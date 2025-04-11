@@ -1,15 +1,18 @@
 export class Page {
-    #displayFunction;
+    #displayFunction :Function;
     #eventInfo;
-    #name;
-    #onDisplay;
+    #name :string;
+    #onDisplay :string;
+	#html: Element;
+	#bindings: any;
+	#script: Element;
 
-    constructor(name, displayFunc, events) {
+    constructor(name :string, displayFunc :Function, events :[string, string, Function]) {
         this.#displayFunction = displayFunc;
         this.#eventInfo = [];
         this.#name = name;
         this.#onDisplay = "none";
-        if (events) this.addEvents(events);
+        if (events) this.setEvents(events);
     }
 
     setEvents(...events) {
@@ -26,9 +29,19 @@ export class Page {
         });
     }
 
-	setHTML() {
-		
-	}
+    setScript(script :Element) {
+        this.#script = script;
+		return (this);
+    }
+
+    setHtml(tag :Element) {
+        this.#html = tag;
+		return (this);
+    }
+
+	getName() {
+        return (this.#name);
+    }
 
     #eventListeners(on) {
         if (!this.#eventInfo.length)
@@ -42,6 +55,19 @@ export class Page {
             else
                 element.removeEventListener(event.type, event.handler);
         });
+    }
+
+    setChilds(elements) {
+        this.#bindings = elements;
+        return (this);
+    }
+
+    getFamilyTree() {
+        return (this.#bindings);
+    }
+
+	getHtml() {
+        return (this.#html);
     }
 
     display(state) {

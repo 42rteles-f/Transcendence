@@ -1,5 +1,5 @@
 import { Page } from "./Page.js";
-import { AppControl } from "./AppControl.js";
+import { AppControl } from "./AppControl.ts";
 import { warnIf } from "./main.js";
 
 export class PageManager {
@@ -16,7 +16,7 @@ export class PageManager {
     setElement(
 		name :string,
 		displayFunction :Function,
-		events :[string, string, (ev: Event) => void]
+		events :[string, string, Function]
 	): Page | undefined {
         if (
 			warnIf(typeof(name) !== 'string', `Invalid page name: ${name}`) ||
@@ -34,7 +34,7 @@ export class PageManager {
     }
 
     async load(name :string) {
-        if (!this.#pageMap.get(name) && !(await AppControl.fetchApp(name))) {
+        if (!this.#pageMap.get(name) && !(await AppControl.fetchElement(name))) {
             console.log(`Could not load the page: ${name}`);
             return ;
         }
@@ -70,7 +70,7 @@ export class PageManager {
         });
         this.#onScreen.clear();
     
-        if (this.#pageMap.get(name) || (await AppControl.fetchApp(name))) {
+        if (this.#pageMap.get(name) || (await AppControl.fetchElement(name))) {
             console.log("passed fetch app");
             this.load(name);
         }

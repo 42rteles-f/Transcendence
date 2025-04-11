@@ -1,3 +1,6 @@
+import { views } from "./main";
+import { Page } from "./Page";
+
 export class AppControl {
 	constructor() {}
 	
@@ -28,41 +31,41 @@ export class AppControl {
 
 	// LOAD HTML AND .TS SEPARETELY
 
-    static async fetchApp(name :string) {
+    static async fetchElement(name :string): Promise<Boolean> {
         try {
-            name = "/" + name.replace(/^\/+/, "");
-            // let find = "api" + name;
-            let find = window.hostUrl + "/spa" + name;
-            const response = await fetch(find);
+			let	page :Page;
+			let newdiv :Element;
+			name = "/" + name.replace(/^\/+/, "");
 
-            if (!response.ok)
-                throw new Error('Network response was not ok: ' + response.statusText);
-            // console.log("appcontrol response =", response);
-            const appHtml = await response.text();
-            const element = document.querySelector(`[page="${name}"]`);
-            
-            let newdiv;
-            if (element) {
-                newdiv = element;
-            } else {
-                newdiv = document.createElement('div');
-                newdiv.innerHTML = appHtml;
-                newdiv.setAttribute("page", name);
-            }
-            // document.body.innerHTML = appHtml;
-            // const fetched = views.get(name);
-            // if (fetched)
-            // await views.waitFetch(name);
-            views.get(name).setHtml(newdiv);
-            return (views.get(name));
-        } catch (error) {
-            console.error('Error:', error);
+			const [jsScript, html] = await Promise.all([
+				import(`/pages${name}.js`),
+				fetch(`/pages${name}.html`).then(response => {
+					if (!response.ok) throw new Error(`Failed to fetch HTML for ${name}`);
+					return (response.text());
+				})
+			]);
+
+			newdiv = document.createElement('div');
+			newdiv.innerHTML = html;
+			newdiv.setAttribute("page", name);
+			page = views.get(name)!; 
+			page.setHtml(newdiv)
+				.setScript(jsScript);
+
+			return (true);
+        }
+		catch (error) {
+			console.error('Error:', error);
             views.urlLoad("/home");
             return (false);
         }
     }
-
 }
+// const element = document.querySelector(`[page="${name}"]`);
+// if (element) {
+// 	newdiv = element;
+// } else {
+// }
 
 // static async #executeScript(doc) {
 //     const scripts = doc.querySelectorAll('script');
