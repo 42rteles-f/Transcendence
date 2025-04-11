@@ -1,10 +1,11 @@
 import { Page } from "./Page.js";
 import { AppControl } from "./AppControl.js";
+import { warnIf } from "./main.js";
 
 export class PageManager {
-    #pageMap;
-    #onScreen;
-    #currentPage;
+    #pageMap :Map<string, Page>;
+    #onScreen :Set<Page>;
+    #currentPage :string;
 
     constructor(current) {
         this.#pageMap = new Map();
@@ -12,36 +13,38 @@ export class PageManager {
         this.#currentPage = "current";
     }
 
-    setElement(name, displayFunction, events) {
-        if (typeof(name) !== 'string') {
-            console.log(`Invalid page name: ${name}`);
+    setElement(
+		name :string,
+		displayFunction :Function,
+		events :[string, string, (ev: Event) => void]
+	): Page | undefined {
+        if (
+			warnIf(typeof(name) !== 'string', `Invalid page name: ${name}`) ||
+			warnIf(typeof(displayFunction) !== 'function', `The value set for ${name} is not a function`)
+		)
             return ;
-        }
-        if (typeof(displayFunction) !== 'function') {
-            console.log(`The value set for ${name} is not a function`);
-            return ;
-        }
-        let page = new Page(name, displayFunction, events);
+
+		let page = new Page(name, displayFunction, events);
         this.#pageMap.set(name, page);
         return (page);
     }
 
-    get(name) {
+    get(name :string) {
         return (this.#pageMap.get(name));
     }
-    
-    async load(name) {
+
+    async load(name :string) {
         if (!this.#pageMap.get(name) && !(await AppControl.fetchApp(name))) {
             console.log(`Could not load the page: ${name}`);
             return ;
         }
-        let page = this.#pageMap.get(name);
+        let page = this.#pageMap.get(name)!;
         page.display("block");
         this.#onScreen.add(page);
         this.#currentPage = window.location.pathname;
     }
 
-    async highlight(name) {
+    async highlight(name :string) {
         this.#onScreen.forEach(page => {
             page.display("none");
         });
@@ -61,7 +64,7 @@ export class PageManager {
             history.pushState({name: name}, '', name);
     }
 
-    async urlLoad(name) {
+    async urlLoad(name :string) {
         this.#onScreen.forEach(page => {
             page.display("none");
         });
@@ -80,7 +83,7 @@ export class PageManager {
             history.pushState({name: name}, '', name);
     }
 
-    unload(name) {
+    unload(name :string) {
         let page = this.#pageMap.get(name);
 
         if (!page) {

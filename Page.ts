@@ -26,6 +26,10 @@ export class Page {
         });
     }
 
+	setHTML() {
+		
+	}
+
     #eventListeners(on) {
         if (!this.#eventInfo.length)
             return ;
