@@ -52,9 +52,9 @@ export class PageManager {
         }
         let page = this.#pageMap.get(name)!;
 		document.body.appendChild(page.getHtml());
-        page.onDisplay();
         this.#onScreen.add(name);
 		page.getDependencies().forEach(element => this.load(element));
+        page.onDisplay();
 		return (true);
     }
 
