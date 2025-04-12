@@ -29,14 +29,11 @@ export class AppControl {
         return (cookieValue);
     }
 
-	// LOAD HTML AND .TS SEPARETELY
-
     static async fetchElement(name :string): Promise<Boolean> {
+		if (views.get(name))
+			return (true);
         try {
-			let	page :Page;
-			let newdiv :Element;
 			name = "/" + name.replace(/^\/+/, "");
-
 			const [jsScript, html] = await Promise.all([
 				import(`/pages${name}.js`),
 				fetch(`/pages${name}.html`).then(response => {
@@ -45,12 +42,14 @@ export class AppControl {
 				})
 			]);
 
-			newdiv = document.createElement('div');
+			const page :Page = views.get(name)!;
+			const newdiv :HTMLDivElement = document.createElement('div');
 			newdiv.innerHTML = html;
 			newdiv.setAttribute("page", name);
-			page = views.get(name)!; 
-			page.setHtml(newdiv)
-				.setScript(jsScript);
+			page.setHtml(newdiv).setScript(jsScript);
+			await Promise.all(
+				page.getDependencies().map(dep => this.fetchElement(dep))
+			);
 
 			return (true);
         }

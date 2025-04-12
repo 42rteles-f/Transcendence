@@ -1,32 +1,31 @@
-export class Page {
-    #displayFunction :Function;
-    #eventInfo;
-    #name :string;
-    #onDisplay :string;
-	#html: Element;
-	#bindings: any;
-	#script: Element;
+type EventTuple = [string, string, Function]; // or (ev: Event) => void
+type EventInfo = {
+  id: string;
+  type: string;
+  handler: EventListener;
+};
 
-    constructor(name :string, displayFunc :Function, events :[string, string, Function]) {
+export class Page {
+    #name				:string;
+    #displayFunction	:Function;
+    #eventInfo			:EventInfo[];
+	#dependencies		:string[];
+	#htmlOriginal		:HTMLDivElement;
+	#htmlCopy			:HTMLDivElement;
+    #onDisplay			:string;
+	#script				:Element;
+
+    constructor(name :string, displayFunc :Function) {
         this.#displayFunction = displayFunc;
-        this.#eventInfo = [];
         this.#name = name;
+		this.#dependencies = [];
+		this.#eventInfo = [];
         this.#onDisplay = "none";
-        if (events) this.setEvents(events);
     }
 
-    setEvents(...events) {
-        events.forEach(event => {
-            if (!Array.isArray(event) || event.length !== 3) {
-                console.log('Invalid event format. Expected [string, string, function]');
-                return ;
-            }
-            this.#eventInfo.push({
-                id: event[0],
-                type: event[1],
-                handler: event[2]
-            });
-        });
+    addEvents(...events :EventInfo[]) {
+		this.#eventInfo.push(...events);
+		return (this);
     }
 
     setScript(script :Element) {
@@ -34,8 +33,9 @@ export class Page {
 		return (this);
     }
 
-    setHtml(tag :Element) {
-        this.#html = tag;
+    setHtml(tag :HTMLDivElement) {
+        this.#htmlOriginal = tag;
+		this.#htmlCopy = this.#htmlOriginal.cloneNode(true) as HTMLDivElement;
 		return (this);
     }
 
@@ -43,37 +43,45 @@ export class Page {
         return (this.#name);
     }
 
-    #eventListeners(on) {
+    #eventListeners(action :string) {
         if (!this.#eventInfo.length)
             return ;
-        let element;
+        let element :HTMLElement | null;
         this.#eventInfo.forEach(event => {
             element = document.getElementById(event.id);
-            if (!element) return ;
-            if (on)
+            if (!element)
+				return ;
+            if (action == "block")
                 element.addEventListener(event.type, event.handler);
             else
                 element.removeEventListener(event.type, event.handler);
         });
     }
 
-    setChilds(elements) {
-        this.#bindings = elements;
+    setDependencies(...elements :string[]) {
+        this.#dependencies = elements;
         return (this);
     }
 
-    getFamilyTree() {
-        return (this.#bindings);
+    getDependencies() {
+        return (this.#dependencies);
     }
 
 	getHtml() {
-        return (this.#html);
+        return (this.#htmlCopy);
     }
 
-    display(state) {
-        this.#onDisplay = state;
-        this.#eventListeners(state === "none" ? false : true);
-        this.#displayFunction(state);
+    onDisplay() {
+        this.#onDisplay = "block";
+        this.#eventListeners("block");
+        this.#displayFunction("block");
+    }
+
+	onRemove() {
+		this.#htmlCopy = this.#htmlOriginal.cloneNode(true) as HTMLDivElement;
+        this.#onDisplay = "none";
+        this.#eventListeners("none");
+        this.#displayFunction("none");
     }
 
     isOnScreen() {
@@ -81,6 +89,6 @@ export class Page {
     }
 
     destructor() {
-        this.display("none");
+        this.onRemove();
     }
 }
