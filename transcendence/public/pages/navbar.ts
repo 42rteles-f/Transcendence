@@ -11,3 +11,4 @@ views.setElement("/navbar", () => {
 })
 .setHtml(newdiv)
 .addEvents({id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")});
+
