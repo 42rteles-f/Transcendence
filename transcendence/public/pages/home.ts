@@ -1,15 +1,16 @@
 import { views } from "../../src/views"
+import { Page } from "../../src/Page";
 
 console.log("executing home.ts");
 
-const newdiv :HTMLDivElement = document.createElement('div');
-newdiv.innerHTML = await fetch("/pages/home.html").then(response => response.text());
+const home: Page = new Page("/home");
 
-views.setElement("/home", () => {})
-.setHtml(newdiv)
-.setDependencies("/navbar");
+let	varForLater: number = 0;
 
+home.setDisplay(() => {
+	varForLater = 5;
+})
+.setHtmlFrom("/pages/home.html")
+.includePages("/navbar")
 
-// console.log([...views.views().keys()]);
-
-/* @vite-ignore */  
+views.registerPage("/home", home);

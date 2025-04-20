@@ -27,22 +27,12 @@ export class AppControl {
 			return (true);
         try {
 			name = "/" + name.replace(/^\/+/, "");
-			const [jsScript, html] = await Promise.all([
-				import(`/pages${name}.ts`),
-				fetch(`/pages${name}.html`).then(response => {
-					if (!response.ok) throw new Error(`Failed to fetch HTML for ${name}`);
-					return (response.text());
-				})
-			]);
+			await import(`/pages${name}.ts`);
+
 			const page :Page = views.get(name)!;
-			const newdiv :HTMLDivElement = document.createElement('div');
-			newdiv.innerHTML = html;
-			newdiv.setAttribute("page", name);
-			page.setHtml(newdiv).setScript(jsScript);
 			await Promise.all(
 				page.getDependencies().map(dep => this.fetchElement(dep))
 			);
-
 			return (true);
         }
 
@@ -52,51 +42,3 @@ export class AppControl {
         }
     }
 }
-
-	// static bodyDisplay(tagName :string) {
-	// 	document.querySelectorAll<HTMLElement>('body > *').forEach(element => {
-	// 		element.style.display = 'none';
-	// 	});
-	// 	document.getElementById(tagName)!.style.display = 'block';
-	// }
-
-// const element = document.querySelector(`[page="${name}"]`);
-// if (element) {
-// 	newdiv = element;
-// } else {
-// }
-
-// static async #executeScript(doc) {
-//     const scripts = doc.querySelectorAll('script');
-//     const scriptPromises = Array.from(scripts).map(script => {
-//         return new Promise((resolve, reject) => {
-//             const newScript = document.createElement('script');
-//             newScript.src = script.src;
-//             newScript.type = script.type;
-//             newScript.onload = resolve;
-//             newScript.onerror = reject;
-//             document.head.appendChild(newScript);
-//             script.parentNode.removeChild(script);
-//         });
-//     });
-//     return (await Promise.all(scriptPromises));
-// static register() {
-//     fetch("http://127.0.0.1:8000/api/register/", {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'X-CSRFToken': this.getCookie('csrftoken')
-//         },
-//         body: JSON.stringify({
-//             username: document.getElementById('username').value,
-//             password: document.getElementById('password').value
-//         })
-//     })
-//         .then(response => response.json())
-//         .then(data => {
-//             console.log(data.message);
-//         })
-//         .catch(error => {
-//             console.error('Error:', error);
-//         });
-// };

@@ -5,25 +5,35 @@ type EventInfo = {
   handler: EventListener;
 };
 
+type PageSet = {
+	pageName: string;
+	displayFunction?: Function;
+	events?: EventInfo[];
+	dependencies? :string[];
+	htmlPath: string;
+};
+
 export class Page {
     private name				:string;
     private displayFunction		:Function;
     private eventInfo			:EventInfo[];
 	private dependencies		:string[];
+	private htmlPath			:string;
 	private htmlOriginal		:HTMLDivElement;
 	private htmlCopy			:HTMLDivElement;
     private onScreen			:string;
-	private script				:Element;
 
-    constructor(name :string, displayFunc :Function) {
-        this.displayFunction = displayFunc;
+    constructor(name: string) {
+        this.displayFunction = () => {};
         this.name = name;
 		this.dependencies = [];
 		this.eventInfo = [];
         this.onScreen = "none";
+		this.htmlPath = `/pages/${name}.html`;
 		this.htmlOriginal = document.createElement("div");
-		this.htmlCopy = document.createElement("div");
-		this.script = document.createElement("div");
+		this.htmlOriginal.setAttribute("page", this.name);
+		this.htmlCopy = this.htmlOriginal.cloneNode(true) as HTMLDivElement;
+		this.setHtmlFrom();
 	}
 
     addEvents(...events :EventInfo[]) {
@@ -33,17 +43,25 @@ export class Page {
 		return (this);
     }
 
-    setScript(script :Element) {
-        this.script = script;
+    setDisplay(func :Function) {
+        this.displayFunction = func;
+		return (this);
+    }
+
+    setHtmlFrom(path?: string) {
+		fetch(path ? path : this.htmlPath)
+			.then(response => response.text())
+			.then((html) => {
+				this.htmlOriginal.innerHTML = html;
+				this.htmlCopy.innerHTML = html;
+		});
 		return (this);
     }
 
     setHtml(tag :HTMLDivElement) {
 		tag.setAttribute("page", this.name);
-		if (!tag.style.order)
-			tag.setAttribute("style", "order: 999;");
         this.htmlOriginal = tag;
-		this.htmlCopy = this.htmlOriginal.cloneNode(true) as HTMLDivElement;
+		this.htmlCopy.innerHTML = this.htmlOriginal.innerHTML;
 		return (this);
     }
 
@@ -52,18 +70,14 @@ export class Page {
     }
 
     private eventListeners(action :string) {
-		console.log("eventListeners");
         if (!this.eventInfo.length)
             return ;
-		console.log("eventListeners after return");
         let element :HTMLElement | null;
         this.eventInfo.forEach(event => {
             element = document.getElementById(event.id);
             if (!element) {
-				console.log("not element");	
 				return ;
 			}
-			console.log("element");	
             if (action == "block")
                 element.addEventListener(event.type, event.handler);
             else
@@ -71,7 +85,7 @@ export class Page {
         });
     }
 
-    setDependencies(...elements :string[]) {
+    includePages(...elements :string[]) {
         this.dependencies = elements;
         return (this);
     }
