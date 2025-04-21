@@ -1,23 +1,20 @@
 import { views } from "../../src/views";
 import { BaseComponent } from "../../src/BaseComponent";
 
+console.log("executing pong copy");
+
 class PongGame extends BaseComponent {
 	constructor() {
-		super("/pages/pong/PongView.html");
+		super("/pages/pong.html");
+		this.setAttribute("page", "/pong");
 	}
 
 	onInit() {
+		this.addEvents(
+			{id: "test_id", type: "click", handler: () => console.log("Button clicked!") }
+		);
+
 		const canvas = this.querySelector("#pong-canvas") as HTMLCanvasElement;
-		const button = this.querySelector("#test_id") as HTMLButtonElement;
-
-		if (button) {
-			button.addEventListener("click", () => {
-				console.log("Button clicked!");
-			});
-		}
-	
-		if (!canvas) return;
-
 		const ctx = canvas.getContext("2d")!;
 		let x = canvas.width / 2;
 		let y = canvas.height / 2;
@@ -45,8 +42,8 @@ class PongGame extends BaseComponent {
 		drawBall();
 	}
 }
-
 customElements.define("pong-game", PongGame);
-
 views.registerView("/pong", () => { return (new PongGame) });
+
+console.log("logged /pong");
 

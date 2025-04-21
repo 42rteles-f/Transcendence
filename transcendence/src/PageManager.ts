@@ -8,11 +8,13 @@ type EventInfo = {
 };
 
 export class PageManager {
-    private pageMap :Map<string, Page>;
-    private onScreen :Set<string>;
+    private pageMap 		:Map<string, Page>;
+    private componentMap	:Map<string, Function>;
+    private onScreen		:Set<string>;
 
     constructor() {
         this.pageMap = new Map();
+        this.componentMap = new Map();
         this.onScreen = new Set();
     }
 
@@ -25,7 +27,7 @@ export class PageManager {
 	registerView(name: string, func: Function) {
 		if (this.pageMap.has(name)) return ;
 
-        this.pageMap.set(name, new Page(name));
+        this.componentMap.set(name, func);
     }
 
     setElement(name :string, displayFunction :Function): Page {
@@ -54,6 +56,21 @@ export class PageManager {
 		page.getDependencies().forEach(element => this.load(element));
 		return (true);
     }
+
+	async newLoad(name: string) {
+		console.log(`new ${name}`);
+		this.onScreen.forEach(name => document.querySelector(`[page="${name}"]`)?.remove());
+
+        // if (!this.componentMap.has(name) && !(await AppControl.fetchElement(name))) {
+		// 	console.log(`PageManager: The page ${name} does not exist`);
+		// 	// this.urlLoad("home");
+		// 	return ;
+        // }
+        this.onScreen.add(name);
+		document.body.appendChild(this.componentMap.get(name)!());
+		if (window.location.pathname !== name)
+			history.pushState({name: name}, '', name);
+	}
 
     async urlLoad(name :string) {
 		console.log(`urload ${name}`);

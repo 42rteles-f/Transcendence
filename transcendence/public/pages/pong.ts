@@ -5,7 +5,7 @@ console.log("executing pong.ts");
 
 const pongPage = new Page("/pong");
 
-pongPage.setDisplay(() => {
+const pongPrint = () => {
 	const canvas = document.getElementById("pong-canvas") as HTMLCanvasElement;
 	if (!canvas) return;
 
@@ -32,11 +32,12 @@ pongPage.setDisplay(() => {
 
 		requestAnimationFrame(drawBall);
 	}
-
 	drawBall();
-})
-.addEvents({id: "test_id", type: "click", handler: () => {}})
-.setHtmlFrom("/pages/pong.html")
-.includePages("/navbar");
+}
+
+pongPage.setDisplay(pongPrint)
+		.addEvents({id: "test_id", type: "click", handler: () => {}})
+		.setHtmlFrom("/pages/pong.html")
+		.includePages("/navbar");
 
 views.registerPage("/pong", pongPage);

@@ -1,16 +1,7 @@
-type EventTuple = [string, string, Function]; // or (ev: Event) => void
 type EventInfo = {
   id: string;
   type: string;
   handler: EventListener;
-};
-
-type PageSet = {
-	pageName: string;
-	displayFunction?: Function;
-	events?: EventInfo[];
-	dependencies? :string[];
-	htmlPath: string;
 };
 
 export class Page {
@@ -108,7 +99,7 @@ export class Page {
 		this.htmlCopy = this.htmlOriginal!.cloneNode(true) as HTMLDivElement;
         this.onScreen = "none";
         this.eventListeners("none");
-        this.displayFunction("none");
+        // this.displayFunction("none");
     }
 
     isOnScreen() {
