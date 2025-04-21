@@ -34,19 +34,18 @@ export class BaseComponent extends HTMLElement {
 	}
 
     addEvents(...events :EventInfo[]) {
-		if (!events.length) return (this);
+		if (!events.length) return ;
 
 		this.eventInfo.push(...events);
-        let element :HTMLElement | null;
-        this.eventInfo.forEach(event => {
-            element = this.getElementById(event.id);
-            if (!element) {
-				console.log("not element");
-				return ;
-			}
-			element.addEventListener(event.type, event.handler);
-        });
+        events.forEach((event) => {
+			this.getElementById(event.id)?.addEventListener(event.type, event.handler)
+		});
     }
 }
 
 customElements.define("base-component", BaseComponent);
+
+// let element :HTMLElement | null;
+// element = this.getElementById(event.id);
+// if (!element) return ;
+// element.addEventListener(event.type, event.handler);

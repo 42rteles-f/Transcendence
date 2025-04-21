@@ -1,5 +1,6 @@
 import { Page } from "./Page";
 import { AppControl } from "./AppControl";
+import { BaseComponent } from "./BaseComponent";
 
 type EventInfo = {
 	id: string;
@@ -11,11 +12,13 @@ export class PageManager {
     private pageMap 		:Map<string, Page>;
     private componentMap	:Map<string, Function>;
     private onScreen		:Set<string>;
+	private	currentPage		:BaseComponent | null;
 
     constructor() {
         this.pageMap = new Map();
         this.componentMap = new Map();
         this.onScreen = new Set();
+		this.currentPage = null;
     }
 
     registerPage(name: string, page: Page) {
@@ -59,15 +62,16 @@ export class PageManager {
 
 	async newLoad(name: string) {
 		console.log(`new ${name}`);
-		this.onScreen.forEach(name => document.querySelector(`[page="${name}"]`)?.remove());
+		this.currentPage?.remove();
 
-        // if (!this.componentMap.has(name) && !(await AppControl.fetchElement(name))) {
-		// 	console.log(`PageManager: The page ${name} does not exist`);
-		// 	// this.urlLoad("home");
-		// 	return ;
-        // }
-        this.onScreen.add(name);
-		document.body.appendChild(this.componentMap.get(name)!());
+        if (!this.componentMap.has(name) && !(await AppControl.fetchElement(name))) {
+			console.log(`PageManager: The page ${name} does not exist`);
+			// this.urlLoad("home");
+			return ;
+        }
+		const factory: Function = this.componentMap.get(name)!;
+		this.currentPage = factory();
+		document.body.appendChild(this.currentPage as Node);
 		if (window.location.pathname !== name)
 			history.pushState({name: name}, '', name);
 	}
