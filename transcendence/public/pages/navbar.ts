@@ -5,9 +5,12 @@ console.log("executing navbar.ts");
 
 const navbar: Page = new Page("/navbar");
 
-navbar
-	.addEvents({id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")})
-	.setHtmlFrom();
+navbar.addEvents(
+	{id: "home_b", type: "click", handler: () => views.urlLoad("/home")},
+	{id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")},
+	{id: "pong_b", type: "click", handler: () => views.urlLoad("/pong")},
+)
+.setHtmlFrom("/pages/navbar.html");
 
 views.registerPage("/navbar", navbar);
 

@@ -1,6 +1,7 @@
 import { views } from "./views.ts";
 await import("../public/pages/navbar.ts");
 await import("../public/pages/home.ts");
+await import("../public/pages/pong.ts");
 
 // console.log(views.get("/home"))
 
