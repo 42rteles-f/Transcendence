@@ -1,16 +1,17 @@
 import { views } from "../../src/views"
 import { Page } from "../../src/Page";
+import { BaseComponent } from "../../src/BaseComponent";
 
 console.log("executing home.ts");
 
-const home: Page = new Page("/home");
+class HomePage extends BaseComponent {
 
-let	varForLater: number = 0;
+	constructor() {
+		super("/pages/home.html");
+	}
 
-home.setDisplay(() => {
-	varForLater = 5;
-})
-.setHtmlFrom("/pages/home.html")
-.includePages("/navbar")
 
-views.registerPage("/home", home);
+}
+
+customElements.define("home-page", HomePage);
+views.registerPage("/home", HomePage);

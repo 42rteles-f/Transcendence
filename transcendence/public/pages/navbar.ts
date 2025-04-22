@@ -1,62 +1,25 @@
-import { views } from "../../src/views"
-import { Page } from "../../src/Page";
+import { views } from "../../src/views";
+import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing navbar.ts");
+console.log("executing navbar copy");
 
-const navbar: Page = new Page("/navbar");
+class Navbar extends BaseComponent {
+	constructor() {
+		super("/pages/navbar.html");
+		this.setAttribute("page", "/navbar");
+		// this.onInit();
+	}
 
-navbar.addEvents(
-	{id: "home_b", type: "click", handler: () => views.urlLoad("/home")},
-	{id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")},
-	{id: "pong_b", type: "click", handler: () => views.urlLoad("/pong")},
-)
-.setHtmlFrom("/pages/navbar.html");
+	onInit() {
+		console.log("navbar init");
+		this.addEvents(
+			{id: "home_b", type: "click", handler: () => views.urlLoad("/home")},
+			{id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")},
+			{id: "pong_b", type: "click", handler: () => views.urlLoad("/pong")},
+		)
+	}
+}
 
-views.registerPage("/navbar", navbar);
+customElements.define("custom-navbar", Navbar);
 
-// views.registerView("navbar", () => new HomePage);
-
-
-// const templates = new Map<string, string>();
-
-// class BaseComponent extends HTMLElement {
-
-// 	constructor(template: string) {
-// 		super();
-// 		if (templates.has(template)) {
-// 			this.innerHTML = templates.get(template)!;
-// 			this.onInit();
-// 		}
-// 		else {
-// 			fetch(template).then(async (response) => {
-// 				if (!response.ok) {
-// 					throw new Error("Network response was not ok");
-// 				}
-// 				const html = await response.text();
-// 				this.innerHTML = html;
-// 				templates.set(template, html);
-// 				this.onInit();
-// 			})
-// 		}
-// 	}
-
-// 	onInit() { }
-// }
-
-// customElements.define("base-component", BaseComponent);
-
-
-// class HomePage extends BaseComponent {
-
-// 	constructor() {
-// 		super("/home/HomeView.html");
-// 	}
-
-// 	onInit() {
-		
-// 	}
-// }
-
-// customElements.define("home-page", HomePage);
-
-// document.body.appendChild(new HomePage);
+views.registerPage("/navbar", Navbar);

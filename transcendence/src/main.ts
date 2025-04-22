@@ -1,7 +1,7 @@
 import { views } from "./views.ts";
-await import("../public/pages/navbar copy.ts");
+await import("../public/pages/navbar.ts");
 await import("../public/pages/home.ts");
-await import("../public/pages/pong copy.ts");
+await import("../public/pages/pong.ts");
 
 // console.log(views.get("/home"))
 
@@ -15,10 +15,10 @@ export function	warnIf(condition :Boolean, message :string) {
 
 window.addEventListener('popstate', () => {
 	console.log("app start2." + window.location.pathname);
-	views.newLoad(window.location.pathname);
+	views.urlLoad(window.location.pathname);
 });
 
-views.newLoad(window.location.pathname);
+views.urlLoad(window.location.pathname);
 
 // document.addEventListener("DOMContentLoaded", function() {
 // });
