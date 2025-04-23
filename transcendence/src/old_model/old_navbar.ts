@@ -1,4 +1,4 @@
-import { views } from "../../src/views"
+import { views } from "../views"
 import { Page } from "../../src/Page";
 
 console.log("executing navbar.ts");

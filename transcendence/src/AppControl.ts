@@ -1,5 +1,5 @@
-import { views } from "./views"
-import { Page } from "./Page"
+// import { views } from "./views"
+// import { Page } from "./old_model/Page"
 
 export class AppControl {
 	constructor() {}
@@ -22,23 +22,23 @@ export class AppControl {
         return (cookieValue);
     }
 
-    static async fetchElement(name :string): Promise<Boolean> {
-		if (views.get(name))
-			return (true);
-        try {
-			name = "/" + name.replace(/^\/+/, "");
-			await import(`/pages${name}.ts`);
+    // static async fetchElement(name :string): Promise<Boolean> {
+	// 	if (views.get(name))
+	// 		return (true);
+    //     try {
+	// 		name = "/" + name.replace(/^\/+/, "");
+	// 		await import(`/pages${name}.ts`);
 
-			const page :Page = views.get(name)!;
-			await Promise.all(
-				page.getDependencies().map(dep => this.fetchElement(dep))
-			);
-			return (true);
-        }
+	// 		const page :Page = views.get(name)!;
+	// 		await Promise.all(
+	// 			page.getDependencies().map(dep => this.fetchElement(dep))
+	// 		);
+	// 		return (true);
+    //     }
 
-		catch (error) {
-			console.error('Error:', error);
-            return (false);
-        }
-    }
+	// 	catch (error) {
+	// 		console.error('Error:', error);
+    //         return (false);
+    //     }
+    // }
 }

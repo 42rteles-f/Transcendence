@@ -6,12 +6,9 @@ console.log("executing navbar copy");
 class Navbar extends BaseComponent {
 	constructor() {
 		super("/pages/navbar.html");
-		this.setAttribute("page", "/navbar");
-		// this.onInit();
 	}
 
 	onInit() {
-		console.log("navbar init");
 		this.addEvents(
 			{id: "home_b", type: "click", handler: () => views.urlLoad("/home")},
 			{id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")},

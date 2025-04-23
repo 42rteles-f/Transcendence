@@ -1,5 +1,5 @@
 import { views } from "../../src/views"
-import { Page } from "../../src/Page";
+import { Page } from "../../src/old_model/Page";
 import { BaseComponent } from "../../src/BaseComponent";
 
 console.log("executing home.ts");

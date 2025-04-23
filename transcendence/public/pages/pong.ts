@@ -6,7 +6,6 @@ console.log("executing pong copy");
 class PongGame extends BaseComponent {
 	constructor() {
 		super("/pages/pong.html");
-		this.setAttribute("page", "/pong");
 	}
 
 	onInit() {
