@@ -1,3 +1,4 @@
+Mandatory
 1   - Major: Use a framework to build the backend.
 2   - Major: Replace basic Pong with server-side Pong and implement an API.
 3   - Major: Remote players
@@ -7,15 +8,18 @@
 6.5 - Minor: Use a framework or a toolkit to build the frontend.
 7   - Minor: Use a database for the backend.
 
+Bonus
+1   - Major: Introduce an AI opponent.
+2   - Major: Designing the backend as microservices.
+2.5 - Minor: GDPR compliance options with user anonymization, local data management, and Account Deletion.
+
 <Interest>
 Major: Standard user management, authentication, users across tournaments.
 Major: Implementing a remote authentication.
 Major: Add another game with user history and matchmaking.
-Major: Introduce an AI opponent.
-Major: Designing the backend as microservices.
 
+Minor: Support on all devices.
 Minor: User and game stats dashboards
-Minor: GDPR compliance options with user anonymization, local data management, and Account Deletion.
 Minor: Expanding browser compatibility.
 <\Interest>
 
@@ -28,7 +32,6 @@ Major: Enabling Pong gameplay via CLI against web users with API integration
 
 Minor: Game customization options.
 Minor: Monitoring system.
-Minor: Support on all devices.
 Minor: Supports multiple languages.
 Minor: Add accessibility features for visually impaired users.
 Minor: Server-Side Rendering (SSR) integration.
