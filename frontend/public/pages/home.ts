@@ -1,15 +1,17 @@
 import { views } from "../../src/views"
+import { Page } from "../../src/old_model/Page";
+import { BaseComponent } from "../../src/BaseComponent";
 
 console.log("executing home.ts");
 
-const newdiv :HTMLDivElement = document.createElement('div');
-newdiv.innerHTML = await fetch("/pages/home.html").then(response => response.text());
+class HomePage extends BaseComponent {
 
-views.setElement("/home", () => {})
-.setHtml(newdiv)
-.setDependencies("/navbar");
+	constructor() {
+		super("/pages/home.html");
+	}
 
 
-// console.log([...views.views().keys()]);
+}
 
-/* @vite-ignore */  
+customElements.define("home-page", HomePage);
+views.registerPage("/home", HomePage);
