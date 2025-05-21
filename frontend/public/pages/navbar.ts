@@ -1,14 +1,22 @@
-import { views } from "../../src/views"
+import { views } from "../../src/views";
+import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing navbar.ts");
+console.log("executing navbar copy");
 
-const newdiv :HTMLDivElement = document.createElement('div');
-newdiv.setAttribute("style", "order: 0;");
-newdiv.innerHTML = await fetch("/pages/navbar.html").then(response => response.text());
+class Navbar extends BaseComponent {
+	constructor() {
+		super("/pages/navbar.html");
+	}
 
-views.setElement("/navbar", () => {
-	
-})
-.setHtml(newdiv)
-.addEvents({id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")});
+	onInit() {
+		this.addEvents(
+			{id: "home_b", type: "click", handler: () => views.urlLoad("/home")},
+			{id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")},
+			{id: "pong_b", type: "click", handler: () => views.urlLoad("/pong")},
+		)
+	}
+}
 
+customElements.define("custom-navbar", Navbar);
+
+views.registerPage("/navbar", Navbar);

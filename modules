@@ -1,6 +1,6 @@
 1   - Major: Use a framework to build the backend.
 2   - Major: Replace basic Pong with server-side Pong and implement an API.
-3   - Major: Standard user management, authentication, users across tournaments.
+3   - Major: Remote players
 4   - Major: Store the score of a tournament in the Blockchain.
 5   - Major: Live chat.
 6   - Major: Implement Two-Factor Authentication (2FA) and JWT.
@@ -8,8 +8,8 @@
 7   - Minor: Use a database for the backend.
 
 <Interest>
+Major: Standard user management, authentication, users across tournaments.
 Major: Implementing a remote authentication.
-Major: Remote players
 Major: Add another game with user history and matchmaking.
 Major: Introduce an AI opponent.
 Major: Designing the backend as microservices.

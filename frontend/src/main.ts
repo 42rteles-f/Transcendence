@@ -1,6 +1,7 @@
 import { views } from "./views.ts";
-await import("../public/pages/home.ts");
 await import("../public/pages/navbar.ts");
+await import("../public/pages/home.ts");
+await import("../public/pages/pong.ts");
 
 // console.log(views.get("/home"))
 
@@ -18,5 +19,6 @@ window.addEventListener('popstate', () => {
 });
 
 views.urlLoad(window.location.pathname);
-document.addEventListener("DOMContentLoaded", function() {
-});
+
+// document.addEventListener("DOMContentLoaded", function() {
+// });
