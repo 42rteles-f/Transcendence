@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import FastifyPostgres from '@fastify/postgres';
+import jwt from 'jsonwebtoken';
 
 export const server = Fastify({
 	logger: false,
@@ -21,17 +23,36 @@ server.register(FastifyPostgres, {
 	}
 });
 
-server.decorate('authenticate', async function (request: any, reply: any) {
-	// const authHeader = request.headers['authorization']
+server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {
+	const authHeader = req.headers['authorization'];
   
-	// if (!authHeader || authHeader !== 'Bearer secrettoken123') {
-	//   reply.code(401).send({ error: 'Unauthorized' })
-	// }
+	if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		res.status(401).send({ error: 'Unauthorized' })
+		return ;
+	}
+
+	const token = authHeader.substring(7);
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+		if (typeof decoded === "object" &&
+			decoded !== null &&
+			"id" in decoded &&
+			"username" in decoded &&
+			typeof decoded.id === "number" &&
+			typeof decoded.username === "string")
+				(req as any).user = decoded as { id: number, username: string }
+		else {
+			res.status(401).send({ error: 'Unauthorized' })
+			return ;
+		}
+	} catch (err) {
+		res.status(401).send({ error: 'Unauthorized' });
+		return ;
+	}
 });
 
 
 server.get("/", async (req, res) => {
-	console.log("root being hit");
 	res.send({ ok: true });
 });
 
