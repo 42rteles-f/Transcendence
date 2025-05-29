@@ -2,24 +2,22 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { server } from '../index';
 import IResponse from '../interfaces/user';
-
+import type { Knex } from 'knex';
 export default class UserDatabase {
 	constructor() {
 	}
 
 	async register(username: string, nickname: string, password: string): Promise<IResponse> {
-		const client = server.pg;
-
+		const client = server.knex;
 		if (!client)
 			return { status: 500, reply: "Database connection not initialized" };
 		const hashedPassword = await bcrypt.hash(password, 10);
-		const query = `INSERT INTO users (username, nickname, password) VALUES ($1, $2, $3) RETURNING *`;
-		const values = [username, nickname, hashedPassword];
 		try {
-			const result = await client.query(query, values);
-			if (result?.rowCount === 0)
+			const [user] = await client('users')
+				.insert({ username, nickname, password: hashedPassword })
+				.returning(['id', 'username']);
+			if (!user)
 				throw new Error("User creation failed");
-			const user = result.rows[0];
 			const token = jwt.sign(
 				{ id: user.id, username: user.username },
 				process.env.JWT_SECRET!,
@@ -34,17 +32,15 @@ export default class UserDatabase {
 	}
 
 	async login(username: string, password: string): Promise<IResponse> {
-		const client = server.pg;
-
+		const client = server.knex;
 		if (!client)
 			return { status: 500, reply: "Database connection not initialized" };
-		const query = `SELECT * FROM users WHERE username = $1`;
-		const values = [username];
+
 		try {
-			const result = await client.query(query, values);
-			if (result?.rowCount === 0)
+			const user = await client('users')
+				.where({ username }).first();
+			if (!user)
 				throw new Error("Invalid credentials");
-			const user = result.rows[0];
 			const match = await bcrypt.compare(password, user.password);
 			if (!match)
 				throw new Error("Invalid credentials");
@@ -64,17 +60,16 @@ export default class UserDatabase {
 	async updateProfile(username: string,
 						nickname: string,
 						password: string): Promise<IResponse> {
-		const client = server.pg;
-
+		const client = server.knex;
 		if (!client)
 			return { status: 500, reply: "Database connection not initialized" };
 
 		const hashedPassword = await bcrypt.hash(password, 10);
-		const query = `UPDATE users SET nickname = $1, password = $2 WHERE username = $3 RETURNING *`;
-		const values = [nickname, hashedPassword, username];
 		try {
-			const result = await client.query(query, values);
-			if (result?.rowCount === 0)
+			const updated = await client('users')
+				.where({ username })
+				.update({ nickname, password: hashedPassword });
+			if (!updated)
 				throw new Error("User update failed");
 			return { status: 200, reply: "User updated successfully" };
 		} catch (error) {

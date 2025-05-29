@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import FastifyPostgres from '@fastify/postgres';
+import knexPlugin from './custom-plugins/sqlite';
 import jwt from 'jsonwebtoken';
 
 export const server = Fastify({
@@ -8,19 +8,13 @@ export const server = Fastify({
 	bodyLimit: 1048576
 });
 
-server.register(FastifyPostgres, {
-	host: process.env.DB_HOST,
-	port: Number(process.env.DB_PORT),
-	database: process.env.DB_NAME,
-	user: process.env.USER,
-	password: process.env.PASSWORD,
-}).after((err) => {
-	if (err) {
-		server.log.error(err);
-		process.exit(1);
-	} else {
-		server.log.info('Postgres connected');
-	}
+
+server.register(knexPlugin, {
+  client: 'sqlite3',
+  connection: {
+    filename: String(process.env.DB_PATH)
+  },
+  useNullAsDefault: true
 });
 
 server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {
@@ -67,7 +61,6 @@ const start = async (port: number) => {
 };
 
 import "./routes/user";
-
 
 const port = Number(process.env.PORT);
 
