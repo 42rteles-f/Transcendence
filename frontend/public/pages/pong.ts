@@ -1,7 +1,6 @@
-import { views } from "../../src/views";
 import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing pong copy");
+console.log("executing PongGame");
 
 class PongGame extends BaseComponent {
 	constructor() {
@@ -43,6 +42,5 @@ class PongGame extends BaseComponent {
 }
 
 customElements.define("pong-game", PongGame);
-views.registerPage("/pong", PongGame);
 
-
+export { PongGame };

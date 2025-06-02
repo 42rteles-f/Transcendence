@@ -11,7 +11,7 @@ export class PageManager {
 		this.currentPage = [];
     }
 
-    registerPage(name: string, page: typeof BaseComponent) {
+    register(name: string, page: typeof BaseComponent) {
 		if (this.componentMap.has(name)) return ;
 
         this.componentMap.set(name, page);

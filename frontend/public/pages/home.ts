@@ -1,5 +1,6 @@
-import { views } from "../../src/views"
 import { BaseComponent } from "../../src/BaseComponent";
+import("./navbar.ts");
+import("./chat/chat.ts");
 
 console.log("executing home.ts");
 
@@ -14,4 +15,5 @@ class HomePage extends BaseComponent {
 }
 
 customElements.define("home-page", HomePage);
-views.registerPage("/home", HomePage);
+
+export { HomePage };

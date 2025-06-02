@@ -1,7 +1,11 @@
-// import { views } from "./views"
+// import { routes } from "./routes"
 // import { Page } from "./old_model/Page"
+import { io, Socket } from 'socket.io-client';
+import { Pointer } from './PageManager';
 
 export class AppControl {
+	private	static socket: Pointer<Socket> = null;
+	private static chatObservers: Function[] = [];
 	constructor() {}
 
     static getCookie(name :string) {
@@ -22,14 +26,47 @@ export class AppControl {
         return (cookieValue);
     }
 
+	static createSocket(): void {
+		this.socket = io("http://localhost:3000");
+
+		this.socket.on('connect', () => {
+			console.log('Connected to server!', this.socket!.id);
+		});
+		  
+		this.socket.on('disconnect', () => {
+		console.log('Disconnected from server');
+		});
+		  
+	}
+
+	static addChatListener(chat: (...args: any[]) => void): void {
+		if (!this.socket) {
+			console.error('Socket not initialized. Call createSocket() first.');
+		}
+		this.chatObservers.push(chat);
+		this.socket!.on('chat', chat);
+	}
+
+	static removeChatListener(chat: (...args: any[]) => void): void {
+		if (!this.socket) {
+			console.error('Socket not initialized. Call createSocket() first.');
+		}
+		const index = this.chatObservers.indexOf(chat);
+		if (index !== -1) {
+			this.chatObservers.splice(index, 1);
+			this.socket!.off('chat', chat);
+			console.log('Chat observer removed:', chat);
+		}
+	}
+
     // static async fetchElement(name :string): Promise<Boolean> {
-	// 	if (views.get(name))
+	// 	if (routes.get(name))
 	// 		return (true);
     //     try {
 	// 		name = "/" + name.replace(/^\/+/, "");
 	// 		await import(`/pages${name}.ts`);
 
-	// 		const page :Page = views.get(name)!;
+	// 		const page :Page = routes.get(name)!;
 	// 		await Promise.all(
 	// 			page.getDependencies().map(dep => this.fetchElement(dep))
 	// 		);

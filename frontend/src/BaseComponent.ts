@@ -47,10 +47,15 @@ export class BaseComponent extends HTMLElement {
 	private bindElements() {
 		const elements = this.querySelectorAll<HTMLElement>('[id]');
 		elements.forEach(el => {
+			// console.log(`Binding element with id: ${el.id}`);
 			if (el.id) {
 				(this as any)[el.id] = el;
 			}
 		});
+	}
+
+	onDestroy() {
+
 	}
 	
 }

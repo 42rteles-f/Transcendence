@@ -1,4 +1,4 @@
-import { views } from "../views";
+import { routes } from "../routes";
 import { Page } from "../../src/Page";
 
 console.log("executing pong.ts");
@@ -40,4 +40,4 @@ pongPage.setDisplay(pongPrint)
 		.setHtmlFrom("/pages/pong.html")
 		.includePages("/navbar");
 
-views.registerPage("/pong", pongPage);
+routes.register("/pong", pongPage);
