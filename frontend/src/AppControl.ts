@@ -39,26 +39,36 @@ export class AppControl {
 		  
 	}
 
-	static addChatListener(chat: (...args: any[]) => void): void {
+	static addChatListener(observer: (...args: any[]) => void): void {
 		if (!this.socket) {
 			console.error('Socket not initialized. Call createSocket() first.');
+			return ;
 		}
-		this.chatObservers.push(chat);
-		this.socket!.on('chat', chat);
+		this.chatObservers.push(observer);
+		this.socket!.on("chat-message", observer);
 	}
 
-	static removeChatListener(chat: (...args: any[]) => void): void {
+	static removeChatListener(observer: (...args: any[]) => void): void {
 		if (!this.socket) {
 			console.error('Socket not initialized. Call createSocket() first.');
+			return ;
 		}
-		const index = this.chatObservers.indexOf(chat);
+		const index = this.chatObservers.indexOf(observer);
 		if (index !== -1) {
 			this.chatObservers.splice(index, 1);
-			this.socket!.off('chat', chat);
-			console.log('Chat observer removed:', chat);
+			this.socket!.off('chat-message', observer);
+			console.log('Chat observer removed:', observer);
 		}
 	}
 
+	static sendChatMessage(event: string, message: string): void {
+		if (!this.socket) {
+			console.error('Socket not initialized. Call createSocket() first.');
+			return ;
+		}
+		this.socket!.emit(event, message);
+		console.log('Chat message sent:', message);
+	}
     // static async fetchElement(name :string): Promise<Boolean> {
 	// 	if (routes.get(name))
 	// 		return (true);

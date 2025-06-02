@@ -45,12 +45,11 @@ export class BaseComponent extends HTMLElement {
     }
 
 	private bindElements() {
-		const elements = this.querySelectorAll<HTMLElement>('[id]');
+		const elements = this.querySelectorAll<HTMLElement>('[data-ref]');
 		elements.forEach(el => {
-			// console.log(`Binding element with id: ${el.id}`);
-			if (el.id) {
-				(this as any)[el.id] = el;
-			}
+			if (el.dataset?.ref) {
+				(this as any)[el.dataset.ref] = el;
+			}	
 		});
 	}
 

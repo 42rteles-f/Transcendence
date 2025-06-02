@@ -14,12 +14,12 @@ class Chat extends BaseComponent {
 	}
 
 	onInit(): void {
-		// AppControl.addChatListener(this.addMessage)
 		console.log("Chat component initialized");
-		this.sendButton.addEventListener("click", () => this.sendMessage());
-		this.chatInput.addEventListener("keydown", (e: KeyboardEvent) => {
+		this.sendButton.onclick = () => this.sendMessage();
+		this.chatInput.onkeydown = (e: KeyboardEvent) => {
 			if (e.key === "Enter") this.sendMessage();
-		});
+		};
+		AppControl.addChatListener(this.addMessage);
 	}
 
 	sendMessage() {
@@ -27,7 +27,7 @@ class Chat extends BaseComponent {
 		console.log("Sending message:", message);
 		if (!message) return ;
 
-		// AppControl.socket?.emit('chat message', message);
+		AppControl.sendChatMessage('chat-message', message);
 		this.addMessage("You: " + message, "outgoing");	
 		this.chatInput.value = '';
 	}
@@ -35,7 +35,7 @@ class Chat extends BaseComponent {
 	addMessage = (message: string, type?: string): void => {
 		if (type !== "outgoing") type = "incoming";
 		const messageElement = document.createElement("div");
-		messageElement.className = `chat-message ${type}`;
+		messageElement.className = `chat-message-${type}`;
 		messageElement.textContent = message;
 		this.chatMessages.appendChild(messageElement);
 	}
