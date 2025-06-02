@@ -1,9 +1,10 @@
 import { views } from "./views.ts";
+import './style.css';
 await import("../public/pages/navbar.ts");
 await import("../public/pages/home.ts");
 await import("../public/pages/pong.ts");
-
-// console.log(views.get("/home"))
+await import("../public/pages/chat/chat.ts");
+await import("../public/pages/login.ts");
 
 console.log("app start." + window.location.pathname);
 

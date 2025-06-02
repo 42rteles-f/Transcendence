@@ -15,6 +15,7 @@ export class BaseComponent extends HTMLElement {
 
 		if (templates.has(name)) {
 			this.innerHTML = templates.get(name)!;
+			this.bindElements();
 			this.onInit();
 		} else {
 			fetch(name)
@@ -22,6 +23,7 @@ export class BaseComponent extends HTMLElement {
 				.then(html => {
 					this.innerHTML = html;
 					templates.set(name, html);
+					this.bindElements();
 					this.onInit();
 				});
 		}
@@ -41,6 +43,16 @@ export class BaseComponent extends HTMLElement {
 			this.getElementById(event.id)?.addEventListener(event.type, event.handler)
 		});
     }
+
+	private bindElements() {
+		const elements = this.querySelectorAll<HTMLElement>('[id]');
+		elements.forEach(el => {
+			if (el.id) {
+				(this as any)[el.id] = el;
+			}
+		});
+	}
+	
 }
 
 customElements.define("base-component", BaseComponent);
