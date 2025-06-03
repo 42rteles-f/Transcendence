@@ -1,11 +1,10 @@
-// import { routes } from "./routes"
-// import { Page } from "./old_model/Page"
 import { io, Socket } from 'socket.io-client';
 import { Pointer } from './PageManager';
 
 export class AppControl {
 	private	static socket: Pointer<Socket> = null;
 	private static chatObservers: Function[] = [];
+
 	constructor() {}
 
     static getCookie(name :string) {
@@ -26,21 +25,38 @@ export class AppControl {
         return (cookieValue);
     }
 
-	static createSocket(): void {
+	static createSocket(): boolean {
 		this.socket = io("http://localhost:3000");
 
 		this.socket.on('connect', () => {
 			console.log('Connected to server!', this.socket!.id);
+			// localStorage.setItem('socketId', this.socket.id);
 		});
 		  
 		this.socket.on('disconnect', () => {
-		console.log('Disconnected from server');
+			console.log('Disconnected from server');
 		});
-		  
+		return (!!this.socket);
+	}
+
+	static async login(username: string, password: string) {
+		const res = await fetch("http://localhost:3000/login", {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				},
+			body: JSON.stringify({ username, password })
+		})
+		.then(res => {
+			if (res.ok) this.createSocket();
+			return res;
+		});
+		alert(`Login request sent, ${res}`);
+		return (res.ok);
 	}
 
 	static addChatListener(observer: (...args: any[]) => void): void {
-		if (!this.socket) {
+		if (!this.socket && !this.createSocket()) {
 			console.error('Socket not initialized. Call createSocket() first.');
 			return ;
 		}
@@ -57,7 +73,6 @@ export class AppControl {
 		if (index !== -1) {
 			this.chatObservers.splice(index, 1);
 			this.socket!.off('chat-message', observer);
-			console.log('Chat observer removed:', observer);
 		}
 	}
 
@@ -69,23 +84,24 @@ export class AppControl {
 		this.socket!.emit(event, message);
 		console.log('Chat message sent:', message);
 	}
-    // static async fetchElement(name :string): Promise<Boolean> {
-	// 	if (routes.get(name))
-	// 		return (true);
-    //     try {
-	// 		name = "/" + name.replace(/^\/+/, "");
-	// 		await import(`/pages${name}.ts`);
-
-	// 		const page :Page = routes.get(name)!;
-	// 		await Promise.all(
-	// 			page.getDependencies().map(dep => this.fetchElement(dep))
-	// 		);
-	// 		return (true);
-    //     }
-
-	// 	catch (error) {
-	// 		console.error('Error:', error);
-    //         return (false);
-    //     }
-    // }
 }
+
+// static async fetchElement(name :string): Promise<Boolean> {
+// 	if (routes.get(name))
+// 		return (true);
+//     try {
+// 		name = "/" + name.replace(/^\/+/, "");
+// 		await import(`/pages${name}.ts`);
+
+// 		const page :Page = routes.get(name)!;
+// 		await Promise.all(
+// 			page.getDependencies().map(dep => this.fetchElement(dep))
+// 		);
+// 		return (true);
+//     }
+
+// 	catch (error) {
+// 		console.error('Error:', error);
+//         return (false);
+//     }
+// }

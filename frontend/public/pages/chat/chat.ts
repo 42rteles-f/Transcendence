@@ -13,7 +13,7 @@ class Chat extends BaseComponent {
 		super("/pages/chat/chat.html");
 	}
 
-	onInit(): void {
+	override onInit(): void {
 		console.log("Chat component initialized");
 		this.sendButton.onclick = () => this.sendMessage();
 		this.chatInput.onkeydown = (e: KeyboardEvent) => {
@@ -27,7 +27,7 @@ class Chat extends BaseComponent {
 		if (!message) return ;
 
 		AppControl.sendChatMessage('chat-message', message);
-		this.addMessage("You: " + message, "outgoing");	
+		this.addMessage(message, "outgoing");
 		this.chatInput.value = '';
 	}
 
@@ -38,9 +38,16 @@ class Chat extends BaseComponent {
 		messageElement.className = `chat-message-${type}`;
 		messageElement.textContent = message;
 		this.chatMessages.appendChild(messageElement);
+
+		const maxMessages = 5;
+		while (this.chatMessages.children.length > maxMessages) {
+			this.chatMessages.removeChild(this.chatMessages.firstChild!);
+		}
+		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 	}
 
 	onDestroy(): void {
+		console.log("Chat component destroyed");
 		AppControl.removeChatListener(this.addMessage);
 		this.chatMessages.innerHTML = "";
 	}

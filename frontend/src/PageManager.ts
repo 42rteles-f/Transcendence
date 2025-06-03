@@ -22,9 +22,9 @@ export class PageManager {
 	navigate(name: string) {
 		console.log(`new ${name}`);
 		this.currentPage.forEach((page) => {
-			page.onDestroy();
 			page.remove();
 		});
+		this.currentPage = [];
 
         if (!this.load(name)) {
 			if (name != "/home") this.navigate("/home");

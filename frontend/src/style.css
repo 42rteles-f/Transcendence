@@ -33,3 +33,30 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+
+.chat-messages {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1rem;
+}
+
+/* Common styles */
+.chat-message-incoming,
+.chat-message-outgoing {
+	max-width: 70%;
+	padding: 0.5rem 1rem;
+	border-radius: 1rem;
+}
+
+/* Left-align */
+.chat-message-incoming {
+	align-self: flex-start;
+	background-color: #eee;
+}
+
+/* Right-align */
+.chat-message-outgoing {
+	align-self: flex-end;
+	background-color: #cce5ff;
+}

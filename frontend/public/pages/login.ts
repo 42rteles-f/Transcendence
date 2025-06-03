@@ -11,13 +11,23 @@ class LoginPage extends BaseComponent {
 		super("/pages/login.html");
 	}
 
-	onInit(): void {
-		this.loginForm.addEventListener("submit", (e) => {
+	onInit() {
+		this.loginForm.onsubmit = (e: Event) => {
 			e.preventDefault();
-			AppControl.createSocket();
-			routes.navigate("/home");
-			console.log("Form submitted — but not reloaded!");
-		});
+			AppControl.login("testuser", "testpassword")
+			.then((success) => {
+				if (success) {
+						AppControl.createSocket();
+						routes.navigate("/home");
+					} else {
+						alert("Login failed. Please try again.");
+					}
+				})
+				.catch((error) => {
+					console.error("Login error:", error);
+					alert("An error occurred during login. Please try again later.");
+				});
+		}
 	}
 }
 
