@@ -17,13 +17,13 @@ export class PageManager {
         this.componentMap.set(name, page);
     }
 
-	urlLoad(name: string) {
+	navigate(name: string) {
 		console.log(`new ${name}`);
 		this.currentPage.forEach(page => page?.remove());
 
         if (!this.componentMap.has(name)) {
 			console.log(`PageManager: The page ${name} does not exist`);
-			if (name != "/home") this.urlLoad("/home");
+			if (name != "/home") this.navigate("/home");
 			return ;
         }
 		this.load(name);
@@ -86,13 +86,13 @@ export class PageManager {
 	// 	return (true);
     // }
 
-    // async urlLoad(name :string) {
+    // async navigate(name :string) {
 	// 	console.log(`urload ${name}`);
 	// 	this.onScreen.forEach(page => this.unload(page));
 
     //     if (!this.pageMap.has(name) && !(await AppControl.fetchElement(name))) {
 	// 		console.log(`PageManager: The page ${name} does not exist`);
-	// 		// this.urlLoad("home");
+	// 		// this.navigate("home");
 	// 		return ;
     //     }
 	// 	this.load(name);

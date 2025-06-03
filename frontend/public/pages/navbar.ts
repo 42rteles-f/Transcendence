@@ -14,10 +14,10 @@ class Navbar extends BaseComponent {
 	}
 
 	onInit() {
-		this.homeButton.onclick = () => routes.urlLoad("/home");
-		this.navbarButton.onclick = () => routes.urlLoad("/navbar");
-		this.pongButton.onclick = () => routes.urlLoad("/pong");
-		this.loginButton.onclick = () => routes.urlLoad("/login");
+		this.homeButton.onclick = () => routes.navigate("/home");
+		this.navbarButton.onclick = () => routes.navigate("/navbar");
+		this.pongButton.onclick = () => routes.navigate("/pong");
+		this.loginButton.onclick = () => routes.navigate("/login");
 	}
 }
 

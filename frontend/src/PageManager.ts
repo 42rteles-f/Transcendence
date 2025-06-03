@@ -19,7 +19,7 @@ export class PageManager {
         this.pageMap.set(name, page);
     }
 
-	urlLoad(name: string) {
+	navigate(name: string) {
 		console.log(`new ${name}`);
 		this.currentPage.forEach((page) => {
 			page.onDestroy();
@@ -27,7 +27,7 @@ export class PageManager {
 		});
 
         if (!this.load(name)) {
-			if (name != "/home") this.urlLoad("/home");
+			if (name != "/home") this.navigate("/home");
 			return ;
         }
 		if (window.location.pathname !== name)

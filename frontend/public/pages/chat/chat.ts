@@ -24,7 +24,6 @@ class Chat extends BaseComponent {
 
 	sendMessage() {
 		const message = this.chatInput.value.trim();
-		console.log("Sending message:", message);
 		if (!message) return ;
 
 		AppControl.sendChatMessage('chat-message', message);
@@ -34,6 +33,7 @@ class Chat extends BaseComponent {
 
 	addMessage = (message: string, type?: string): void => {
 		if (type !== "outgoing") type = "incoming";
+
 		const messageElement = document.createElement("div");
 		messageElement.className = `chat-message-${type}`;
 		messageElement.textContent = message;
@@ -42,7 +42,7 @@ class Chat extends BaseComponent {
 
 	onDestroy(): void {
 		AppControl.removeChatListener(this.addMessage);
-		this.chatMessages.innerHTML = ""; // Clear messages on destroy
+		this.chatMessages.innerHTML = "";
 	}
 }
 

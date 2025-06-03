@@ -11,7 +11,7 @@ export function	warnIf(condition :Boolean, message :string) {
 
 window.addEventListener('popstate', () => {
 	console.log("app start2." + window.location.pathname);
-	routes.urlLoad(window.location.pathname);
+	routes.navigate(window.location.pathname);
 });
 
-routes.urlLoad(window.location.pathname);
+routes.navigate(window.location.pathname);

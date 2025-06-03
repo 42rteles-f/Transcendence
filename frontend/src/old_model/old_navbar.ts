@@ -6,9 +6,9 @@ console.log("executing navbar.ts");
 const navbar: Page = new Page("/navbar");
 
 navbar.addEvents(
-	{id: "home_b", type: "click", handler: () => routes.urlLoad("/home")},
-	{id: "navbar_b", type: "click", handler: () => routes.urlLoad("/navbar")},
-	{id: "pong_b", type: "click", handler: () => routes.urlLoad("/pong")},
+	{id: "home_b", type: "click", handler: () => routes.navigate("/home")},
+	{id: "navbar_b", type: "click", handler: () => routes.navigate("/navbar")},
+	{id: "pong_b", type: "click", handler: () => routes.navigate("/pong")},
 )
 .setHtmlFrom("/pages/navbar.html");
 

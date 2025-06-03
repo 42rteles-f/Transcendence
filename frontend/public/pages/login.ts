@@ -15,7 +15,7 @@ class LoginPage extends BaseComponent {
 		this.loginForm.addEventListener("submit", (e) => {
 			e.preventDefault();
 			AppControl.createSocket();
-			routes.urlLoad("/home");
+			routes.navigate("/home");
 			console.log("Form submitted — but not reloaded!");
 		});
 	}
