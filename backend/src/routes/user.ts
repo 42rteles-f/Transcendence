@@ -6,9 +6,10 @@ import { verifyCredentials } from '../middlewares/user';
 @Router()
 class UserRoutes {
 	
-	@Get(undefined, true, [])
+	@Get('profile/:id', true, [])
 	async profile(req: FastifyRequest, res: FastifyReply) {
-		res.status(200).send({ message: "getting from profile" });
+		const { status, reply } = await userController.profile(req, res);
+		res.status(status).send({ message: reply });
 	}
 
 	@Post(undefined, false, [])
@@ -26,6 +27,12 @@ class UserRoutes {
 	@Post("update", true, [verifyCredentials])
 	async updateProfile(req: FastifyRequest, res: FastifyReply) {
 		const { status, reply } = await userController.updateProfile(req, res);
+		res.status(status).send({ message: reply });
+	}
+
+	@Get("all", true, [])
+	async all(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.all(req, res);
 		res.status(status).send({ message: reply });
 	}
 

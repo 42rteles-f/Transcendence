@@ -1,32 +1,12 @@
 import fp from 'fastify-plugin';
-import type { Knex } from 'knex';
-import knex from 'knex';
+import sqlite3 from 'sqlite3';
 import { FastifyInstance } from 'fastify';
 
-declare module 'fastify' {
-  interface FastifyInstance {
-    knex: Knex;
-  }
-}
+export default fp(async (fastify: FastifyInstance, options: any) => {
+	const db = new sqlite3.Database(options.filename || '../../db/db.sqlite3');
+	fastify.decorate('sqlite', db);
 
-function knexPlugin(fastify: FastifyInstance, options: Knex.Config, done: (err?: Error) => void) {
-	if (!fastify.knex) {
-		const knexInstance = knex(options);
-	
-		knexInstance.raw('PRAGMA foreign_keys = ON;').then(() => {
-			fastify.decorate('knex', knexInstance);
-
-			fastify.addHook('onClose', (fastifyInstance, done) => {
-			if (fastifyInstance.knex === knexInstance)
-				fastifyInstance.knex.destroy().then(() => done());
-			else
-				done();
-			});
-
-			done();
-		});
-	} else
-		done();
-}
-
-export default fp(knexPlugin, { name: 'fastify-knex-sqlite' });
+	fastify.addHook('onClose', (instance, done) => {
+		db.close((err) => done(err ?? undefined));
+	});
+});

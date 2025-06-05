@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import knexPlugin from './custom-plugins/sqlite';
+import sqlitePlugin from './custom-plugins/sqlite';
 import jwt from 'jsonwebtoken';
 
 export const server = Fastify({
@@ -9,12 +9,8 @@ export const server = Fastify({
 });
 
 
-server.register(knexPlugin, {
-  client: 'sqlite3',
-  connection: {
+server.register(sqlitePlugin, {
     filename: String(process.env.DB_PATH)
-  },
-  useNullAsDefault: true
 });
 
 server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {
