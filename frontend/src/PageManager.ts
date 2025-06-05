@@ -1,10 +1,11 @@
 import { BaseComponent } from "./BaseComponent";
 type AnyBaseComponent = new (...args: any[]) => BaseComponent;
 
+export type Pointer<T> = (T | null);
 
 export class PageManager {
-    private componentMap	:Map<string, AnyBaseComponent>;
-	private currentPage: (BaseComponent | null)[];
+    private componentMap:	Map<string, AnyBaseComponent>;
+	private currentPage:	BaseComponent[];
 
     constructor() {
         this.componentMap = new Map();
@@ -36,9 +37,10 @@ export class PageManager {
 			console.log(`PageManager: Component ${name} does not exist`);
 			return (false);
         }
-		const newPage = new (this.componentMap.get(name) as any);
-		this.currentPage.push(newPage);
-		document.body.appendChild(newPage as Node);
+
+		const newComponent = new (this.componentMap.get(name) as any);
+		this.currentPage.push(newComponent);
+		document.body.appendChild(newComponent as Node);
 		return (true);
 	}
 }

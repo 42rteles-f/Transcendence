@@ -1,0 +1,23 @@
+<div class="w-80 max-h-[400px] bg-white shadow-lg rounded-xl flex flex-col">
+    
+    <!-- Messages -->
+    <div id="chatMessages" class="flex-1 p-3 overflow-y-auto border border-gray-300 text-sm space-y-2">
+      <!-- Messages will appear here -->
+    </div>
+
+    <!-- Input -->
+    <div class="flex border-black">
+      <input 
+        id="chatInput"
+        type="text"
+        placeholder="Type a message..."
+        class="flex-1 px-3 py-2 text-sm focus:outline-none"
+      />
+      <button 
+        onclick="sendMessage()"
+        class="px-4 py-2 bg-blue-600 text-black text-sm hover:bg-blue-700 transition"
+      >
+        Send
+      </button>
+    </div>
+  </div>
