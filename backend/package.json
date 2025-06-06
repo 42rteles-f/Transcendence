@@ -9,6 +9,7 @@
 		"migrate": "node ./migrations/migrate.js"
 	},
 	"dependencies": {
+		"@fastify/cors": "^11.0.1",
 		"bcrypt": "^6.0.0",
 		"fastify": "^5.3.1",
 		"fastify-plugin": "^5.0.1",

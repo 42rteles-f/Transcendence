@@ -2,12 +2,18 @@ import Fastify from 'fastify';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import sqlitePlugin from './custom-plugins/sqlite';
 import jwt from 'jsonwebtoken';
+import cors from '@fastify/cors';
 
 export const server = Fastify({
 	logger: false,
 	bodyLimit: 1048576
 });
 
+
+server.register(cors, {
+	origin: "http://localhost:5173",
+	credentials: true,
+});
 
 server.register(sqlitePlugin, {
     filename: String(process.env.DB_PATH)
