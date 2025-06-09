@@ -15,18 +15,18 @@ class LoginPage extends BaseComponent {
 		this.loginForm.onsubmit = (e: Event) => {
 			e.preventDefault();
 			AppControl.login("testuser", "testpassword")
-			.then((success) => {
-				if (success) {
-						AppControl.createSocket();
-						routes.navigate("/home");
-					} else {
-						alert("Login failed. Please try again.");
-					}
-				})
-				.catch((error) => {
-					console.error("Login error:", error);
-					alert("An error occurred during login. Please try again later.");
-				});
+				.then((success) => {
+					if (success) {
+							AppControl.createSocket();
+							routes.navigate("/home");
+						} else {
+							alert("Login failed. Please try again.");
+						}
+					})
+					.catch((error) => {
+						console.error("Login error:", error);
+						alert("An error occurred during login. Please try again later.");
+					});
 		}
 	}
 }

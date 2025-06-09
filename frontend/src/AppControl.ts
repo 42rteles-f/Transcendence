@@ -49,9 +49,9 @@ export class AppControl {
 		})
 		.then(res => {
 			if (res.ok) this.createSocket();
-			return res;
+			return res.json();
 		});
-		alert(`Login request sent, ${res}`);
+		alert(`Login request sent, ${res.message!}`);
 		return (res.ok);
 	}
 

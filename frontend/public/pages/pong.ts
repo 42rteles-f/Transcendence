@@ -8,10 +8,6 @@ class PongGame extends BaseComponent {
 	}
 
 	onInit() {
-		this.addEvents(
-			{id: "test_id", type: "click", handler: () => console.log("Button clicked!") }
-		);
-
 		const canvas = this.querySelector("#pong-canvas") as HTMLCanvasElement;
 		const ctx = canvas.getContext("2d")!;
 		let x = canvas.width / 2;

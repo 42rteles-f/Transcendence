@@ -9,6 +9,8 @@ class Chat extends BaseComponent {
 	private chatInput!: HTMLInputElement;
 	private sendButton!: HTMLButtonElement;
 
+	public	messageLimit: number = 5;
+
 	constructor() {
 		super("/pages/chat/chat.html");
 	}
@@ -39,19 +41,18 @@ class Chat extends BaseComponent {
 		messageElement.textContent = message;
 		this.chatMessages.appendChild(messageElement);
 
-		const maxMessages = 5;
-		while (this.chatMessages.children.length > maxMessages) {
+		while (this.chatMessages.children.length > this.messageLimit)
 			this.chatMessages.removeChild(this.chatMessages.firstChild!);
-		}
+
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 	}
 
 	onDestroy(): void {
-		console.log("Chat component destroyed");
 		AppControl.removeChatListener(this.addMessage);
 		this.chatMessages.innerHTML = "";
 	}
 }
 
 customElements.define("chat-component", Chat);
-routes.register("/chat", Chat);
+
+export { Chat };
