@@ -64,6 +64,6 @@ import "./socket/setup";
 import loginRoutes from './routes/login';
 server.register(loginRoutes);
 
-const port = Number(process.env.PORT);
+const port = Number(process.env.PORT) || 3000;
 
 start(port);
