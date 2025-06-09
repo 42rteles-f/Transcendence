@@ -1,42 +1,48 @@
 import Fastify from 'fastify';
-import FastifyPostgres from '@fastify/postgres';
-import cors from '@fastify/cors';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+import sqlitePlugin from './custom-plugins/sqlite';
+import jwt from 'jsonwebtoken';
 
 export const server = Fastify({
 	logger: false,
 	bodyLimit: 1048576
 });
 
-server.register(cors, {
-	origin: true
+
+server.register(sqlitePlugin, {
+    filename: String(process.env.DB_PATH)
 });
 
-server.register(FastifyPostgres, {
-	host: process.env.DB_HOST,
-	port: Number(process.env.DB_PORT),
-	database: process.env.DB_NAME,
-	user: process.env.USER,
-	password: process.env.PASSWORD,
-}).after((err) => {
-	if (err) {
-		server.log.error(err);
-		process.exit(1);
-	} else {
-		server.log.info('Postgres connected');
-	}
-});
-
-server.decorate('authenticate', async function (request: any, reply: any) {
-	// const authHeader = request.headers['authorization']
+server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {
+	const authHeader = req.headers['authorization'];
   
-	// if (!authHeader || authHeader !== 'Bearer secrettoken123') {
-	//   reply.code(401).send({ error: 'Unauthorized' })
-	// }
+	if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		res.status(401).send({ error: 'Unauthorized' })
+		return ;
+	}
+
+	const token = authHeader.substring(7);
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+		if (typeof decoded === "object" &&
+			decoded !== null &&
+			"id" in decoded &&
+			"username" in decoded &&
+			typeof decoded.id === "number" &&
+			typeof decoded.username === "string")
+				(req as any).user = decoded as { id: number, username: string }
+		else {
+			res.status(401).send({ error: 'Unauthorized' })
+			return ;
+		}
+	} catch (err) {
+		res.status(401).send({ error: 'Unauthorized' });
+		return ;
+	}
 });
 
 
 server.get("/", async (req, res) => {
-	console.log("root being hit");
 	res.send({ ok: true });
 });
 
@@ -58,7 +64,6 @@ import "./socket/setup";
 import loginRoutes from './routes/login';
 server.register(loginRoutes);
 
-const port = 3000;
-// const port = Number(process.env.PORT);
+const port = Number(process.env.PORT);
 
 start(port);

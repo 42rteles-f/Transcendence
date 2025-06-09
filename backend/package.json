@@ -4,7 +4,9 @@
 		"build": "tsc -p tsconfig.json",
 		"start": "node ./dest/index.js",
 		"dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' ./src/index.ts",
-		"clear": "rm -rf ./dest"
+		"clear": "rm -rf ./dest",
+		"prune": "npm run clear && rm -rf ./node_modules ./package-lock.json",
+		"migrate": "node ./migrations/migrate.js"
 	},
 	"dependencies": {
 		"@fastify/cors": "^11.0.1",
@@ -14,15 +16,19 @@
 		"fastify-cors": "^6.0.3",
 		"jsonwebtoken": "^9.0.2",
 		"pg": "^8.16.0",
-		"socket.io": "^4.8.1"
+		"socket.io": "^4.8.1",
+		"fastify-plugin": "^5.0.1",
+		"sqlite3": "^5.1.7"
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^5.0.2",
 		"@types/jsonwebtoken": "^9.0.9",
-		"@types/node": "^22.14.1",
 		"@types/socket.io": "^3.0.1",
+		"@types/ms": "^2.1.0",
+		"@types/node": "^22.15.23",
+		"@types/pg": "^8.15.2",
 		"nodemon": "^3.0.1",
-		"ts-node": "^10.9.1",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.8.3"
 	}
 }
