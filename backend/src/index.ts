@@ -1,9 +1,14 @@
 import Fastify from 'fastify';
 import FastifyPostgres from '@fastify/postgres';
+import cors from '@fastify/cors';
 
 export const server = Fastify({
 	logger: false,
 	bodyLimit: 1048576
+});
+
+server.register(cors, {
+	origin: true
 });
 
 server.register(FastifyPostgres, {
@@ -44,10 +49,16 @@ const start = async (port: number) => {
 		server.log.error(err);
 	}
 };
+const httpServer = server.server;
+
+export { httpServer };
 
 import "./routes/user";
+import "./socket/setup";
+import loginRoutes from './routes/login';
+server.register(loginRoutes);
 
-
-const port = Number(process.env.PORT);
+const port = 3000;
+// const port = Number(process.env.PORT);
 
 start(port);
