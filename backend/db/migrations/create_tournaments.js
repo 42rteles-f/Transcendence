@@ -1,9 +1,5 @@
-const sqlite3 = require('sqlite3').verbose();
-
-const db = new sqlite3.Database('./db/db.sqlite3');
-
-db.serialize(() => {
-  db.run(`
+module.exports.up = function(db, cb) {
+  return db.run(`
 	CREATE TABLE IF NOT EXISTS tournaments (
 	  id INTEGER PRIMARY KEY AUTOINCREMENT,
 	  name VARCHAR(100) NOT NULL,
@@ -12,7 +8,9 @@ db.serialize(() => {
 	  winner INTEGER,
 	  FOREIGN KEY(winner) REFERENCES users(id)
 	)
-  `);
-});
+  `, cb);
+};
 
-db.close();
+module.exports.down = function(db, cb) {
+  return db.run(`DROP TABLE IF EXISTS tournaments`, cb);
+};

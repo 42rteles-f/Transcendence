@@ -3,10 +3,12 @@
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
 		"start": "node ./dest/index.js",
-		"dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' ./src/index.ts",
+		"dev": "npm run migrate && npm run watch",
+		"watch": "nodemon --watch './src/**/*.ts' --exec 'ts-node' ./src/index.ts",
 		"clear": "rm -rf ./dest",
-		"prune": "npm run clear && rm -rf ./node_modules ./package-lock.json && pwd",
-		"migrate": "node ./migrations/users.js ./migrations/games.js ./migrations/tournaments.js ./migrations/tournaments_games.js ./migrations/tournaments_players.js"
+		"prune": "npm run clear && rm -rf ./node_modules ./package-lock.json ./db/db.sqlite3",
+		"re": "npm run prune && npm install && npm run dev",
+		"migrate": "node ./db/migrate.js"
 	},
 	"dependencies": {
 		"@fastify/cors": "^11.0.1",
