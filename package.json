@@ -1,0 +1,7 @@
+{
+	"scripts": {
+		"start": "docker compose up -d",
+		"stop": "docker compose down",
+		"re": "npm run stop && docker compose run backend npm run re"
+	}
+}
