@@ -8,6 +8,7 @@ declare module 'fastify' {
     sqlite: Database;
   }
 }
+
 class UserController {
 	constructor () {
 	}

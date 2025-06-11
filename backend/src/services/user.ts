@@ -9,7 +9,7 @@ export default class UserService {
 	constructor (db: Database) {
 		this.db = new UserDatabase(db);
 	}
-	
+
 	async register(username: string, nickname: string, password: string): Promise<IResponse> {
 		return (await this.db.register(username, nickname, password));
 	}

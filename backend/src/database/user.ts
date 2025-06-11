@@ -53,7 +53,6 @@ export default class UserDatabase {
             const user = await this.getAsync('SELECT id, username FROM users WHERE username = ?', [username]);
             if (!user)
                 throw new Error("User creation failed");
-
             const token = jwt.sign(
                 { id: user.id, username: user.username },
                 process.env.JWT_SECRET!,
@@ -69,16 +68,23 @@ export default class UserDatabase {
 
     async login(username: string, password: string): Promise<IResponse> {
         try {
+			console.log("Login attempt for user:", username);
             const user = await this.getAsync('SELECT * FROM users WHERE username = ?', [username]);
             if (!user)
                 throw new Error("Invalid credentials");
-            const match = await bcrypt.compare(password, user.password);
+			console.log("found user:", username);
+
+            // const match = await bcrypt.compare(password, user.password);
+            const match = (password === user.password);
             if (!match)
                 throw new Error("Invalid credentials");
+			console.log(`secret: ${process.env.JWT_SECRET}`);
+
             const token = jwt.sign(
                 { id: user.id, username: user.username },
                 process.env.JWT_SECRET!,
-                { expiresIn: Number(process.env.JWT_EXPIRATION) }
+                // { expiresIn: Number(process.env.JWT_EXPIRATION) }
+                { expiresIn: "1h" }
             );
             return { status: 200, reply: token };
         } catch (error) {

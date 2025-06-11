@@ -1,4 +1,3 @@
-import { routes } from "../../../src/routes"
 import { BaseComponent } from "../../../src/BaseComponent";
 import { AppControl } from "../../../src/AppControl";
 

@@ -1,15 +1,16 @@
 import { io, Socket } from 'socket.io-client';
 import { Pointer } from './PageManager';
+import { jwtDecode } from "jwt-decode";
 
 export class AppControl {
-	private	static socket: Pointer<Socket> = null;
-	private static chatObservers: Function[] = [];
+	private	static socket:			Pointer<Socket> = null;
+	private static chatObservers:	Function[] = [];
 
 	constructor() {}
 
     static getCookie(name :string) {
         let cookieValue :string = "";
-    
+
         if (document.cookie && document.cookie !== '')
         {
             const cookies = document.cookie.split(';');
@@ -39,8 +40,26 @@ export class AppControl {
 		return (!!this.socket);
 	}
 
+	static getValidDecodedToken() {
+		const token = localStorage.getItem("authToken");
+		if (!token) return (null);
+
+		try {
+			const decoded = jwtDecode(token);
+			const now = Math.floor(Date.now() / 1000);
+			if (decoded.exp! < now) {
+				localStorage.removeItem("authToken");
+				return (null);
+			}
+			return (decoded);
+		} catch {
+			localStorage.removeItem("authToken");
+			return (null);
+		}
+	}
+
 	static async login(username: string, password: string) {
-		const res = await fetch("http://localhost:3000/login", {
+		const res = await fetch("http://localhost:3000/user/login", {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
@@ -48,10 +67,13 @@ export class AppControl {
 			body: JSON.stringify({ username, password })
 		})
 		.then(res => {
-			if (res.ok) this.createSocket();
-			return res.json();
+			if (!res.ok){
+				throw new Error(`Login failed: ${res.status} ${res.statusText}`);
+			}
+			return (res.json());
 		});
-		alert(`Login request sent, ${res.message!}`);
+		this.createSocket();
+		localStorage.setItem("authToken", res.message);
 		return (res.ok);
 	}
 
