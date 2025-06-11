@@ -1,29 +1,33 @@
 import { BaseComponent } from "./BaseComponent";
+
 type AnyBaseComponent = new (...args: any[]) => BaseComponent;
 
 export type Pointer<T> = (T | null);
 
 export class PageManager {
-    private componentMap:	Map<string, AnyBaseComponent>;
+    private pageMap:	Map<string, AnyBaseComponent>;
 	private currentPage:	BaseComponent[];
 
     constructor() {
-        this.componentMap = new Map();
+        this.pageMap = new Map();
 		this.currentPage = [];
     }
 
-    registerPage(name: string, page: typeof BaseComponent) {
-		if (this.componentMap.has(name)) return ;
+    register(name: string, page: AnyBaseComponent) {
+		if (this.pageMap.has(name)) return ;
 
-        this.componentMap.set(name, page);
+        this.pageMap.set(name, page);
     }
 
-	urlLoad(name: string) {
+	navigate(name: string) {
 		console.log(`new ${name}`);
-		this.currentPage.forEach(page => page?.remove());
+		this.currentPage.forEach((page) => {
+			page.remove();
+		});
+		this.currentPage = [];
 
         if (!this.load(name)) {
-			if (name != "/home") this.urlLoad("/home");
+			if (name != "/home") this.navigate("/home");
 			return ;
         }
 		if (window.location.pathname !== name)
@@ -33,12 +37,12 @@ export class PageManager {
 	load(name: string): Boolean {
 		console.log(`load ${name}`);
 
-        if (!this.componentMap.has(name)) {
+        if (!this.pageMap.has(name)) {
 			console.log(`PageManager: Component ${name} does not exist`);
 			return (false);
         }
 
-		const newComponent = new (this.componentMap.get(name) as any);
+		const newComponent = new (this.pageMap.get(name) as any);
 		this.currentPage.push(newComponent);
 		document.body.appendChild(newComponent as Node);
 		return (true);

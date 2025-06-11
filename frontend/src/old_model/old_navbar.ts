@@ -1,4 +1,4 @@
-import { views } from "../views"
+import { routes } from "../routes"
 import { Page } from "../../src/Page";
 
 console.log("executing navbar.ts");
@@ -6,15 +6,15 @@ console.log("executing navbar.ts");
 const navbar: Page = new Page("/navbar");
 
 navbar.addEvents(
-	{id: "home_b", type: "click", handler: () => views.urlLoad("/home")},
-	{id: "navbar_b", type: "click", handler: () => views.urlLoad("/navbar")},
-	{id: "pong_b", type: "click", handler: () => views.urlLoad("/pong")},
+	{id: "home_b", type: "click", handler: () => routes.navigate("/home")},
+	{id: "navbar_b", type: "click", handler: () => routes.navigate("/navbar")},
+	{id: "pong_b", type: "click", handler: () => routes.navigate("/pong")},
 )
 .setHtmlFrom("/pages/navbar.html");
 
-views.registerPage("/navbar", navbar);
+routes.register("/navbar", navbar);
 
-// views.registerView("navbar", () => new HomePage);
+// routes.registerView("navbar", () => new HomePage);
 
 
 // const templates = new Map<string, string>();

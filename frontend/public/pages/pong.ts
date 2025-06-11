@@ -1,7 +1,6 @@
-import { views } from "../../src/views";
 import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing pong copy");
+console.log("executing PongGame");
 
 class PongGame extends BaseComponent {
 	constructor() {
@@ -9,10 +8,6 @@ class PongGame extends BaseComponent {
 	}
 
 	onInit() {
-		this.addEvents(
-			{id: "test_id", type: "click", handler: () => console.log("Button clicked!") }
-		);
-
 		const canvas = this.querySelector("#pong-canvas") as HTMLCanvasElement;
 		const ctx = canvas.getContext("2d")!;
 		let x = canvas.width / 2;
@@ -43,6 +38,5 @@ class PongGame extends BaseComponent {
 }
 
 customElements.define("pong-game", PongGame);
-views.registerPage("/pong", PongGame);
 
-
+export { PongGame };

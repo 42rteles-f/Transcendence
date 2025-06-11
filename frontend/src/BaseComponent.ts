@@ -7,29 +7,35 @@ type EventInfo = {
 };
 
 export class BaseComponent extends HTMLElement {
-    private eventInfo			:EventInfo[];
+    private eventInfo	:EventInfo[];
+	public name			:string;
 
 	constructor(name: string) {
 		super();
 		this.eventInfo = [];
-
-		if (templates.has(name)) {
-			this.innerHTML = templates.get(name)!;
-			this.bindElements();
-			this.onInit();
-		} else {
-			fetch(name)
-				.then(res => res.text())
-				.then(html => {
-					this.innerHTML = html;
-					templates.set(name, html);
-					this.bindElements();
-					this.onInit();
-				});
-		}
+		this.name = name;
 	}
 
 	onInit() {}
+
+	async connectedCallback() {
+		let html: string;
+
+		if (templates.has(this.name)) {
+			html = templates.get(this.name)!;
+		} else {
+			html = await fetch(this.name).then(res => res.text());
+			templates.set(this.name, html);
+		}
+
+		this.innerHTML = html;
+		this.bindElements();
+		this.onInit();
+	}
+
+	disconnectedCallback() {
+		this.onDestroy();
+	}
 
 	getElementById(id: string) {
 		return (this.querySelector(`#${id}`) as HTMLElement);
@@ -45,13 +51,15 @@ export class BaseComponent extends HTMLElement {
     }
 
 	private bindElements() {
-		const elements = this.querySelectorAll<HTMLElement>('[id]');
+		const elements = this.querySelectorAll<HTMLElement>('[data-ref]');
 		elements.forEach(el => {
-			if (el.id) {
-				(this as any)[el.id] = el;
-			}
+			if (el.dataset?.ref) {
+				(this as any)[el.dataset.ref] = el;
+			}	
 		});
 	}
+
+	onDestroy(): void {}
 	
 }
 
