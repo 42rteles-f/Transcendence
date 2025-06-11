@@ -23,10 +23,6 @@ server.register(sqlitePlugin, {
     filename: String('./db/db.sqlite3'),
 });
 
-server.register(cors, {
-	origin: true
-});
-
 server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {
 	const authHeader = req.headers['authorization'];
   

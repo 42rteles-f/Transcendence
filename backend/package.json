@@ -5,8 +5,8 @@
 		"start": "node ./dest/index.js",
 		"dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' ./src/index.ts",
 		"clear": "rm -rf ./dest",
-		"prune": "npm run clear && rm -rf ./node_modules ./package-lock.json",
-		"migrate": "node ./migrations/migrate.js"
+		"prune": "npm run clear && rm -rf ./node_modules ./package-lock.json && pwd",
+		"migrate": "node ./migrations/users.js ./migrations/games.js ./migrations/tournaments.js ./migrations/tournaments_games.js ./migrations/tournaments_players.js"
 	},
 	"dependencies": {
 		"@fastify/cors": "^11.0.1",
