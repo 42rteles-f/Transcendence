@@ -10,17 +10,9 @@ class HomePage extends BaseComponent {
 
 	constructor() {
 		super("/pages/home.html");
-
-		customElements.whenDefined('chat-component').then(() => {
-			// console.log(`Chat component is defined (((${this.chatRef.messageLimit})))`);
-			this.chatRef.messageLimit = 10;
-		});
 	}
 
-
-
-	onInit(): void {
-	}
+	onInit(): void {}
 }
 
 customElements.define("home-page", HomePage);

@@ -1,4 +1,5 @@
 import { BaseComponent } from "./BaseComponent";
+import { AppControl } from "./AppControl";
 
 type AnyBaseComponent = new (...args: any[]) => BaseComponent;
 
@@ -20,6 +21,11 @@ export class PageManager {
     }
 
 	navigate(name: string) {
+		if (!AppControl.getValidDecodedToken() && name != "/login") {
+			this.navigate("/login");
+			return ;
+		}
+
 		console.log(`new ${name}`);
 		this.currentPage.forEach((page) => {
 			page.remove();

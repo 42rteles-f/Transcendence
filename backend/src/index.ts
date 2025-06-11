@@ -2,15 +2,23 @@ import Fastify from 'fastify';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import sqlitePlugin from './custom-plugins/sqlite';
 import jwt from 'jsonwebtoken';
+import cors from '@fastify/cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const server = Fastify({
 	logger: false,
 	bodyLimit: 1048576
 });
 
-
+console.log("DB_PATH:", process.env.DB_PATH);
 server.register(sqlitePlugin, {
-    filename: String(process.env.DB_PATH)
+    filename: String('./db/db.sqlite3'),
+});
+
+server.register(cors, {
+	origin: true
 });
 
 server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {
