@@ -27,7 +27,7 @@ export class AppControl {
     }
 
 	static createSocket(): boolean {
-		this.socket = io("http://localhost:3000");
+		this.socket = io("http://localhost:3001");
 
 		this.socket.on('connect', () => {
 			console.log('Connected to server!', this.socket!.id);
@@ -59,21 +59,37 @@ export class AppControl {
 	}
 
 	static async login(username: string, password: string) {
-		const res = await fetch("http://localhost:3000/user/login", {
+		const res = await fetch("http://localhost:3001/user/login", {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
 				},
 			body: JSON.stringify({ username, password })
-		})
-		.then(res => {
-			if (!res.ok){
-				throw new Error(`Login failed: ${res.status} ${res.statusText}`);
-			}
-			return (res.json());
 		});
+		const data = await res.json();
+		if (!res.ok)
+			throw new Error(`Login failed: ${res.status} ${data.message}`);
 		this.createSocket();
-		localStorage.setItem("authToken", res.message);
+		localStorage.setItem("authToken", data.message);
+		return (res.ok);
+	}
+
+	static async register(username: string, nickname: string, password: string) {
+		// console.log(`coming from AppControl.register: ${username} ${password}`);
+		// console.log(`${JSON.stringify({username, password})}`);
+		const res = await fetch("http://localhost:3001/user/register", {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				},
+			body: JSON.stringify({ username, nickname, password })
+		});
+		const data = await res.json();
+		// console.log("Register response:", data);
+		if (!res.ok)
+			throw new Error(`Register failed: ${res.status} ${data.message}`);
+		this.createSocket();
+		localStorage.setItem("authToken", data.message);
 		return (res.ok);
 	}
 

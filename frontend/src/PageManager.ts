@@ -21,7 +21,7 @@ export class PageManager {
     }
 
 	navigate(name: string) {
-		if (!AppControl.getValidDecodedToken() && name != "/login") {
+		if (!AppControl.getValidDecodedToken() && name != "/login" && name != "/register") {
 			this.navigate("/login");
 			return ;
 		}
