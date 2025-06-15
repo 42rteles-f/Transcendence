@@ -93,6 +93,35 @@ export class AppControl {
 		return (res.ok);
 	}
 
+	static async getProfile(id: string | number | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const res = await fetch(`http://localhost:3001/user/profile/${id}`, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		const data = await res.json();
+		if (!res.ok)
+			throw new Error(`Get profile failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async logout(): Promise<void> {
+		const token = localStorage.getItem("authToken");
+		if (!token) {
+			console.error('No token found. Cannot logout.');
+			return;
+		}
+		localStorage.removeItem("authToken");
+		if (this.socket) {
+			this.socket.disconnect();
+			this.socket = null;
+		}
+		console.log('Logged out successfully');
+	}
+
 	static addChatListener(observer: (...args: any[]) => void): void {
 		if (!this.socket && !this.createSocket()) {
 			console.error('Socket not initialized. Call createSocket() first.');
