@@ -9,6 +9,7 @@ class Navbar extends BaseComponent {
 	private pongButton!: HTMLButtonElement;
 	private loginButton!: HTMLButtonElement;
 	private profileButton!: HTMLButtonElement;
+	private ticTacToeButton!: HTMLButtonElement;
 
 	constructor() {
 		super("/pages/navbar.html");
@@ -20,6 +21,7 @@ class Navbar extends BaseComponent {
 		this.pongButton.onclick = () => routes.navigate("/pong");
 		this.loginButton.onclick = () => routes.navigate("/login");
 		this.profileButton.onclick = () => routes.navigate("/profile/me");
+		this.ticTacToeButton.onclick = () => routes.navigate("/tic-tac-toe");
 	}
 }
 
