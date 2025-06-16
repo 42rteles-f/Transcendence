@@ -9,7 +9,9 @@
 		"re": "npm run prune && npm install && npm run down && npm run up && npm run dev",
 		"migrate": "node ./db/migrate.js",
 		"up": "node ./db/migrate.js up",
-		"down": "node ./db/migrate.js down"
+		"down": "node ./db/migrate.js down",
+		"games": "node ./db/mocks/insert_games.js",
+		"users": "node ./db/mocks/insert_users.js"
 	},
 	"dependencies": {
 		"@fastify/cors": "^11.0.1",
