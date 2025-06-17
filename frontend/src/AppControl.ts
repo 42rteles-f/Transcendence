@@ -27,7 +27,8 @@ export class AppControl {
     }
 
 	static createSocket(): boolean {
-		this.socket = io("http://localhost:3000");
+		const apiUrl = import.meta.env.API_URL || "http://localhost:3001";
+		this.socket = io(apiUrl);
 
 		this.socket.on('connect', () => {
 			console.log('Connected to server!', this.socket!.id);
@@ -59,22 +60,85 @@ export class AppControl {
 	}
 
 	static async login(username: string, password: string) {
-		const res = await fetch("http://localhost:3000/user/login", {
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "login") || "http://localhost:3001/user/login";
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
 				},
 			body: JSON.stringify({ username, password })
-		})
-		.then(res => {
-			if (!res.ok){
-				throw new Error(`Login failed: ${res.status} ${res.statusText}`);
-			}
-			return (res.json());
 		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Login failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Login failed: ${res.status} ${data.message}`);
 		this.createSocket();
-		localStorage.setItem("authToken", res.message);
+		localStorage.setItem("authToken", data.message);
 		return (res.ok);
+	}
+
+	static async register(username: string, nickname: string, password: string) {
+		// console.log(`coming from AppControl.register: ${username} ${password}`);
+		// console.log(`${JSON.stringify({username, password})}`);
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "register") || "http://localhost:3001/user/register";
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				},
+			body: JSON.stringify({ username, nickname, password })
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Register failed: ${error}`);
+		}
+		// console.log("Register response:", data);
+		if (!res.ok)
+			throw new Error(`Register failed: ${res.status} ${data.message}`);
+		this.createSocket();
+		localStorage.setItem("authToken", data.message);
+		return (res.ok);
+	}
+
+	static async getProfile(id: string | number | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `profile/${id}`) || `http://localhost:3001/user/profile/${id}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get profile failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get profile failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async logout(): Promise<void> {
+		const token = localStorage.getItem("authToken");
+		if (!token) {
+			console.error('No token found. Cannot logout.');
+			return;
+		}
+		localStorage.removeItem("authToken");
+		if (this.socket) {
+			this.socket.disconnect();
+			this.socket = null;
+		}
+		console.log('Logged out successfully');
 	}
 
 	static addChatListener(observer: (...args: any[]) => void): void {

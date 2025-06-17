@@ -74,8 +74,7 @@ export default class UserDatabase {
                 throw new Error("Invalid credentials");
 			console.log("found user:", username);
 
-            // const match = await bcrypt.compare(password, user.password);
-            const match = (password === user.password);
+            const match = await bcrypt.compare(password, user.password);
             if (!match)
                 throw new Error("Invalid credentials");
 			console.log(`secret: ${process.env.JWT_SECRET}`);
@@ -126,7 +125,13 @@ export default class UserDatabase {
 
     async all(): Promise<IResponse> {
         try {
-            const users = await this.allAsync('SELECT username, nickname FROM users');
+            const users = await this.allAsync(`SELECT u.username, 
+													  u.nickname,
+													  COUNT(g.id) AS games_played
+												 FROM users u
+												 LEFT JOIN games g ON u.id = g.player1 OR u.id = g.player2
+												GROUP BY u.id
+												ORDER BY games_played DESC`);
             return { status: 200, reply: users };
         } catch (error) {
             if (error instanceof Error)

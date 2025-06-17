@@ -12,13 +12,15 @@ export const server = Fastify({
 	bodyLimit: 1048576
 });
 
+
+server.register(cors, {
+	origin: "http://localhost:5173",
+	credentials: true,
+});
+
 console.log("DB_PATH:", process.env.DB_PATH);
 server.register(sqlitePlugin, {
     filename: String('./db/db.sqlite3'),
-});
-
-server.register(cors, {
-	origin: true
 });
 
 server.decorate('authenticate', async function (req: FastifyRequest, res: FastifyReply) {

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+	"prune": "rm -rf node_modules && rm -rf package-lock.json && npm cache clean --force",
+	"re": "npm run prune && npm install && npm run build"
   },
   "devDependencies": {
     "typescript": "~5.7.2",

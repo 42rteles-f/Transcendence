@@ -8,6 +8,7 @@ class LoginPage extends BaseComponent {
 	private loginForm!: HTMLFormElement;
 	private userInput!: HTMLInputElement;
 	private passInput!: HTMLInputElement;
+	private createAccount!: HTMLButtonElement;
 
 	constructor() {
 		super("/pages/login.html");
@@ -15,6 +16,7 @@ class LoginPage extends BaseComponent {
 
 	onInit() {
 		this.loginForm.onsubmit = (e: Event) => { this.login(e); };
+		this.createAccount.onclick = (e: Event) => { this.createAccountClicked(e); };
 	}
 
 	login(e: Event) {
@@ -29,10 +31,16 @@ class LoginPage extends BaseComponent {
 		})
 		.catch((error) => {
 			console.error("Login error:", error);
-			alert("An error occurred during login. Please try again later.");
+			alert(error.message);
 		});
 	}
+
+	createAccountClicked(e: Event) {
+		e.preventDefault();
+		routes.navigate("/register");
+	}
 }
+
 
 customElements.define("login-page", LoginPage);
 

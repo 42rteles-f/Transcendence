@@ -22,8 +22,24 @@ export class PageManager {
     }
 
 	navigate(name: string) {
-		if (!AppControl.getValidDecodedToken() && name != "/login") {
+		let routeName = name;
+		let param: string | null = null;
+
+		if (name.startsWith("/profile/")) {
+			routeName = "/profile";
+			param = name.split("/")[2] || null;
+		}
+
+		if (!AppControl.getValidDecodedToken()
+			&& routeName != "/login"
+			&& routeName != "/register"){
 			this.navigate("/login");
+			return ;
+		}
+
+		if (AppControl.getValidDecodedToken()
+			&& (routeName == "/login" || routeName == "/register")) {
+			this.navigate("/home");
 			return ;
 		}
 
@@ -33,15 +49,15 @@ export class PageManager {
 		});
 		this.currentPage = [];
 
-        if (!this.load(name)) {
-			if (name != "/home") this.navigate("/home");
+        if (!this.load(routeName, param)) {
+			if (routeName != "/home") this.navigate("/home");
 			return ;
         }
 		if (window.location.pathname !== name)
 			history.pushState({name: name}, '', name);
 	}
 
-	load(name: string): Boolean {
+	load(name: string, param?: string | null): Boolean {
 		console.log(`load ${name}`);
 
         if (!this.pageMap.has(name)) {
@@ -49,7 +65,7 @@ export class PageManager {
 			return (false);
         }
 
-		const newComponent = new (this.pageMap.get(name) as any);
+		const newComponent = new (this.pageMap.get(name) as any)(param);
 		this.currentPage.push(newComponent);
 		document.body.appendChild(newComponent as Node);
 		return (true);
