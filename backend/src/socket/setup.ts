@@ -42,3 +42,4 @@ const io = new Server(httpServer, {
 		console.log('Client disconnected:', socket.id);
 	});
 });
+

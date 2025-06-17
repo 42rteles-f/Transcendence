@@ -1,5 +1,6 @@
 import { BaseComponent } from "./BaseComponent";
 import { AppControl } from "./AppControl";
+import { Page } from "./Page";
 
 type AnyBaseComponent = new (...args: any[]) => BaseComponent;
 

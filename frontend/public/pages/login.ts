@@ -5,7 +5,7 @@ import { routes } from "../../src/routes";
 console.log("executing LoginPage.ts");
 
 class LoginPage extends BaseComponent {
-	private loginForm!: HTMLButtonElement;
+	private loginForm!: HTMLFormElement;
 	private userInput!: HTMLInputElement;
 	private passInput!: HTMLInputElement;
 
