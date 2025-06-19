@@ -56,7 +56,7 @@ export default class UserDatabase {
             const token = jwt.sign(
                 { id: user.id, username: user.username },
                 process.env.JWT_SECRET!,
-                { expiresIn: Number(process.env.JWT_EXPIRATION) }
+                { expiresIn: "1h" /* Number(process.env.JWT_EXPIRATION) */ }
             );
             return { status: 200, reply: token };
         } catch (error) {

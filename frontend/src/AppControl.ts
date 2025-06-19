@@ -27,7 +27,7 @@ export class AppControl {
     }
 
 	static createSocket(): boolean {
-		const apiUrl = import.meta.env.API_URL || "http://localhost:3001";
+		const apiUrl = import.meta.env.API_URL || "http://localhost:3000";
 		this.socket = io(apiUrl);
 
 		this.socket.on('connect', () => {
@@ -60,7 +60,7 @@ export class AppControl {
 	}
 
 	static async login(username: string, password: string) {
-		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "login") || "http://localhost:3001/user/login";
+		const userApiUrl = /* (import.meta.env.VITE_USER_API_URL + "login") || */ "http://localhost:3000/user/login";
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "POST",
@@ -84,8 +84,9 @@ export class AppControl {
 	static async register(username: string, nickname: string, password: string) {
 		// console.log(`coming from AppControl.register: ${username} ${password}`);
 		// console.log(`${JSON.stringify({username, password})}`);
-		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "register") || "http://localhost:3001/user/register";
+		const userApiUrl = /* (import.meta.env.VITE_USER_API_URL + "register") ||  */"http://localhost:3000/user/register";
 		let data = {} as { message: any };
+		console.log(`username, nickname, password: ${username}, ${nickname}, ${password}`);
 		const res = await fetch(userApiUrl, {
 			method: "POST",
 			headers: {
@@ -108,7 +109,7 @@ export class AppControl {
 
 	static async getProfile(id: string | number | null): Promise<any> {
 		const token = localStorage.getItem("authToken");
-		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `profile/${id}`) || `http://localhost:3001/user/profile/${id}`;
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `profile/${id}`) || `http://localhost:3000/user/profile/${id}`;
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "GET",
