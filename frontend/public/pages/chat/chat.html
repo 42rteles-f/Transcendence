@@ -1,5 +1,11 @@
 <div class="w-80 max-h-[400px] bg-white shadow-lg rounded-xl flex flex-col">
   <!-- Messages -->
+  <div class="fixed top-4 right-4 bg-white shadow-lg rounded-2xl p-4">
+    <h2 class="text-xl font-semibold mb-4">Connected Clients</h2>
+    <ul data-ref="clientList" class="flex flex-col gap-2"></ul>
+  </div>
+
+  <div data-ref="chatName"></div>
   <div
     data-ref="chatMessages"
     class="chat-messages flex-1 p-3 overflow-y-auto border border-gray-300 text-sm space-y-2"

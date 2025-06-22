@@ -7,6 +7,8 @@ class Chat extends BaseComponent {
 	private chatMessages!: HTMLDivElement;
 	private chatInput!: HTMLInputElement;
 	private sendButton!: HTMLButtonElement;
+	private clientList!: HTMLUListElement;
+	private chatName!: HTMLDivElement;
 
 	public	messageLimit: number = 5;
 
@@ -21,6 +23,7 @@ class Chat extends BaseComponent {
 			if (e.key === "Enter") this.sendMessage();
 		};
 		AppControl.addChatListener(this.addMessage);
+		this.renderClients(["Client A", "Client B", "Client C"]);
 	}
 
 	sendMessage() {
@@ -44,6 +47,25 @@ class Chat extends BaseComponent {
 			this.chatMessages.removeChild(this.chatMessages.firstChild!);
 
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+	}
+
+	renderClients(clients: string[]) {
+		this.clientList.innerHTML = "";
+		clients.forEach(client => {
+			const listItem = document.createElement("li");
+			listItem.textContent = client;
+			listItem.className = "cursor-pointer p-2 hover:bg-gray-200";
+			listItem.onclick = () => this.openChat(client);
+			this.clientList.appendChild(listItem);
+		});
+	}
+
+	openChat(clientName: string) {
+		this.chatName.textContent = `${clientName}`;
+		this.chatMessages.innerHTML = "";
+		this.chatInput.value = '';
+		this.chatMessages.scrollTop = 0;
+		console.log("Chat opened");
 	}
 
 	onDestroy(): void {
