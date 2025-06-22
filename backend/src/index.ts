@@ -1,9 +1,12 @@
 import Fastify from 'fastify';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import fastifyMultipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import sqlitePlugin from './custom-plugins/sqlite';
 import jwt from 'jsonwebtoken';
 import cors from '@fastify/cors';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,6 +19,13 @@ export const server = Fastify({
 server.register(cors, {
 	origin: "http://localhost:5173",
 	credentials: true,
+});
+
+server.register(fastifyMultipart);
+
+server.register(fastifyStatic, {
+	root: path.join(__dirname, '../uploads'),
+	prefix: '/uploads/',
 });
 
 console.log("DB_PATH:", process.env.DB_PATH);

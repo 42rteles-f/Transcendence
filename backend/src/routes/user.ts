@@ -36,6 +36,11 @@ class UserRoutes {
 		res.status(status).send({ message: reply });
 	}
 
+	@Post("upload-profile-picture", true, [])
+	async uploadProfilePicture(req: FastifyRequest, res: FastifyReply) {
+		const {status, reply} = await userController.uploadProfilePicture(req, res);
+		res.status(status).send({ message: reply });
+	}
 };
 
 export {}

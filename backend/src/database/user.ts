@@ -112,7 +112,17 @@ export default class UserDatabase {
 
     async profile(id: number): Promise<IResponse> {
         try {
-            const user = await this.getAsync('SELECT username, nickname FROM users WHERE id = ?', [id]);
+            const user = await this.getAsync(`SELECT u.username,
+													 u.nickname,
+													 COUNT(g.id) AS gamesPlayed,
+													 SUM(CASE WHEN ((g.player1 = u.id AND g.player1_score > g.player2_score) OR (g.player2 = u.id AND g.player1_score < g.player2_score) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesWon,
+													 SUM(CASE WHEN ((g.player1 = u.id AND g.player1_score < g.player2_score) OR (g.player2 = u.id AND g.player1_score > g.player2_score) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesLost,
+													 u.profile_picture as profilePicture
+												FROM users AS u
+												LEFT JOIN games AS g ON u.id = g.player1 OR u.id = g.player2
+												WHERE u.id = ?
+												GROUP BY u.id
+												`, [id]);
             if (!user)
                 throw new Error("User not found");
             return { status: 200, reply: user };
@@ -127,11 +137,11 @@ export default class UserDatabase {
         try {
             const users = await this.allAsync(`SELECT u.username, 
 													  u.nickname,
-													  COUNT(g.id) AS games_played
+													  COUNT(g.id) AS gamesPlayed
 												 FROM users u
 												 LEFT JOIN games g ON u.id = g.player1 OR u.id = g.player2
 												GROUP BY u.id
-												ORDER BY games_played DESC`);
+												ORDER BY gamesPlayed DESC`);
             return { status: 200, reply: users };
         } catch (error) {
             if (error instanceof Error)

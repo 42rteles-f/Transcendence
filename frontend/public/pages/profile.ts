@@ -8,7 +8,12 @@ class ProfilePage extends BaseComponent {
 	private userId!: string | number |null;
 	private username!: HTMLElement;
 	private nickname!: HTMLElement;
+	private profilePicture!: HTMLImageElement;
 	private logoutButton!: HTMLButtonElement;
+	private editProfileButton!: HTMLButtonElement;
+	private gamesPlayed!: HTMLElement;
+	private gamesWon!: HTMLElement;
+	private gamesLost!: HTMLElement;
 
 	constructor(userId?: string | number | null) {
 		super("/pages/profile.html");
@@ -17,6 +22,7 @@ class ProfilePage extends BaseComponent {
 	
 	async onInit() {
 		this.logoutButton.onclick = () => { this.logout() };
+		this.editProfileButton.onclick = () => { this.editProfile() };
 		let id = this.userId;
 		if (!id || id === "me") {
 			const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string };
@@ -31,8 +37,12 @@ class ProfilePage extends BaseComponent {
 		try {
 			const profile = await AppControl.getProfile(id);
 
-			this.username.innerHTML = profile.username;
-			this.nickname.innerHTML = profile.nickname;
+			this.username.innerText = profile.username;
+			this.nickname.innerText = profile.nickname;
+			this.gamesPlayed.innerText = `Games Played: ${profile.gamesPlayed.toString()}`;
+			this.gamesWon.innerText = `Games Won: ${profile.gamesWon.toString()}`;
+			this.gamesLost.innerText = `Games lost: ${profile.gamesLost.toString()}`;
+			this.profilePicture.src = `${import.meta.env.VITE_API_URL}uploads/${profile.profilePicture}`;
 
 		} catch (error) {
 			this.innerHTML = `<h2>Error loading profile</h2>
@@ -52,6 +62,11 @@ class ProfilePage extends BaseComponent {
 			console.error("Logout failed:", error);
 			alert("Logout failed. Please try again.");
 		}
+	}
+
+	async editProfile() {
+		// Implement edit profile functionality here
+		alert("Edit profile functionality is not implemented yet.");
 	}
 }
 
