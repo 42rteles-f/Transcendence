@@ -1,5 +1,4 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 
 console.log("executing TicTacToePage.ts");
@@ -8,6 +7,7 @@ console.log("executing TicTacToePage.ts");
 class ticTacToePage extends BaseComponent {
 	private ticTacToeCells!: NodeListOf<HTMLDivElement>;
 	private currentPlayer: string = "X";
+
 	constructor() {
 		super("/pages/ticTacToe.html");
 	}

@@ -1,11 +1,12 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
+import Api from "../../src/api/Api";
 import { routes } from "../../src/routes";
 
 console.log("executing LoginPage.ts");
 
 class LoginPage extends BaseComponent {
-	private loginForm!: HTMLButtonElement;
+	private loginForm!: HTMLFormElement;
 	private userInput!: HTMLInputElement;
 	private passInput!: HTMLInputElement;
 	private createAccount!: HTMLButtonElement;
@@ -22,7 +23,7 @@ class LoginPage extends BaseComponent {
 	login(e: Event) {
 		e.preventDefault();
 
-		AppControl.login(
+		Api.login(
 			this.userInput.value.trim(),
 			this.passInput.value.trim()
 		)

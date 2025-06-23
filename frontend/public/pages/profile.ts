@@ -6,7 +6,7 @@ import { editProfile } from "./editProfile";
 console.log("executing ProfilePage.ts");
 
 class ProfilePage extends BaseComponent {
-	private userId!: string | number |null;
+	private userId!: string | number | null;
 	private username!: HTMLElement;
 	private nickname!: HTMLElement;
 	private profilePicture!: HTMLImageElement;

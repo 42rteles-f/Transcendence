@@ -1,12 +1,11 @@
 import { BaseComponent } from "../../src/BaseComponent";
+import("./client_list/client_list.ts")
 import("./navbar.ts");
 import("./chat/chat.ts");
-import { Chat } from "./chat/chat.ts";
 
 console.log("executing home.ts");
 
 class HomePage extends BaseComponent {
-	private chatRef!: Chat;
 
 	constructor() {
 		super("/pages/home.html");
