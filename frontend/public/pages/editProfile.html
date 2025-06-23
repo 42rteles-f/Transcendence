@@ -1,0 +1,27 @@
+<div data-ref="editProfileModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hdata-refden">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
+    <button data-ref="closeModalButton" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-center">Edit Profile</h2>
+    <form data-ref="editProfileForm" class="flex flex-col gap-4" autocomplete='on'>
+
+		<label class="cursor-pointer flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 hover:bg-gray-300 shadow-lg relative">
+			<span class="material-symbols-outlined">
+				imagesmode
+			</span>
+			<input name="profilePicture" type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+      	</label>
+
+		<label>
+			<span class="block text-sm font-medium text-gray-700 mb-1">Nickname</span>
+			<input data-ref="nickname" name="nickname" type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required autocomplete='on'/>
+		</label>
+
+		<label>
+			<span class="block text-sm font-medium text-gray-700 mb-1">Username</span>
+			<input data-ref="username" name="username" type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required autocomplete='on'/>
+		</label>
+
+      <button type="submit" class="bg-blue-600 text-black px-4 py-2 rounded-lg hover:bg-blue-700 transition">Save</button>
+    </form>
+  </div>
+</div>

@@ -1,6 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
+import { editProfile } from "./editProfile";
 
 console.log("executing ProfilePage.ts");
 
@@ -15,9 +16,15 @@ class ProfilePage extends BaseComponent {
 	private gamesWon!: HTMLElement;
 	private gamesLost!: HTMLElement;
 
+	private userInfo: { username: string, nickname: string };
+
 	constructor(userId?: string | number | null) {
 		super("/pages/profile.html");
 		this.userId = userId || null;
+		this.userInfo = {
+			username: "",
+			nickname: ""
+		};
 	}
 	
 	async onInit() {
@@ -44,6 +51,9 @@ class ProfilePage extends BaseComponent {
 			this.gamesLost.innerText = `Games lost: ${profile.gamesLost.toString()}`;
 			this.profilePicture.src = `${import.meta.env.VITE_API_URL}uploads/${profile.profilePicture}`;
 
+			this.userInfo.username = profile.username;
+			this.userInfo.nickname = profile.nickname;
+
 		} catch (error) {
 			this.innerHTML = `<h2>Error loading profile</h2>
 			<p>${error instanceof Error ? error.message : "Unknown error"}</p>`;
@@ -65,8 +75,8 @@ class ProfilePage extends BaseComponent {
 	}
 
 	async editProfile() {
-		// Implement edit profile functionality here
-		alert("Edit profile functionality is not implemented yet.");
+		const editProfilModal = new editProfile(this.userInfo);
+		this.appendChild(editProfilModal);
 	}
 }
 

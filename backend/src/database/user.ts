@@ -93,12 +93,11 @@ export default class UserDatabase {
         }
     }
 
-    async updateProfile(username: string, nickname: string, password: string): Promise<IResponse> {
-        const hashedPassword = await bcrypt.hash(password, 10);
+    async updateProfile(userId: number, username: string | undefined, nickname: string | undefined, fileName: string | undefined): Promise<IResponse> {
         try {
             const result = await this.runAsync(
-                'UPDATE users SET nickname = ?, password = ? WHERE username = ?',
-                [nickname, hashedPassword, username]
+                'UPDATE users SET username = ?, nickname = ?, profile_picture = ? WHERE id = ?',
+                [username, nickname, fileName, userId]
             );
             if (result.changes === 0)
                 throw new Error("User update failed");

@@ -126,6 +126,27 @@ export class AppControl {
 			throw new Error(`Get profile failed: ${res.status} ${data.message}`);
 		return (data.message);
 	}
+	
+	static async updateProfile(form: FormData): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "update") || "http://localhost:3001/user/update";
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "POST",
+			headers: {
+				'Authorization': `Bearer ${token}`
+			},
+			body: form
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Update profile failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Update profile failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
 
 	static async logout(): Promise<void> {
 		const token = localStorage.getItem("authToken");

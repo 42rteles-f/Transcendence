@@ -14,7 +14,7 @@ function up(db, cb) {
 		('player1', 'gamer', '${password1}', 'default-profile-image.png'),
 		('player2', 'non gamer', '${password2}', 'default-profile-image.png'),
 		('tester_a', 'somebody that I used to know', '${password3}', 'default-profile-image.png'),
-		('tester_t', 'somebody that I did not used to know', '${password4}', 'default-profile-image.png')`, cb);
+		('tester_t', 'somebody that I did not use to know', '${password4}', 'default-profile-image.png')`, cb);
 }
 
 function down(db, cb) {
