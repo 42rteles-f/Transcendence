@@ -1,10 +1,12 @@
 import { io, Socket } from 'socket.io-client';
 import { Pointer } from './PageManager';
 import { jwtDecode } from "jwt-decode";
+import Api from './api/Api';
 
 export class AppControl {
 	private	static socket:			Pointer<Socket> = null;
 	private static chatObservers:	Function[] = [];
+	public static api: Api = new Api();
 
 	constructor() {}
 
@@ -184,12 +186,12 @@ export class AppControl {
 		}
 	}
 
-	static sendChatMessage(event: string, message: string): void {
+	static sendChatMessage(event: string, targetId: string, message: string): void {
 		if (!this.socket) {
 			console.error('Socket not initialized. Call createSocket() first.');
 			return ;
 		}
-		this.socket!.emit(event, message);
+		this.socket!.emit(event, { target: targetId, message: message });
 		console.log('Chat message sent:', message);
 	}
 }
