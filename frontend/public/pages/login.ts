@@ -1,5 +1,4 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import Api from "../../src/api/Api";
 import { routes } from "../../src/routes";
 

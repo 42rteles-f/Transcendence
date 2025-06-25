@@ -1,10 +1,12 @@
 import { io, Socket } from 'socket.io-client';
 import { Pointer } from './PageManager';
 import { jwtDecode } from "jwt-decode";
+import Api from './api/Api';
 
 export class AppControl {
 	private	static socket:			Pointer<Socket> = null;
 	private static chatObservers:	Function[] = [];
+	public static api: Api = new Api();
 
 	constructor() {}
 
@@ -171,6 +173,7 @@ export class AppControl {
 		this.socket!.emit(event, message);
 		console.log('Chat message sent:', message);
 	}
+
 }
 
 // static async fetchElement(name :string): Promise<Boolean> {

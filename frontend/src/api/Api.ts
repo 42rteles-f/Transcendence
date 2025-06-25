@@ -26,7 +26,6 @@ class Api {
 	}
 
 	static async makeRequest(apiPath: string, method: "GET" | "POST", body?: string, params?: URLSearchParams | "") {
-
 		const response = await fetch(`${this.apiUrl}/${apiPath}?${params?.toString()}`, {
 			method: method,
 			headers: {
