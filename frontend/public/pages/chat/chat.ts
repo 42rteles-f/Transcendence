@@ -30,7 +30,7 @@ class Chat extends BaseComponent {
 		const message = this.chatInput.value.trim();
 		if (!message) return ;
 
-		AppControl.sendChatMessage('chat-message', message);
+		AppControl.sendChatMessage('chat-message', "targetId", message);
 		this.addMessage(message, "outgoing");
 		this.chatInput.value = '';
 	}
@@ -50,6 +50,7 @@ class Chat extends BaseComponent {
 	}
 
 	renderClients(clients: string[]) {
+		Api.onlineClients();
 		this.clientList.innerHTML = "";
 		clients.forEach(client => {
 			const listItem = document.createElement("li");

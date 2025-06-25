@@ -186,15 +186,14 @@ export class AppControl {
 		}
 	}
 
-	static sendChatMessage(event: string, message: string): void {
+	static sendChatMessage(event: string, targetId: string, message: string): void {
 		if (!this.socket) {
 			console.error('Socket not initialized. Call createSocket() first.');
 			return ;
 		}
-		this.socket!.emit(event, message);
+		this.socket!.emit(event, { target: targetId, message: message });
 		console.log('Chat message sent:', message);
 	}
-
 }
 
 // static async fetchElement(name :string): Promise<Boolean> {
