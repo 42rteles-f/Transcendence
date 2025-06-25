@@ -2,6 +2,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 import { editProfile } from "./editProfile";
+import { showToast } from './toastNotification';
 
 console.log("executing ProfilePage.ts");
 
@@ -67,10 +68,10 @@ class ProfilePage extends BaseComponent {
 	async logout() {
 		try {
 			await AppControl.logout();
+			showToast("Logout successful!", 3000, "success");
 			routes.navigate("/login");
 		} catch (error) {
-			console.error("Logout failed:", error);
-			alert("Logout failed. Please try again.");
+			showToast("Logout failed. Please try again.", 3000, "error");
 		}
 	}
 

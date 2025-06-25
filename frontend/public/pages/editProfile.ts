@@ -1,6 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
+import { showToast } from './toastNotification';
 
 console.log("executing editProfile.ts");
 
@@ -38,7 +39,7 @@ class editProfile extends BaseComponent {
 		e.preventDefault();
 
 		if (!this.trimingForms()) {
-			alert("Please fill in all fields.");
+			showToast("Please fill in all fields.");
 			return;
 		}
 
@@ -46,17 +47,17 @@ class editProfile extends BaseComponent {
 		const profilePicture = formData.get("profilePicture") as File | null;
 
 		if (profilePicture && profilePicture.size > 2 * 1024 * 1024) {
-			alert("Profile picture size exceeds 2MB limit.");
+			showToast("Profile picture size exceeds 2MB limit.");
 			return;
 		}
 
 		try {
 			await AppControl.updateProfile(formData);
-			alert("Profile updated successfully!");
+			showToast("Profile updated successfully!");
 			this.closeEditModal();
 			routes.navigate("/profile/me");
 		} catch (error) {
-			alert(error instanceof Error ? error.message : "An error occurred while updating the profile.");
+			showToast(error instanceof Error ? error.message : "An error occurred while updating the profile.");
 		}
 	}
 

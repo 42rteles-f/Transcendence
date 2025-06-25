@@ -130,7 +130,7 @@ export class AppControl {
 	
 	static async updateProfile(form: FormData): Promise<any> {
 		const token = localStorage.getItem("authToken");
-		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "update") || "http://localhost:3001/user/update";
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + "update") || "http://localhost:3000/user/update";
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "POST",

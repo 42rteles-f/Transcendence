@@ -1,6 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
+import { showToast } from './toastNotification';
 
 console.log("executing RegisterPage.ts");
 
@@ -28,17 +29,14 @@ class RegisterPage extends BaseComponent {
 			|| this.passInput.value.trim() === ""
 			|| this.confirmPassInput.value.trim() === ""
 			|| this.nickInput.value.trim() === "") {
-			alert("Fields cannot be empty.");
+			showToast("Fields cannot be empty.", 3000, "error");
 			return;
 		}
 
 		if (this.passInput.value.trim() !== this.confirmPassInput.value.trim()) {
-			alert("Passwords do not match.");
+			showToast("Passwords do not match.", 3000, "error");
 			return;
 		}
-
-		// console.log(`user: ${this.userInput.value.trim()}`);
-		// console.log(`pass: ${this.passInput.value.trim()}`);
 
 		AppControl.register(
 			this.userInput.value.trim(),
@@ -49,9 +47,7 @@ class RegisterPage extends BaseComponent {
 			routes.navigate("/home");
 		})
 		.catch((error) => {
-			// console.error("Register error:", error);
-			// console.error("Register error:", error.message);
-			alert(error.message);
+			showToast(error.message, 3000, "error");
 		});
 	}
 

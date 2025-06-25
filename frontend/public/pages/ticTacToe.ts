@@ -1,5 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { routes } from "../../src/routes";
+import { showToast } from "./toastNotification";
 
 console.log("executing TicTacToePage.ts");
 
@@ -19,7 +20,7 @@ class ticTacToePage extends BaseComponent {
 		this.ticTacToeCells.forEach((cell) => {
 			cell.onclick = () => {
 				if (cell.classList.contains("occupied")) {
-					alert("Cell already occupied!");
+					showToast("Cell already occupied!", 2000, "error");
 					return;
 				}
 				cell.classList.add("occupied");
@@ -47,26 +48,20 @@ class ticTacToePage extends BaseComponent {
 
 		for (const combination of winningCombinations) {
 			if (combination.every(cell => cell.classList.contains("occupied") && cell.classList.contains("x-cell"))) {
-				setTimeout(() => {
-					alert("Player X wins!");
-					this.resetGame();
-				}, 0);
+				showToast("Player X wins!", 2000, "info");
+				setTimeout(() => this.resetGame(), 2000);
 				return;
 			}
 			if (combination.every(cell => cell.classList.contains("occupied") && cell.classList.contains("o-cell"))) {
-				setTimeout(() => {
-					alert("Player O wins!");
-					this.resetGame();
-				}, 0);
+				showToast("Player O wins!", 2000, "info");
+				setTimeout(() => this.resetGame(), 2000);
 				return;
 			}
 		}
 
 		if (cells.every(cell => cell.classList.contains("occupied"))) {
-			setTimeout(() => {
-				alert("It's a draw!");
-				this.resetGame();
-			}, 0);
+			showToast("It's a draw!", 2000, "info");
+			setTimeout(() => this.resetGame(), 2000);
 		}
 	}
 
@@ -76,8 +71,7 @@ class ticTacToePage extends BaseComponent {
 			cell.innerText = "";
 		});
 		this.currentPlayer = "X";
-		console.log("Game reset. Player X starts again.");
-		routes.navigate("/tic-tac-toe");
+		// routes.navigate("/tic-tac-toe");
 	}
 }
 

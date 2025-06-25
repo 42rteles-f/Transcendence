@@ -1,3 +1,4 @@
+import { ToastNotification } from '../public/pages/toastNotification.ts';
 import { routes } from "./routes.ts";
 import './style.css';
 
@@ -14,4 +15,5 @@ window.addEventListener('popstate', () => {
 	routes.navigate(window.location.pathname);
 });
 
+document.body.insertBefore(new ToastNotification() as Node, document.body.firstChild);
 routes.navigate(window.location.pathname);

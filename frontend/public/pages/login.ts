@@ -2,6 +2,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import Api from "../../src/api/Api";
 import { routes } from "../../src/routes";
+import { showToast } from './toastNotification';
 
 console.log("executing LoginPage.ts");
 
@@ -28,11 +29,11 @@ class LoginPage extends BaseComponent {
 			this.passInput.value.trim()
 		)
 		.then(() => {
+			showToast("Login successful!", 2000, "success");
 			routes.navigate("/home");
 		})
 		.catch((error) => {
-			console.error("Login error:", error);
-			alert(error.message);
+			showToast(error.message, 3000, "error");
 		});
 	}
 

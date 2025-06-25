@@ -1,4 +1,5 @@
 import { BaseComponent } from '../../../src/BaseComponent';
+import { showToast } from '../toastNotification';
 
 class ClientList extends BaseComponent {
 	private clientList!: HTMLUListElement;
@@ -36,7 +37,7 @@ class ClientList extends BaseComponent {
 			listItem.textContent = client;
 			listItem.className = "cursor-pointer p-2 hover:bg-gray-200";
 			listItem.onclick = () => {
-				alert(`You clicked on ${client}`);
+				showToast(`You clicked on ${client}`, 2000, "info");
 			};
 			this.clientList.appendChild(listItem);
 		});
