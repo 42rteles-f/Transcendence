@@ -19,11 +19,12 @@ export default class UserService {
 	}
 
 	async updateProfile(
-		username: string,
-		nickname: string,
-		password: string
+		userId: number,
+		username: string | undefined,
+		nickname: string | undefined,
+		fileName: string | undefined
 	): Promise<IResponse> {	
-		return (await this.db.updateProfile(username, nickname, password));
+		return (await this.db.updateProfile(userId, username, nickname, fileName));
 	}
 
 	async profile(id: number): Promise<IResponse> {
