@@ -95,6 +95,9 @@ export default class UserDatabase {
 
     async updateProfile(userId: number, username: string | undefined, nickname: string | undefined, fileName: string | undefined): Promise<IResponse> {
         try {
+			const existingUser = await this.getAsync('SELECT id FROM users WHERE username = ?', [username]);
+			if (existingUser && existingUser.id !== userId)
+				throw new Error("Username already exists");
             const result = await this.runAsync(
                 'UPDATE users SET username = ?, nickname = ?, profile_picture = ? WHERE id = ?',
                 [username, nickname, fileName, userId]
@@ -148,4 +151,27 @@ export default class UserDatabase {
             return { status: 500, reply: "Unknown error" };
         }
     }
+
+	async getByEmail(email: string): Promise<any | null> {
+		try {
+			const user = await this.getAsync('SELECT * FROM users WHERE email = ?', [email]);
+			return user || null;
+		} catch (error) {
+			return null;
+		}
+	}
+
+	async createGoogleUser(email: string, name: string, picture: string): Promise<any> {
+		const baseUsername = name ? name.replace(/\s+/g, '').toLowerCase() : email.split('@')[0];
+		let username = baseUsername;
+		let suffix = 1;
+		while (await this.getAsync('SELECT id FROM users WHERE username = ?', [username]))
+			username = `${baseUsername}${suffix++}`;
+
+		await this.runAsync(
+			'INSERT INTO users (username, nickname, email, profile_picture) VALUES (?, ?, ?, ?)',
+			[username, name, email, picture]
+		);
+		return await this.getByEmail(email);
+	}
 }
