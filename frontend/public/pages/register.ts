@@ -44,6 +44,7 @@ class RegisterPage extends BaseComponent {
 			this.passInput.value.trim()
 		)
 		.then(() => {
+			showToast("Registration successful!", 3000, "success");
 			routes.navigate("/home");
 		})
 		.catch((error) => {

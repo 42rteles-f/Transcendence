@@ -26,7 +26,7 @@ class Api {
 	}
 
 	static async makeRequest(apiPath: string, method: "GET" | "POST", body?: string, params?: URLSearchParams | "") {
-		let fullPath = `${this.apiUrl}/${apiPath}`;
+		let fullPath = `${this.apiUrl}${apiPath}`;
 		if (params && typeof params === "object" && params.toString())
 			fullPath += '?' + params.toString();
 		const response = await fetch(fullPath, {
