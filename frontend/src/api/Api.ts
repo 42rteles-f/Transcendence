@@ -1,3 +1,4 @@
+import { jwtDecode } from "jwt-decode";
 import { Pointer } from "../PageManager";
 import { routes } from "../routes";
 
@@ -45,6 +46,7 @@ class Api {
 		const body = JSON.stringify({ username, password });
 		const response = await this.makeRequest("user/login", "POST", body);
 		this.token = response.message;
+		console.log(jwtDecode(this.token!));
 		localStorage.setItem("authToken", this.token!);
 		return (response);
 	}

@@ -23,16 +23,19 @@ class Client {
 	sendChatMessage(roomId: string, text: string) {
 	}
 
-	onChatMessage(target: string, message: string) {
-		this.socket.to(target).emit('chat-message', {
+	onchatMessage(payload: {target: string, message: string}) {
+		console.log(`target ${payload.target}, message ${payload.message}`)
+		this.socket.to(payload.target).emit('chat-message', {
 			fromId: this.socket.id,
-			fromName: "name",
-			message: message,
-		});
+			fromName: this.socket.data.user.username,
+			message: payload.message,
+		},
+	);
 	}
 
 	eventCaller(event: string, ...args: any[]) {
 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
+		console.log(methodName);
 		if (typeof (this as any)[methodName] === 'function') {
 			(this as any)[methodName](...args);
 		} else {
