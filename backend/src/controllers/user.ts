@@ -124,6 +124,22 @@ class UserController {
 		const { status, reply } = await service.all();
 		return { status, reply };
 	}
+
+	async matchHistory(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const { page, pageSize } = req.query as { page?: string, pageSize?: string };
+		const userId: number = id === 'me' ? (req as any).user?.id : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const pageNum = page ? parseInt(page) : 1;
+		const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
+		const { status, reply } = await service.matchHistory(userId, pageNum, pageSizeNum);
+		return { status, reply };
+	}
 };
 
 export const userController = new UserController();

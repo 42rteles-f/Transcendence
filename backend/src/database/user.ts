@@ -122,7 +122,7 @@ export default class UserDatabase {
 													 u.profile_picture as profilePicture
 												FROM users AS u
 												LEFT JOIN games AS g ON u.id = g.player1 OR u.id = g.player2
-												WHERE u.id = ?
+												WHERE u.id = ? AND g.status = 'finished'
 												GROUP BY u.id
 												`, [id]);
             if (!user)
@@ -135,6 +135,37 @@ export default class UserDatabase {
         }
     }
 
+	async matchHistory(id: number, page: number = 1, pageSize: number = 10): Promise<IResponse> {
+		try {
+			const offset = (page - 1) * pageSize;
+			const games = await this.allAsync(`SELECT g.id, 
+													  g.player1 AS player1Id,
+													  g.player2 AS player2Id,
+													  u1.username AS player1_name,
+													  u2.username AS player2_name,
+													  g.player1_score,
+													  g.player2_score,
+													  g.status,
+													  g.created_at
+											 FROM games g
+											 LEFT JOIN users u1 ON g.player1 = u1.id
+											 LEFT JOIN users u2 ON g.player2 = u2.id
+											 WHERE (g.player1 = ? OR g.player2 = ?) AND g.status = 'finished'
+											 ORDER BY g.created_at DESC
+											 LIMIT ? OFFSET ?`, [id, id, pageSize, offset]);
+			if (!games || games.length === 0)
+				return { status: 404, reply: "No games found" };
+			const total = await this.getAsync(`SELECT COUNT(*) as count
+											 FROM games g
+											 WHERE g.player1 = ? OR g.player2 = ?`, [id, id]);
+			return { status: 200, reply: { games, total: total.count } };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
     async all(): Promise<IResponse> {
         try {
             const users = await this.allAsync(`SELECT u.username, 
@@ -142,6 +173,7 @@ export default class UserDatabase {
 													  COUNT(g.id) AS gamesPlayed
 												 FROM users u
 												 LEFT JOIN games g ON u.id = g.player1 OR u.id = g.player2
+												 WHERE g.status = 'finished'
 												GROUP BY u.id
 												ORDER BY gamesPlayed DESC`);
             return { status: 200, reply: users };

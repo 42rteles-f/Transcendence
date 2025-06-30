@@ -7,7 +7,29 @@ export function up(db, cb) {
 		(2, 1, 11, 3, 'finished'),
 		(3, 4, 11, 5, 'finished'),
 		(4, 3, 11, 10, 'finished'),
-		(3, 4, 7, 11, 'finished')`, cb);
+		(3, 4, 7, 11, 'finished'),
+		(3, 4, 11, 3, 'finished'),
+		(1, 2, 11, 5, 'finished'),
+		(2, 1, 11, 10, 'finished'),
+		(3, 4, 11, 7, 'finished'),
+		(4, 3, 11, 6, 'finished'),
+		(1, 2, 11, 9, 'finished'),
+		(2, 1, 11, 8, 'finished'),
+		(3, 4, 11, 5, 'finished'),
+		(4, 3, 11, 5, 'finished'),
+		(1, 2, 11, 2, 'finished'),
+		(2, 1, 1, 11, 'finished'),
+		(3, 4, 11, 4, 'finished'),
+		(4, 3, 11, 8, 'finished'),
+		(1, 2, 11, 4, 'finished'),
+		(2, 1, 11, 6, 'finished'),
+		(3, 4, 11, 2, 'finished'),
+		(4, 3, 11, 7, 'finished'),
+		(1, 2, 11, 9, 'finished'),
+		(2, 1, 11, 4, 'finished'),
+		(3, 4, 11, 3, 'finished'),
+		(4, 3, 11, 1, 'finished')
+		`, cb);
 }
 
 export function down(db, cb) {

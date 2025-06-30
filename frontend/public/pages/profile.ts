@@ -3,6 +3,7 @@ import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 import { editProfile } from "./editProfile";
 import { showToast } from './toastNotification';
+import { MatchHistoryModal } from "./matchHistoryModal";
 
 console.log("executing ProfilePage.ts");
 
@@ -16,12 +17,14 @@ class ProfilePage extends BaseComponent {
 	private gamesPlayed!: HTMLElement;
 	private gamesWon!: HTMLElement;
 	private gamesLost!: HTMLElement;
+	private matchHistoryButton!: HTMLButtonElement;
 
 	private userInfo: { username: string, nickname: string };
 
 	constructor(userId?: string | number | null) {
 		super("/pages/profile.html");
-		this.userId = userId || null;
+		const pathParts = window.location.pathname.split("/");
+		this.userId = pathParts.length > 2 ? pathParts[2] : userId || null;
 		this.userInfo = {
 			username: "",
 			nickname: ""
@@ -31,10 +34,12 @@ class ProfilePage extends BaseComponent {
 	async onInit() {
 		this.logoutButton.onclick = () => { this.logout() };
 		this.editProfileButton.onclick = () => { this.editProfile() };
+		this.matchHistoryButton.onclick = () => { this.showMatchHistory(this.userId) };
 		let id = this.userId;
 		if (!id || id === "me") {
 			const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string };
 			id = token?.id || null;
+			this.userId = id;
 		}
 
 		if (!id) {
@@ -78,6 +83,11 @@ class ProfilePage extends BaseComponent {
 	async editProfile() {
 		const editProfilModal = new editProfile(this.userInfo);
 		this.appendChild(editProfilModal);
+	}
+
+	async showMatchHistory(id: number | string | null) {
+		const modal = new MatchHistoryModal(Number(id));
+		document.body.appendChild(modal);
 	}
 }
 

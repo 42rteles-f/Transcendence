@@ -39,6 +39,12 @@ class UserRoutes {
 		const { status, reply } = await userController.all(req, res);
 		res.status(status).send({ message: reply });
 	}
+
+	@Get("match-history/:id", true, [])
+	async matchHistory(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.matchHistory(req, res);
+		res.status(status).send({ message: reply });
+	}
 };
 
 export {}

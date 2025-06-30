@@ -34,5 +34,13 @@ export default class UserService {
 	async all(): Promise<IResponse> {
 		return (await this.db.all());
 	}
+
+	async matchHistory(
+		userId: number,
+		page: number = 1,
+		pageSize: number = 10
+	): Promise<IResponse> {
+		return (await this.db.matchHistory(userId, page, pageSize));
+	}
 }
 

@@ -129,6 +129,27 @@ export class AppControl {
 			throw new Error(`Get profile failed: ${res.status} ${data.message}`);
 		return (data.message);
 	}
+
+	static async getMatchHistory(id: string | number, page: number = 1, pageSize: number = 10): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `match-history/${id}`) || `http://localhost:3000/user/match-history/${id}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl + `?page=${page}&pageSize=${pageSize}`, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get match history failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get match history failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
 	
 	static async updateProfile(form: FormData): Promise<any> {
 		const token = localStorage.getItem("authToken");
