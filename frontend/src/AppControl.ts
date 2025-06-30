@@ -30,16 +30,26 @@ export class AppControl {
 
 	static createSocket(): boolean {
 		const apiUrl = import.meta.env.API_URL || "http://localhost:3000";
-		this.socket = io(apiUrl);
+
+		this.socket = io(apiUrl, {
+			transports: ['websocket'],
+			auth: {
+				token: localStorage.getItem("authToken") || ""
+			}
+		});
 
 		this.socket.on('connect', () => {
 			console.log('Connected to server!', this.socket!.id);
-			// localStorage.setItem('socketId', this.socket.id);
 		});
-		  
+		
+		this.socket.on('connect_error', (err) => {
+			console.error('Socket connection error:', err.message);
+		});
+
 		this.socket.on('disconnect', () => {
 			console.log('Disconnected from server');
 		});
+
 		return (!!this.socket);
 	}
 
@@ -207,6 +217,15 @@ export class AppControl {
 		}
 	}
 
+	static onlineClientsListener(observer: (...args: any[]) => void): void {
+		if (!this.socket &&  !this.createSocket()) {
+			console.error('Socket not initialized. Call createSocket() first.');
+			return ;
+		}
+		this.socket!.emit('online-clients');
+		this.socket!.on('online-clients', observer);
+	}
+
 	static sendChatMessage(event: string, targetId: string, message: string): void {
 		if (!this.socket) {
 			console.error('Socket not initialized. Call createSocket() first.');
@@ -236,3 +255,12 @@ export class AppControl {
 //         return (false);
 //     }
 // }
+
+/*
+cs50 CS
+harvard fundamentals
+harvard leadership
+java course
+harvard python
+sdlc
+*/

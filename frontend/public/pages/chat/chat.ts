@@ -22,25 +22,33 @@ class Chat extends BaseComponent {
 		this.chatInput.onkeydown = (e: KeyboardEvent) => {
 			if (e.key === "Enter") this.sendMessage();
 		};
+		AppControl.onlineClientsListener(this.renderClients);
 		AppControl.addChatListener(this.addMessage);
-		this.renderClients(["Client A", "Client B", "Client C"]);
+		// this.renderClients(["Client A", "Client B", "Client C"]);
 	}
 
 	sendMessage() {
 		const message = this.chatInput.value.trim();
 		if (!message) return ;
 
-		AppControl.sendChatMessage('chat-message', "targetId", message);
-		this.addMessage(message, "outgoing");
+		AppControl.sendChatMessage('chat-message', this.chatName.dataset.id!, message);
+		this.addMessage({fromId: "", fromName: "", message}, "outgoing");
 		this.chatInput.value = '';
 	}
 
-	addMessage = (message: string, type?: string): void => {
+	addMessage = (
+		data: { fromId: string, fromName: string, message: string },
+		type?: "incoming" | "outgoing"
+	): void => {
+		console.log("triggered");
+		console.log(`((${data}))`);
 		if (type !== "outgoing") type = "incoming";
+		console.log(`chatName (${this.chatName.textContent}) != fromName (${data.fromName}) && type (${type})`);
+		if (this.chatName.textContent != data.fromName && type != "outgoing") return ;
 
 		const messageElement = document.createElement("div");
 		messageElement.className = `chat-message-${type}`;
-		messageElement.textContent = message;
+		messageElement.textContent = data.message;
 		this.chatMessages.appendChild(messageElement);
 
 		while (this.chatMessages.children.length > this.messageLimit)
@@ -49,20 +57,22 @@ class Chat extends BaseComponent {
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 	}
 
-	renderClients(clients: string[]) {
-		Api.onlineClients();
+	renderClients = (clients: { id: string, name: string }[]) => {
 		this.clientList.innerHTML = "";
 		clients.forEach(client => {
 			const listItem = document.createElement("li");
-			listItem.textContent = client;
+			listItem.dataset.clientId = client.id;
+			listItem.dataset.clientName = client.name
+			listItem.textContent = client.name;
 			listItem.className = "cursor-pointer p-2 hover:bg-gray-200";
 			listItem.onclick = () => this.openChat(client);
 			this.clientList.appendChild(listItem);
 		});
 	}
 
-	openChat(clientName: string) {
-		this.chatName.textContent = `${clientName}`;
+	openChat(client: { id: string, name: string }) {
+		this.chatName.textContent = `${client.name}`;
+		this.chatName.dataset.id = client.id
 		this.chatMessages.innerHTML = "";
 		this.chatInput.value = '';
 		this.chatMessages.scrollTop = 0;
