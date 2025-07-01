@@ -5,6 +5,7 @@ import { editProfile } from "./editProfile";
 import { showToast } from './toastNotification';
 import { MatchHistoryModal } from "./matchHistoryModal";
 import { FriendListModal } from "./friendListModal";
+import { LogoutModal } from "./logoutModal";
 
 console.log("executing ProfilePage.ts");
 
@@ -36,8 +37,8 @@ class ProfilePage extends BaseComponent {
 	}
 	
 	async onInit() {
-		this.editProfileButton.onclick = () => { this.editProfile() };
-		this.logoutButton.onclick = () => { this.logout() };
+		this.editProfileButton.onclick = () => { this.showEditProfileModal() };
+		this.logoutButton.onclick = () => { this.showLogoutConfirmation() };
 		this.handleFriendRequestButton.onclick = () => { this.showFriendsListModal() };
 	
 		let id = this.userId;
@@ -109,17 +110,7 @@ class ProfilePage extends BaseComponent {
 		}
 	}
 
-	async logout() {
-		try {
-			await AppControl.logout();
-			showToast("Logout successful!", 3000, "success");
-			routes.navigate("/login");
-		} catch (error) {
-			showToast("Logout failed. Please try again.", 3000, "error");
-		}
-	}
-
-	async editProfile() {
+	async showEditProfileModal() {
 		const editProfilModal = new editProfile(this.userInfo);
 		this.appendChild(editProfilModal);
 	}
@@ -131,6 +122,11 @@ class ProfilePage extends BaseComponent {
 
 	async showFriendsListModal() {
 		const modal = new FriendListModal(this.userId, import.meta.env.VITE_API_URL + "uploads/");
+		document.body.appendChild(modal);
+	}
+
+	async showLogoutConfirmation() {
+		const modal = new LogoutModal();
 		document.body.appendChild(modal);
 	}
 }
