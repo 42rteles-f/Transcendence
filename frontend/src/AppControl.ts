@@ -182,6 +182,91 @@ export class AppControl {
 		return (data.message);
 	}
 
+	static async friendRequest(friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friend-request/${friendId}`) || `http://localhost:3000/user/friend-request/${friendId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({ status })
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Friend request failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Friend request failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getFriendRequest(friendId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friend-request/${friendId}`) || `http://localhost:3000/user/friend-request/${friendId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get friend request failed: ${error}`);
+		}
+		if (!res.ok && res.status !== 404)
+			throw new Error(`Get friend request failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getAllNotFriends(userId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `not-friends/${userId}`) || `http://localhost:3000/user/not-friends/${userId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get not friends failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get not friends failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getAllFriends(userId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friends/${userId}`) || `http://localhost:3000/user/friends/${userId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get friends failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get friends failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
 	static async logout(): Promise<void> {
 		const token = localStorage.getItem("authToken");
 		if (!token) {

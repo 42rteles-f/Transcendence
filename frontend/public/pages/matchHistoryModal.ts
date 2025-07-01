@@ -11,17 +11,16 @@ class MatchHistoryModal extends BaseComponent {
     private page = 1;
     private pageSize = 5;
     private userId: number;
-	private _boundHandleEsc: (e: KeyboardEvent) => void;
 
     constructor(userId: number) {
         super("/pages/matchHistoryModal.html");
+		this.tabIndex = -1;
         this.userId = userId;
-		this._boundHandleEsc = this.handleEsc.bind(this);
     }
 
     async onInit() {
 		this.focus();
-		document.addEventListener("keydown", this._boundHandleEsc);
+		this.addEventListener("keydown", this.handleEsc);
         this.closeModalButton.onclick = () => this.close();
         this.paginationPrev.onclick = () => this.changePage(-1);
         this.paginationNext.onclick = () => this.changePage(1);
@@ -72,7 +71,6 @@ class MatchHistoryModal extends BaseComponent {
     }
 
     close() {
-		document.removeEventListener("keydown", this._boundHandleEsc);
         this.remove();
     }
 }

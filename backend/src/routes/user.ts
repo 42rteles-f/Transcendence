@@ -45,6 +45,30 @@ class UserRoutes {
 		const { status, reply } = await userController.matchHistory(req, res);
 		res.status(status).send({ message: reply });
 	}
+
+	@Post("friend-request/:id", true, [])
+	async friendRequest(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.friendRequest(req, res);
+		res.status(status).send({ message: reply });
+	}
+
+	@Get("friend-request/:id", true, [])
+	async getFriendRequest(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.getFriendRequest(req, res);
+		res.status(status).send({ message: reply });
+	}
+
+	@Get("friends-list/:id", true, [])
+	async getAllFriends(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.getAllFriends(req, res);
+		res.status(status).send({ message: reply });
+	}
+
+	@Get("not-friends-list/:id", true, [])
+	async getAllNotFriends(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.getAllNotFriends(req, res);
+		res.status(status).send({ message: reply });
+	}
 };
 
 export {}

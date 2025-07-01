@@ -1,0 +1,15 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
+    <button data-ref="closeFriendList" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-center">Friends</h2>
+    <div class="flex flex-col gap-2 mb-4">
+      <div class="flex gap-2">
+        <button class="flex-1 px-4 py-2 rounded-t-lg bg-gray-200 font-bold tab active" id="friends-tab" data-ref="friendsTab">Friends</button>
+        <button class="flex-1 px-4 py-2 rounded-t-lg bg-gray-200 font-bold tab" id="not-friends-tab" data-ref="notFriendsTab">Others</button>
+        <button class="flex-1 px-4 py-2 rounded-t-lg bg-gray-200 font-bold tab" id="requests-tab" data-ref="requestsTab">Requests</button>
+      </div>
+      <input type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="friend-search" data-ref="friendSearch" placeholder="Search user...">
+    </div>
+    <div class="flex flex-col gap-3 max-h-80 overflow-y-auto" id="user-list" data-ref="userList"></div>
+  </div>
+</div>

@@ -140,6 +140,78 @@ class UserController {
 		const { status, reply } = await service.matchHistory(userId, pageNum, pageSizeNum);
 		return { status, reply };
 	}
+
+	async friendRequest(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const userId: number = (req as any).user?.id;
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { id } = req.params as { id: number | string };
+		let friendId: number | string = id;
+		if (!friendId || !/^\d+$/.test(String(friendId)))
+			return { status: 400, reply: "Invalid friend ID" };
+	
+		const { status } = req.body as { status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship' };
+		if (!['pending', 'accepted', 'rejected', 'removed', 'no friendship'].includes(status))
+			return { status: 400, reply: "Invalid status" };
+
+		friendId = Number(friendId);
+		const response = await service.friendRequest(userId, friendId, status);
+		return response;
+	}
+
+	async getFriendRequest(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const userId: number = (req as any).user?.id;
+
+		if (id === 'me')
+			return { status: 400, reply: "FriendId and UserId are the same" };
+
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+		
+		if (!id || !/^\d+$/.test(String(id)))
+			return { status: 400, reply: "Invalid friend ID" };
+		
+		if (id === userId)
+			return { status: 400, reply: "FriendId and UserId are the same" };
+
+		const friendId: number = Number(id);
+		const { status, reply } = await service.getFriendRequest(userId, friendId);
+		return { status, reply };
+	}
+
+	async getAllNotFriends(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const userId: number = id === 'me' ? Number((req as any).user?.id) : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { status, reply } = await service.getAllNotFriends(userId);
+		return { status, reply };
+	}
+
+	async getAllFriends(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const userId: number = id === 'me' ? Number((req as any).user?.id) : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { status, reply } = await service.getAllFriends(userId);
+		return { status, reply };
+	}
 };
 
 export const userController = new UserController();

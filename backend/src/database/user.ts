@@ -206,4 +206,116 @@ export default class UserDatabase {
 		);
 		return await this.getByEmail(email);
 	}
+
+	async friendRequest(userId: number, friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<IResponse> {
+		let query = '';
+
+		const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
+		const requesterId = userId;
+		try {
+			const request = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?', [userA, userB]);
+			if (!request)
+				return { status: 404, reply: "Friend request not found" };
+			switch (status) {
+				case 'pending': {
+					if (request)
+						return { status: 400, reply: "Friend request already exists" };
+					query = 'INSERT INTO friend_requests (user_id, friend_id, requester_id, status) VALUES (?, ?, ?)';
+					await this.runAsync(query, [userA, userB, requesterId, status]);
+					return { status: 200, reply: "Friend request sent" };
+				}
+				case 'accepted': {
+					if (request.status !== 'pending')
+						return { status: 400, reply: "Friend request already processed" };
+					if (request.requester_id === userId)
+						return { status: 400, reply: "You cannot accept your own friend request" };
+
+					query = 'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?';
+					await this.runAsync(query, [status, userA, userB]);
+					return { status: 200, reply: "Friend request accepted" };
+				}
+				case 'rejected': {
+					if (request.status !== 'pending')
+						return { status: 400, reply: "Friend request already processed" };
+					if (request.requester_id === userId)
+						return { status: 400, reply: "You cannot reject your own friend request" };
+
+					query = 'DELETE FROM friend_requests WHERE user_id = ? AND friend_id = ?';
+					await this.runAsync(query, [status, userA, userB]);
+					return { status: 200, reply: "Friend request rejected" };
+				}
+				case 'removed': {
+					if (request.status !== 'accepted')
+						return { status: 400, reply: "Friend request not accepted" };
+					query = 'DELETE FROM friend_requests WHERE user_id = ? AND friend_id = ?';
+					await this.runAsync(query, [userA, userB]);
+					return { status: 200, reply: "Friend request removed" };
+				}
+				default:
+					return { status: 400, reply: "Invalid status" };
+		}
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async getFriendRequest(userId: number, friendId: number): Promise<IResponse> {
+		try {
+			const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
+			const request = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?', [userA, userB]);
+			if (!request)
+				return { status: 200, reply: "no friendship" };
+			return { status: 200, reply: { status: request.status, requester_id: request.requester_id } };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async getAllNotFriends(userId: number): Promise<IResponse> {
+		try {
+			const notFriends = await this.allAsync(`
+				SELECT id, username, nickname, profile_picture
+				FROM users
+				WHERE id != ?
+				AND id NOT IN (
+					SELECT CASE
+						WHEN fr.user_id = ? THEN fr.friend_id
+						ELSE fr.user_id
+					END
+					FROM friend_requests fr
+					WHERE (fr.user_id = ? OR fr.friend_id = ?)
+					AND fr.status = 'accepted'
+				)
+			`, [userId, userId, userId, userId]);
+			return { status: 200, reply: notFriends };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+
+	async getAllFriends(userId: number): Promise<IResponse> {
+		try {
+			const friends = await this.allAsync(`
+				SELECT u.id, u.username, u.nickname, u.profile_picture
+				FROM users u
+				INNER JOIN friend_requests fr
+					ON (fr.user_id = ? OR fr.friend_id = ?)
+					AND (u.id = fr.user_id OR u.id = fr.friend_id)
+					AND u.id != ?
+					AND fr.status = 'accepted'
+			`, [userId, userId, userId]);
+			return { status: 200, reply: friends };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
 }
