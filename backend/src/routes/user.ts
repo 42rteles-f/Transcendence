@@ -58,6 +58,12 @@ class UserRoutes {
 		res.status(status).send({ message: reply });
 	}
 
+	@Get("all-friend-requests/:id", true, [])
+	async getAllFriendRequests(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.getAllFriendRequests(req, res);
+		res.status(status).send({ message: reply });
+	}
+
 	@Get("friends-list/:id", true, [])
 	async getAllFriends(req: FastifyRequest, res: FastifyReply) {
 		const { status, reply } = await userController.getAllFriends(req, res);
@@ -65,8 +71,8 @@ class UserRoutes {
 	}
 
 	@Get("not-friends-list/:id", true, [])
-	async getAllNotFriends(req: FastifyRequest, res: FastifyReply) {
-		const { status, reply } = await userController.getAllNotFriends(req, res);
+	async findUsers(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.findUsers(req, res);
 		res.status(status).send({ message: reply });
 	}
 };

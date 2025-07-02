@@ -52,16 +52,22 @@ export default class UserService {
 	}
 
 	async getFriendRequest(
-		userId: number,
-		friendId: number
+		userId: number | string,
+		friendId: number | string
 	): Promise<IResponse> {
 		return (await this.db.getFriendRequest(userId, friendId));
 	}
 
-	async getAllNotFriends(
+	async getAllFriendRequests(
 		userId: number
 	): Promise<IResponse> {
-		return (await this.db.getAllNotFriends(userId));
+		return (await this.db.getAllFriendRequests(userId));
+	}
+
+	async findUsers(
+		userId: number
+	): Promise<IResponse> {
+		return (await this.db.findUsers(userId));
 	}
 
 	async getAllFriends(

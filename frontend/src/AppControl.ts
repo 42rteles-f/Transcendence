@@ -225,9 +225,30 @@ export class AppControl {
 		return (data.message);
 	}
 
-	static async getAllNotFriends(userId: number | string | null): Promise<any> {
+	static async getAllFriendRequests(friendId: number | string | null): Promise<any> {
 		const token = localStorage.getItem("authToken");
-		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `not-friends/${userId}`) || `http://localhost:3000/user/not-friends/${userId}`;
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `all-friend-requests/${friendId}`) || `http://localhost:3000/user/all-friend-requests/${friendId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get friend request failed: ${error}`);
+		}
+		if (!res.ok && res.status !== 404)
+			throw new Error(`Get friend request failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async findUsers(userId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `not-friends-list/${userId}`) || `http://localhost:3000/user/not-friends-list/${userId}`;
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "GET",
@@ -248,7 +269,7 @@ export class AppControl {
 
 	static async getAllFriends(userId: number | string | null): Promise<any> {
 		const token = localStorage.getItem("authToken");
-		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friends/${userId}`) || `http://localhost:3000/user/friends/${userId}`;
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friends-list/${userId}`) || `http://localhost:3000/user/friends-list/${userId}`;
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "GET",

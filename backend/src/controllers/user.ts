@@ -163,31 +163,21 @@ class UserController {
 		return response;
 	}
 
-	async getFriendRequest(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+	async getAllFriendRequests(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
 		const db = req.server.sqlite as Database;
 		const service = new UserService(db);
 
 		const { id } = req.params as { id: number | string };
-		const userId: number = (req as any).user?.id;
-
-		if (id === 'me')
-			return { status: 400, reply: "FriendId and UserId are the same" };
-
-		if (!userId || !/^\d+$/.test(String(userId)))
-			return { status: 400, reply: "Invalid user ID" };
 		
 		if (!id || !/^\d+$/.test(String(id)))
 			return { status: 400, reply: "Invalid friend ID" };
-		
-		if (id === userId)
-			return { status: 400, reply: "FriendId and UserId are the same" };
 
-		const friendId: number = Number(id);
-		const { status, reply } = await service.getFriendRequest(userId, friendId);
+		const userId: number = Number(id);
+		const { status, reply } = await service.getAllFriendRequests(userId);
 		return { status, reply };
 	}
 
-	async getAllNotFriends(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+	async findUsers(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
 		const db = req.server.sqlite as Database;
 		const service = new UserService(db);
 
@@ -196,7 +186,28 @@ class UserController {
 		if (!userId || !/^\d+$/.test(String(userId)))
 			return { status: 400, reply: "Invalid user ID" };
 
-		const { status, reply } = await service.getAllNotFriends(userId);
+		const { status, reply } = await service.findUsers(userId);
+		return { status, reply };
+	}
+
+	async getFriendRequest(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const userId: number = (req as any).user?.id;
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+	
+		const { id } = req.params as { id: number | string };
+		let friendId: number | string = id;
+		if (!friendId || !/^\d+$/.test(String(friendId)))
+			return { status: 400, reply: "Invalid friend ID" };
+		
+		friendId = Number(friendId);
+		if (userId === friendId)
+			return { status: 400, reply: "Cannot get friend request with self" };
+	
+		const { status, reply } = await service.getFriendRequest(userId, friendId);
 		return { status, reply };
 	}
 

@@ -82,7 +82,6 @@ export default class UserDatabase {
             const token = jwt.sign(
                 { id: user.id, username: user.username },
                 process.env.JWT_SECRET!,
-                // { expiresIn: Number(process.env.JWT_EXPIRATION) }
                 { expiresIn: "1h" }
             );
             return { status: 200, reply: token };
@@ -261,13 +260,12 @@ export default class UserDatabase {
 		}
 	}
 
-	async getFriendRequest(userId: number, friendId: number): Promise<IResponse> {
+	async getAllFriendRequests(userId: number): Promise<IResponse> {
 		try {
-			const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
-			const request = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?', [userA, userB]);
-			if (!request)
+			const requests = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? OR friend_id = ?', [userId, userId]);
+			if (!requests)
 				return { status: 200, reply: "no friendship" };
-			return { status: 200, reply: { status: request.status, requester_id: request.requester_id } };
+			return { status: 200, reply: requests };
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };
@@ -275,7 +273,7 @@ export default class UserDatabase {
 		}
 	}
 
-	async getAllNotFriends(userId: number): Promise<IResponse> {
+	async findUsers(userId: number): Promise<IResponse> {
 		try {
 			const notFriends = await this.allAsync(`
 				SELECT id, username, nickname, profile_picture
@@ -288,10 +286,27 @@ export default class UserDatabase {
 					END
 					FROM friend_requests fr
 					WHERE (fr.user_id = ? OR fr.friend_id = ?)
-					AND fr.status = 'accepted'
+					AND fr.status != 'accepted'
 				)
 			`, [userId, userId, userId, userId]);
 			return { status: 200, reply: notFriends };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async getFriendRequest(userId: number | string, friendId: number | string): Promise<IResponse> {
+		try {
+			const request = await this.getAsync(`
+				SELECT *
+				FROM friend_requests
+				WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+			`, [userId, friendId, friendId, userId]);
+			if (!request)
+				return { status: 200, reply: "Friend request not found" };
+			return { status: 200, reply: request };
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };

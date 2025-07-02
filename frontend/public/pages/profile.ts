@@ -20,8 +20,8 @@ class ProfilePage extends BaseComponent {
 	private gamesWon!: HTMLElement;
 	private gamesLost!: HTMLElement;
 	private matchHistoryButton!: HTMLButtonElement;
-	private friendRequestStatus!: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship';
-	private handleFriendRequestButton!: HTMLButtonElement;
+	private friendshipStatus!: HTMLElement;
+	private friendListsButton!: HTMLButtonElement;
 
 	private userInfo: { username: string, nickname: string };
 
@@ -39,43 +39,36 @@ class ProfilePage extends BaseComponent {
 	async onInit() {
 		this.editProfileButton.onclick = () => { this.showEditProfileModal() };
 		this.logoutButton.onclick = () => { this.showLogoutConfirmation() };
-		this.handleFriendRequestButton.onclick = () => { this.showFriendsListModal() };
+		this.friendListsButton.onclick = () => { this.showFriendsListModal() };
+		this.matchHistoryButton.onclick = () => { this.showMatchHistory(this.userId) };
 	
 		let id = this.userId;
-		const loggedUser = AppControl.getValidDecodedToken() as { id: string | number, username?: string } | null;
+		const loggedUser = AppControl.getValidDecodedToken() as { id: string | number | null, username?: string } | null;
 		if (id !== "me" && Number(id) !== Number(loggedUser?.id)) {
-			this.editProfileButton.remove();
-			this.logoutButton.remove();
-			this.handleFriendRequestButton.remove();
 			try {
-				const data = await AppControl.getFriendRequest(id);
-				console.log("Friend request data:", data);
-
-				if (typeof data === "object")
-					this.friendRequestStatus = data.message;
-				else if (typeof data === "string")
-					this.friendRequestStatus = data as 'pending' | 'accepted' | 'rejected' | 'removed';
-				
-				if (this.friendRequestStatus === 'pending')
-					this.handleFriendRequestButton.innerText = "Cancel Friend Request";
-
-				else if (this.friendRequestStatus === 'accepted')
-					this.handleFriendRequestButton.innerText = "Unfriend";
-
-				else if (['rejected', 'removed', 'no friendship'].includes(this.friendRequestStatus))
-					this.handleFriendRequestButton.innerText = "Send Friend Request";
-
+				this.editProfileButton.remove();
+				this.logoutButton.remove();
+				const friendRequest = await AppControl.getFriendRequest(id);
+				if (friendRequest.status === "accepted") {
+					this.friendshipStatus.innerText = "Friendship Status: Friends";
+				} else if (friendRequest.status === "pending") {
+					this.friendshipStatus.innerText = "Friendship Status: Pending";
+				} else {
+					this.friendshipStatus.innerText = "Friendship Status: Not Friends";
+				}
+				console.log(`Friend request status: ${friendRequest.status}`);
 			} catch (error) {
-				if (error instanceof Error && error.message.includes("404")
-					|| error instanceof Error && error.message.includes("No friendship found")) {
-				this.friendRequestStatus = 'no friendship';
+				if (error instanceof Error
+					&& typeof error.message === "string"
+					&& error.message.includes("Cannot get friend request with self")) {
+				} else if (error instanceof Error) {
+					showToast(error.message, 3000)
+				}
 			}
-				else
-					showToast("Error fetching friend request status", 3000, "error");
-			}
+		} else {
+			this.friendshipStatus.remove();
 		}
 		
-		this.matchHistoryButton.onclick = () => { this.showMatchHistory(this.userId) };
 		if (!id || id === "me") {
 			const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string };
 			id = token?.id || null;
