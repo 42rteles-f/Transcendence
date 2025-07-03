@@ -7,7 +7,8 @@ import path from 'path';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    sqlite: Database;
+	sqlite: Database;
+	io?: any;
   }
 }
 
@@ -160,6 +161,10 @@ class UserController {
 
 		friendId = Number(friendId);
 		const response = await service.friendRequest(userId, friendId, status);
+		if (req.server.io) {
+			req.server.io.to(userId.toString()).emit("friendship-updated");
+			req.server.io.to(friendId.toString()).emit("friendship-updated");
+		}
 		return response;
 	}
 

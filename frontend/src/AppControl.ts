@@ -40,6 +40,10 @@ export class AppControl {
 
 		this.socket.on('connect', () => {
 			console.log('Connected to server!', this.socket!.id);
+			const token = this.getValidDecodedToken() as { id: string | number } | null;
+			if (token?.id) {
+				this.socket!.emit("join", { userId: token.id });
+			}
 		});
 		
 		this.socket.on('connect_error', (err) => {
@@ -48,6 +52,13 @@ export class AppControl {
 
 		this.socket.on('disconnect', () => {
 			console.log('Disconnected from server');
+		});
+
+		this.socket.on("friendship-updated", () => {
+			const modal = document.querySelector("friend-list-modal") as any;
+			if (modal && typeof modal.fetchUsersAndRequests === "function") {
+				modal.fetchUsersAndRequests().then(() => modal.renderList());
+			}
 		});
 
 		return (!!this.socket);
@@ -185,6 +196,7 @@ export class AppControl {
 	static async friendRequest(friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<any> {
 		const token = localStorage.getItem("authToken");
 		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friend-request/${friendId}`) || `http://localhost:3000/user/friend-request/${friendId}`;
+		console.log(`URL called: ${userApiUrl}`);
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "POST",
@@ -339,6 +351,10 @@ export class AppControl {
 		}
 		this.socket!.emit(event, { target: targetId, message: message });
 		console.log('Chat message sent:', message);
+	}
+
+	public static getSocket(): Pointer<Socket> {
+		return this.socket;
 	}
 }
 

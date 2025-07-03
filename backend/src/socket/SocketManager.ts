@@ -100,6 +100,10 @@ class SocketManager {
 	public getAllClients() {
 		return Array.from(this.clients.values());
 	}
+
+	public getIo(): Server {
+		return this.io;
+	}
 }
 
 export default SocketManager;

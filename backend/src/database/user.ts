@@ -120,8 +120,8 @@ export default class UserDatabase {
 													 SUM(CASE WHEN ((g.player1 = u.id AND g.player1_score < g.player2_score) OR (g.player2 = u.id AND g.player1_score > g.player2_score) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesLost,
 													 u.profile_picture as profilePicture
 												FROM users AS u
-												LEFT JOIN games AS g ON u.id = g.player1 OR u.id = g.player2
-												WHERE u.id = ? AND g.status = 'finished'
+												LEFT JOIN games AS g ON (u.id = g.player1 OR u.id = g.player2) AND g.status = 'finished'
+												WHERE u.id = ?
 												GROUP BY u.id
 												`, [id]);
             if (!user)
@@ -206,53 +206,71 @@ export default class UserDatabase {
 		return await this.getByEmail(email);
 	}
 
-	async friendRequest(userId: number, friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<IResponse> {
-		let query = '';
-
-		const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
-		const requesterId = userId;
+	async friendRequest(
+		userId: number,
+		friendId: number,
+		status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'
+	): Promise<IResponse> {
 		try {
-			const request = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?', [userA, userB]);
-			if (!request)
-				return { status: 404, reply: "Friend request not found" };
-			switch (status) {
-				case 'pending': {
-					if (request)
-						return { status: 400, reply: "Friend request already exists" };
-					query = 'INSERT INTO friend_requests (user_id, friend_id, requester_id, status) VALUES (?, ?, ?)';
-					await this.runAsync(query, [userA, userB, requesterId, status]);
-					return { status: 200, reply: "Friend request sent" };
-				}
-				case 'accepted': {
-					if (request.status !== 'pending')
-						return { status: 400, reply: "Friend request already processed" };
-					if (request.requester_id === userId)
-						return { status: 400, reply: "You cannot accept your own friend request" };
+			const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
 
-					query = 'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?';
-					await this.runAsync(query, [status, userA, userB]);
-					return { status: 200, reply: "Friend request accepted" };
-				}
-				case 'rejected': {
-					if (request.status !== 'pending')
-						return { status: 400, reply: "Friend request already processed" };
-					if (request.requester_id === userId)
-						return { status: 400, reply: "You cannot reject your own friend request" };
+			let request = await this.getAsync(
+				'SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?',
+				[userA, userB]
+			);
 
-					query = 'DELETE FROM friend_requests WHERE user_id = ? AND friend_id = ?';
-					await this.runAsync(query, [status, userA, userB]);
-					return { status: 200, reply: "Friend request rejected" };
+			if (!request) {
+				if (status !== "pending")
+					return { status: 403, reply: "You can only send a friend request." };
+				await this.runAsync(
+					'INSERT INTO friend_requests (user_id, friend_id, status, requester_id) VALUES (?, ?, ?, ?)',
+					[userA, userB, status, userId]
+				);
+				return { status: 200, reply: "Friend request sent." };
+			}
+
+			if (request.status === "pending") {
+				if (status === "removed") {
+					if (request.requester_id !== userId)
+						return { status: 403, reply: "Only the requester can cancel the request." };
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userA, userB]
+					);
+					return { status: 200, reply: "Friend request cancelled." };
 				}
-				case 'removed': {
-					if (request.status !== 'accepted')
-						return { status: 400, reply: "Friend request not accepted" };
-					query = 'DELETE FROM friend_requests WHERE user_id = ? AND friend_id = ?';
-					await this.runAsync(query, [userA, userB]);
-					return { status: 200, reply: "Friend request removed" };
+				if (status === "accepted" || status === "rejected") {
+					if (request.requester_id === userId)
+						return { status: 403, reply: "Only the recipient can accept or reject the request." };
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userA, userB]
+					);
+					return { status: 200, reply: `Friend request ${status}.` };
 				}
-				default:
-					return { status: 400, reply: "Invalid status" };
-		}
+				return { status: 400, reply: "Invalid operation for pending request." };
+			}
+
+			if (request.status === "accepted") {
+				if (status === "removed") {
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userA, userB]
+					);
+					return { status: 200, reply: "Friendship removed." };
+				}
+				return { status: 400, reply: "Invalid operation for accepted friendship." };
+			}
+
+			if (status === "pending") {
+				await this.runAsync(
+					'UPDATE friend_requests SET status = ?, requester_id = ? WHERE user_id = ? AND friend_id = ?',
+					[status, userId, userA, userB]
+				);
+				return { status: 200, reply: "Friend request sent again." };
+			}
+
+			return { status: 400, reply: "Invalid operation." };
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };
@@ -276,19 +294,22 @@ export default class UserDatabase {
 	async findUsers(userId: number): Promise<IResponse> {
 		try {
 			const notFriends = await this.allAsync(`
-				SELECT id, username, nickname, profile_picture
-				FROM users
-				WHERE id != ?
-				AND id NOT IN (
-					SELECT CASE
-						WHEN fr.user_id = ? THEN fr.friend_id
-						ELSE fr.user_id
-					END
-					FROM friend_requests fr
-					WHERE (fr.user_id = ? OR fr.friend_id = ?)
-					AND fr.status != 'accepted'
-				)
-			`, [userId, userId, userId, userId]);
+				SELECT
+					u.id,
+					fr.requester_id,
+					u.username,
+					u.nickname,
+					u.profile_picture,
+					fr.status as friendship_status
+				FROM users u
+				LEFT JOIN friend_requests fr
+					ON (
+						(fr.user_id = u.id AND fr.friend_id = ?)
+						OR (fr.friend_id = u.id AND fr.user_id = ?)
+					)
+				WHERE u.id != ?
+				AND (fr.status IS NULL OR fr.status != 'accepted')
+			`, [userId, userId, userId]);
 			return { status: 200, reply: notFriends };
 		} catch (error) {
 			if (error instanceof Error)
@@ -318,13 +339,21 @@ export default class UserDatabase {
 	async getAllFriends(userId: number): Promise<IResponse> {
 		try {
 			const friends = await this.allAsync(`
-				SELECT u.id, u.username, u.nickname, u.profile_picture
+				SELECT 
+					u.id, 
+					fr.requester_id,
+					u.username, 
+					u.nickname, 
+					u.profile_picture,
+					fr.status as friendship_status
 				FROM users u
 				INNER JOIN friend_requests fr
-					ON (fr.user_id = ? OR fr.friend_id = ?)
-					AND (u.id = fr.user_id OR u.id = fr.friend_id)
-					AND u.id != ?
+					ON (
+						(fr.user_id = u.id AND fr.friend_id = ?)
+						OR (fr.friend_id = u.id AND fr.user_id = ?)
+					)
 					AND fr.status = 'accepted'
+				WHERE u.id != ?
 			`, [userId, userId, userId]);
 			return { status: 200, reply: friends };
 		} catch (error) {
