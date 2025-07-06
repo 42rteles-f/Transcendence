@@ -23,7 +23,7 @@ class Client {
 	sendChatMessage(roomId: string, text: string) {
 	}
 
-	onchatMessage(payload: {target: string, message: string}) {
+	onChatMessage(payload: {target: string, message: string}) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
 		this.socket.to(payload.target).emit('chat-message', {
 			fromId: this.socket.id,
@@ -34,13 +34,14 @@ class Client {
 	}
 
 	eventCaller(event: string, ...args: any[]) {
+		event = `-${event}`;
 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
 		console.log(methodName);
 		if (typeof (this as any)[methodName] === 'function') {
 			(this as any)[methodName](...args);
-		} else {
-			console.warn(`Unhandled event: ${event}`);
-		};
+			return (true);
+		}
+		console.warn(`Unhandled event: ${event}`);
  	}
 
 	quitGame() {

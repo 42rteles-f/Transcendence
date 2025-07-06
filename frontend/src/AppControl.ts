@@ -1,12 +1,11 @@
-import { io, Socket } from 'socket.io-client';
+import { io, Socket as SocketIo } from 'socket.io-client';
 import { Pointer } from './PageManager';
 import { jwtDecode } from "jwt-decode";
-import Api from './api/Api';
+import Socket from "./Socket";
 
 export class AppControl {
-	private	static socket:			Pointer<Socket> = null;
+	private	static socket:			Pointer<SocketIo> = null;
 	private static chatObservers:	Function[] = [];
-	public static api: Api = new Api();
 
 	constructor() {}
 
@@ -88,7 +87,7 @@ export class AppControl {
 		}
 		if (!res.ok)
 			throw new Error(`Login failed: ${res.status} ${data.message}`);
-		this.createSocket();
+		Socket.init();
 		localStorage.setItem("authToken", data.message);
 		return (res.ok);
 	}

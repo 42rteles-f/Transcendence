@@ -1,5 +1,5 @@
 import { BaseComponent } from "../../../src/BaseComponent";
-import { AppControl } from "../../../src/AppControl";
+import Socket from "../../../src/Socket";
 
 console.log("executing home.ts");
 
@@ -9,6 +9,8 @@ class Chat extends BaseComponent {
 	private sendButton!: HTMLButtonElement;
 	private clientList!: HTMLUListElement;
 	private chatName!: HTMLDivElement;
+
+	private chatHistory: Map<string, HTMLDivElement[]> = new Map();
 
 	public	messageLimit: number = 5;
 
@@ -22,17 +24,21 @@ class Chat extends BaseComponent {
 		this.chatInput.onkeydown = (e: KeyboardEvent) => {
 			if (e.key === "Enter") this.sendMessage();
 		};
-		AppControl.onlineClientsListener(this.renderClients);
-		AppControl.addChatListener(this.addMessage);
-		// this.renderClients(["Client A", "Client B", "Client C"]);
+		Socket.init();
+		Socket.addEventListener("chat-message", this.addMessage);
+		Socket.addEventListener("client-arrival", this.addClients);
+		Socket.addEventListener("client-departure", this.removeClient);
 	}
 
 	sendMessage() {
 		const message = this.chatInput.value.trim();
 		if (!message) return ;
 
-		AppControl.sendChatMessage('chat-message', this.chatName.dataset.id!, message);
-		this.addMessage({fromId: "", fromName: "", message}, "outgoing");
+		Socket.emit("chat-message", {
+			target: this.chatName.dataset.id,
+			message: message
+		});
+		this.addMessage({fromId: "self", fromName: this.chatName.textContent!, message}, "outgoing");
 		this.chatInput.value = '';
 	}
 
@@ -40,15 +46,17 @@ class Chat extends BaseComponent {
 		data: { fromId: string, fromName: string, message: string },
 		type?: "incoming" | "outgoing"
 	): void => {
-		console.log("triggered");
-		console.log(`((${data}))`);
 		if (type !== "outgoing") type = "incoming";
 		console.log(`chatName (${this.chatName.textContent}) != fromName (${data.fromName}) && type (${type})`);
-		if (this.chatName.textContent != data.fromName && type != "outgoing") return ;
-
+		
 		const messageElement = document.createElement("div");
 		messageElement.className = `chat-message-${type}`;
 		messageElement.textContent = data.message;
+
+		if (!this.chatHistory.has(data.fromName)) this.chatHistory.set(data.fromName, []);
+		this.chatHistory.get(data.fromName)!.push(messageElement);
+
+		if (this.chatName.textContent != data.fromName && type != "outgoing") return ;
 		this.chatMessages.appendChild(messageElement);
 
 		while (this.chatMessages.children.length > this.messageLimit)
@@ -57,7 +65,7 @@ class Chat extends BaseComponent {
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 	}
 
-	renderClients = (clients: { id: string, name: string }[]) => {
+	addClients = (clients: { id: string, name: string }[]) => {
 		this.clientList.innerHTML = "";
 		clients.forEach(client => {
 			const listItem = document.createElement("li");
@@ -70,17 +78,35 @@ class Chat extends BaseComponent {
 		});
 	}
 
+	removeClient = (client: { id: string, name: string }) => {
+		this.clientList.querySelectorAll("li").forEach((item) => {
+			const clientId = item.dataset.clientId;
+			if (client.id == clientId){
+				item.remove();
+			}
+		});
+		console.log("Clients removed");
+	}
+
 	openChat(client: { id: string, name: string }) {
 		this.chatName.textContent = `${client.name}`;
 		this.chatName.dataset.id = client.id
 		this.chatMessages.innerHTML = "";
 		this.chatInput.value = '';
-		this.chatMessages.scrollTop = 0;
+		if (!this.chatHistory.has(client.id)) {
+			this.chatHistory.set(client.id, []);
+		}
+		this.chatHistory.get(client.name)?.forEach((msg) => {
+			this.chatMessages.appendChild(msg);
+		});
+		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 		console.log("Chat opened");
 	}
 
 	onDestroy(): void {
-		AppControl.removeChatListener(this.addMessage);
+		Socket.removeEventListener("chat-message", this.addMessage);
+		Socket.removeEventListener("client-arrival", this.addClients);
+		Socket.removeEventListener("client-departure", this.removeClient);
 		this.chatMessages.innerHTML = "";
 	}
 }
