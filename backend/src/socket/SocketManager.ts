@@ -46,48 +46,56 @@ class SocketManager {
 			const client = new Client(this, socket);
 			this.clients.set(socket.id, client);
 
-			this.broadcastClientArrive();
-		
+			socket.broadcast.emit('client-arrival', [{
+				id: socket.id,
+				name: socket.data.user.username
+			}]);
+
 			socket.onAny((event: string, ...args: any[]) => {
-				// if (event.startsWith("client-"))
-					client.eventCaller(event, ...args);
-				// else if (event.startsWith("server-"))
-				// 	this.eventCaller(event, client, ...args);
+				if (!client.eventCaller(event, ...args)
+					&& !this.eventCaller(event, client, ...args))
+				{
+					console.warn(`Unhandled event: ${event}`);
+				}
 			});
 
 			socket.on('disconnect', () => {
 				console.log('Client disconnected:', socket.id);
 				this.clients.delete(socket.id);
-				this.broadcastClientLeft(client);
+				this.io.emit('client-departure', {
+					id: client.socket.id,
+					name: client.socket.data.user.username,
+				});
 			});
 		});
 	}
 
-	broadcastClientArrive() {
+	onSubscribeClients(client: Client) {
 		const onlineClients = Array.from(this.clients.values()).map(c => ({
 			id: c.socket.id,
 			name: c.socket.data.user.username,
 		}));
-		this.io.emit('client-arrival', onlineClients);
+		client.socket.emit('client-arrival', onlineClients);
+	}
+
+	broadcastClientArrive(Client: Client) {
+
+		;
 	}
 
 	broadcastClientLeft(client: Client) {
-		this.io.emit('client-departure', {
-			id: client.socket.id,
-			name: client.socket.data.user.username,
-		});
+
 	}
 
 	eventCaller(event: string, ...args: any[]) {
 		event = `-${event}`;
 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
-		console.log(methodName);
 		if (typeof (this as any)[methodName] === 'function') {
 			(this as any)[methodName](...args);
 			return (true);
 		}
-		console.warn(`Unhandled event: ${event}`);
- 	}
+		return (false);
+	}
 
 
 	public sendChatMessage(from: string, target: string, message: string) {

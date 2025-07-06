@@ -25,6 +25,8 @@ class Chat extends BaseComponent {
 			if (e.key === "Enter") this.sendMessage();
 		};
 		Socket.init();
+		Socket.emit("subscribe-chat");
+		Socket.emit("subscribe-clients");
 		Socket.addEventListener("chat-message", this.addMessage);
 		Socket.addEventListener("client-arrival", this.addClients);
 		Socket.addEventListener("client-departure", this.removeClient);
@@ -66,7 +68,6 @@ class Chat extends BaseComponent {
 	}
 
 	addClients = (clients: { id: string, name: string }[]) => {
-		this.clientList.innerHTML = "";
 		clients.forEach(client => {
 			const listItem = document.createElement("li");
 			listItem.dataset.clientId = client.id;
@@ -104,6 +105,8 @@ class Chat extends BaseComponent {
 	}
 
 	onDestroy(): void {
+		Socket.emit("unsubscribe-chat");
+		Socket.emit("unsubscribe-clients");
 		Socket.removeEventListener("chat-message", this.addMessage);
 		Socket.removeEventListener("client-arrival", this.addClients);
 		Socket.removeEventListener("client-departure", this.removeClient);

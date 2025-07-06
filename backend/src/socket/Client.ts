@@ -1,9 +1,11 @@
 import { Socket } from "socket.io";
 import SocketManager from "./SocketManager";
+import fastify from "fastify";
 
 class Client {
 	public id: string = '';
 	public socket: Socket;
+	public subscriptions: string[] = [];
 	public currentGameRoom?: string;
 	private server: SocketManager;
 
@@ -21,6 +23,11 @@ class Client {
 	}
   
 	sendChatMessage(roomId: string, text: string) {
+	}
+
+	onSubscribeToChat(event: string) {
+		console.log(`subscribing to chat ${event}`);
+		this.socket.join(event);
 	}
 
 	onChatMessage(payload: {target: string, message: string}) {
@@ -41,7 +48,7 @@ class Client {
 			(this as any)[methodName](...args);
 			return (true);
 		}
-		console.warn(`Unhandled event: ${event}`);
+		return (false);
  	}
 
 	quitGame() {

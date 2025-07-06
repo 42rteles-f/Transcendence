@@ -5,7 +5,6 @@ import Socket from "./Socket";
 
 export class AppControl {
 	private	static socket:			Pointer<SocketIo> = null;
-	private static chatObservers:	Function[] = [];
 
 	constructor() {}
 
@@ -172,45 +171,6 @@ export class AppControl {
 			this.socket = null;
 		}
 		console.log('Logged out successfully');
-	}
-
-	static addChatListener(observer: (...args: any[]) => void): void {
-		if (!this.socket && !this.createSocket()) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		this.chatObservers.push(observer);
-		this.socket!.on("chat-message", observer);
-	}
-
-	static removeChatListener(observer: (...args: any[]) => void): void {
-		if (!this.socket) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		const index = this.chatObservers.indexOf(observer);
-		if (index !== -1) {
-			this.chatObservers.splice(index, 1);
-			this.socket!.off('chat-message', observer);
-		}
-	}
-
-	static onlineClientsListener(observer: (...args: any[]) => void): void {
-		if (!this.socket &&  !this.createSocket()) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		this.socket!.emit('online-clients');
-		this.socket!.on('online-clients', observer);
-	}
-
-	static sendChatMessage(event: string, targetId: string, message: string): void {
-		if (!this.socket) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		this.socket!.emit(event, { target: targetId, message: message });
-		console.log('Chat message sent:', message);
 	}
 }
 
