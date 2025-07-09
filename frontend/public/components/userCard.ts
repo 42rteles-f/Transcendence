@@ -34,7 +34,7 @@ class UserCard extends BaseComponent {
         this.userCardNickname.textContent = this.user.nickname || "";
         this.userCardUsername.textContent = "@" + (this.user.username || "");
 		this.renderFriendActionButton();
-    }
+    }	
 
 	renderFriendActionButton() {
         const status = this.user.friendship_status as string;

@@ -30,15 +30,6 @@ class FriendListModal extends BaseComponent {
         this.notFriendsTab.onclick = () => this.switchTab("not-friends");
         this.closeFriendList.onclick = () => this.closeModal();
 
-		const socket = AppControl.getSocket();
-		if (socket) {
-			socket.on("friendship-updated", async () => {
-				await this.fetchUsersAndRequests();
-				this.renderList();
-			});
-		}
-
-
         await this.fetchUsersAndRequests();
         this.renderList();
     }
