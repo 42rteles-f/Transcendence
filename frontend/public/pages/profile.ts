@@ -6,6 +6,7 @@ import { showToast } from './toastNotification';
 import { MatchHistoryModal } from "./matchHistoryModal";
 import { FriendListModal } from "./friendListModal";
 import { LogoutModal } from "./logoutModal";
+import Socket from "../../src/Socket";
 
 console.log("executing ProfilePage.ts");
 
@@ -22,6 +23,7 @@ class ProfilePage extends BaseComponent {
 	private matchHistoryButton!: HTMLButtonElement;
 	private friendshipStatus!: HTMLElement;
 	private friendListsButton!: HTMLButtonElement;
+	private onlineStatus!: HTMLSpanElement;
 
 	private userInfo: { username: string, nickname: string };
 
@@ -37,6 +39,7 @@ class ProfilePage extends BaseComponent {
 	}
 	
 	async onInit() {
+		this.editProfileButton.onclick = () => { this.showEditProfileModal() };
 		this.editProfileButton.onclick = () => { this.showEditProfileModal() };
 		this.logoutButton.onclick = () => { this.showLogoutConfirmation() };
 		this.friendListsButton.onclick = () => { this.showFriendsListModal() };
@@ -101,6 +104,16 @@ class ProfilePage extends BaseComponent {
 			}
 			, 2000);
 		}
+		console.log(`before ()()()()`);
+		Socket.init();
+		Socket.addEventListener("client-arrival", (clients: { id: string, name: string }[]) => {
+			console.log("clients received:", clients);
+			if (clients.find(client => client.name === this.username.textContent)) {
+				this.onlineStatus!.style.backgroundColor = "green";
+				console.log("changed");
+			}
+		})
+		console.log(`after ()()()()`);
 	}
 
 	async showEditProfileModal() {

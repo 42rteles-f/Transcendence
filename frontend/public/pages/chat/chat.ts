@@ -26,7 +26,6 @@ class Chat extends BaseComponent {
 		};
 		Socket.init();
 		Socket.emit("subscribe-chat");
-		Socket.emit("subscribe-clients");
 		Socket.addEventListener("chat-message", this.addMessage);
 		Socket.addEventListener("client-arrival", this.addClients);
 		Socket.addEventListener("client-departure", this.removeClient);

@@ -30,6 +30,7 @@ class Api {
 		let fullPath = `${this.apiUrl}${apiPath}`;
 		if (params && typeof params === "object" && params.toString())
 			fullPath += '?' + params.toString();
+
 		const response = await fetch(fullPath, {
 			method: method,
 			headers: {

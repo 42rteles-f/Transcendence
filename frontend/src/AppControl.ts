@@ -131,6 +131,7 @@ export class AppControl {
 	static async getProfile(id: string | number | null): Promise<any> {
 		const token = localStorage.getItem("authToken");
 		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `profile/${id}`) || `http://localhost:3000/user/profile/${id}`;
+		console.log(`URL called: ${userApiUrl}`);
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "GET",
@@ -332,6 +333,9 @@ export class AppControl {
 //         return (false);
 //     }
 // }
+
+// Error loading profile
+// Get profile failed: SyntaxError: Unexpected token '<', "
 
 /*
 cs50 CS

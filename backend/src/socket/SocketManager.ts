@@ -55,7 +55,7 @@ class SocketManager {
 				if (!client.eventCaller(event, ...args)
 					&& !this.eventCaller(event, client, ...args))
 				{
-					console.warn(`Unhandled event: ${event}`);
+					// console.warn(`Unhandled event: ${event}`);
 				}
 			});
 
@@ -70,7 +70,7 @@ class SocketManager {
 		});
 	}
 
-	onSubscribeClients(client: Client) {
+	onSubscribeClientArrival(client: Client) {
 		const onlineClients = Array.from(this.clients.values()).map(c => ({
 			id: c.socket.id,
 			name: c.socket.data.user.username,
