@@ -10,8 +10,6 @@ class UserCard extends BaseComponent {
     private userCardNickname!: HTMLElement;
     private userCardUsername!: HTMLElement;
 	private friendActionButton!: HTMLDivElement;
-	private onlineStatus!: HTMLSpanElement;
-	private _userStatusCallback?: ({ userId, status }: { userId: string, status: string }) => void;
 
     constructor(user: any, uploadUrl: string, ownerId: number | string) {
         super("/components/userCard.html");
@@ -36,39 +34,7 @@ class UserCard extends BaseComponent {
         this.userCardNickname.textContent = this.user.nickname || "";
         this.userCardUsername.textContent = "@" + (this.user.username || "");
 		this.renderFriendActionButton();
-		this.setupStatusListener();
-    }
-
-
-	setupStatusListener() {
-        const statusEl = this.onlineStatus;
-        if (!statusEl) return;
-
-		const socket = AppControl.getSocket();
-		if (socket) {
-
-			this._userStatusCallback = ({ userId, status }: { userId: string, status: string }) => {
-				if (String(userId) === String(this.user.id)) {
-					console.log(`Status update for user ${userId}: ${status}`);
-					statusEl.textContent = status === "online" ? "🟢 Online" : "⚫ Offline";
-					statusEl.className = status === "online"
-						? "ml-2 text-xs font-semibold text-green-600"
-						: "ml-2 text-xs font-semibold text-gray-400";
-				}
-			};
-			socket.on("user-status", this._userStatusCallback);
-		}
-    }
-
-
-	onDestroy(): void {
-		const socket = AppControl.getSocket();
-		if (socket && this._userStatusCallback) {
-			socket.off("user-status", this._userStatusCallback);
-			this._userStatusCallback = undefined;
-		}
-	}
-	
+    }	
 
 	renderFriendActionButton() {
         const status = this.user.friendship_status as string;
