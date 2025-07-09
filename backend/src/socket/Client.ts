@@ -27,7 +27,7 @@ class Client {
 
 	onSubscribeToChat(event: string) {
 		console.log(`subscribing to chat ${event}`);
-		this.socket.join(event);
+		this.subscriptions.push(event);
 	}
 
 	onChatMessage(payload: {target: string, message: string}) {

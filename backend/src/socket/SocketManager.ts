@@ -47,8 +47,8 @@ class SocketManager {
 			this.clients.set(socket.id, client);
 
 			socket.broadcast.emit('client-arrival', [{
-				id: socket.id,
-				name: socket.data.user.username
+					id: socket.id,
+					name: socket.data.user.username
 			}]);
 
 			socket.onAny((event: string, ...args: any[]) => {

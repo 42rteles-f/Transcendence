@@ -30,6 +30,10 @@ class Chat extends BaseComponent {
 		Socket.addEventListener("chat-message", this.addMessage);
 		Socket.addEventListener("client-arrival", this.addClients);
 		Socket.addEventListener("client-departure", this.removeClient);
+		Socket.addEventListener("disconnect", () => {
+			this.clientList.innerHTML = "";
+		});
+			
 	}
 
 	sendMessage() {
