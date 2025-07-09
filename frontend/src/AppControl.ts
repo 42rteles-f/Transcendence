@@ -1,12 +1,10 @@
-import { io, Socket } from 'socket.io-client';
+import { io, Socket as SocketIo } from 'socket.io-client';
 import { Pointer } from './PageManager';
 import { jwtDecode } from "jwt-decode";
-import Api from './api/Api';
+import Socket from "./Socket";
 
 export class AppControl {
-	private	static socket:			Pointer<Socket> = null;
-	private static chatObservers:	Function[] = [];
-	public static api: Api = new Api();
+	private	static socket:			Pointer<SocketIo> = null;
 
 	constructor() {}
 
@@ -99,7 +97,7 @@ export class AppControl {
 		}
 		if (!res.ok)
 			throw new Error(`Login failed: ${res.status} ${data.message}`);
-		this.createSocket();
+		Socket.init();
 		localStorage.setItem("authToken", data.message);
 		return (res.ok);
 	}
@@ -312,49 +310,6 @@ export class AppControl {
 			this.socket = null;
 		}
 		console.log('Logged out successfully');
-	}
-
-	static addChatListener(observer: (...args: any[]) => void): void {
-		if (!this.socket && !this.createSocket()) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		this.chatObservers.push(observer);
-		this.socket!.on("chat-message", observer);
-	}
-
-	static removeChatListener(observer: (...args: any[]) => void): void {
-		if (!this.socket) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		const index = this.chatObservers.indexOf(observer);
-		if (index !== -1) {
-			this.chatObservers.splice(index, 1);
-			this.socket!.off('chat-message', observer);
-		}
-	}
-
-	static onlineClientsListener(observer: (...args: any[]) => void): void {
-		if (!this.socket &&  !this.createSocket()) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		this.socket!.emit('online-clients');
-		this.socket!.on('online-clients', observer);
-	}
-
-	static sendChatMessage(event: string, targetId: string, message: string): void {
-		if (!this.socket) {
-			console.error('Socket not initialized. Call createSocket() first.');
-			return ;
-		}
-		this.socket!.emit(event, { target: targetId, message: message });
-		console.log('Chat message sent:', message);
-	}
-
-	public static getSocket(): Pointer<Socket> {
-		return this.socket;
 	}
 }
 
