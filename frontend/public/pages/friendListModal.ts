@@ -70,10 +70,15 @@ class FriendListModal extends BaseComponent {
 
         users.forEach(u => {
             const userId = this.userId ?? "";
-            const user = new UserCard(u, this.uploadUrl, userId);
+            const user = new UserCard(u, this.uploadUrl, userId, this.handleFriendAction.bind(this));
             this.userList.appendChild(user);
         });
     }
+
+	private handleFriendAction = async () => {
+		await this.fetchUsersAndRequests();
+		this.renderList();
+	}
 
     handleEsc = (e: KeyboardEvent) => {
         if (e.key === "Escape") this.closeModal();

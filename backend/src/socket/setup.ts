@@ -13,6 +13,8 @@ socketManager.getIo().on("connection", (socket) => {
 	});
 });
 
+export default socketManager;
+
 //   io.use((socket, next) => {
 // 	const token = socket.handshake.auth.token;
 // 	const userId = verifyTokenAndExtractUserId(token); // your function

@@ -10,12 +10,14 @@ class UserCard extends BaseComponent {
     private userCardNickname!: HTMLElement;
     private userCardUsername!: HTMLElement;
 	private friendActionButton!: HTMLDivElement;
+	private onActionComplete?: () => void;
 
-    constructor(user: any, uploadUrl: string, ownerId: number | string) {
+    constructor(user: any, uploadUrl: string, ownerId: number | string, callback?: () => void) {
         super("/components/userCard.html");
         this.user = user;
         this.uploadUrl = uploadUrl;
 		this.ownerId = ownerId;
+		this.onActionComplete = callback;
     }
 
     user: any;
@@ -62,6 +64,7 @@ class UserCard extends BaseComponent {
 						this.user.friendship_status = "accepted";
 						this.renderFriendActionButton();
                         this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+						this.onActionComplete?.();
                     } catch (error) {
                         showToast(error instanceof Error ? error.message : "Error", 3000, "error");
                     }
@@ -80,6 +83,7 @@ class UserCard extends BaseComponent {
 						this.user.friendship_status = "rejected";
 						this.renderFriendActionButton();
                         this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+						this.onActionComplete?.();
                     } catch (error) {
                         showToast(error instanceof Error ? error.message : "Error", 3000, "error");
                     }
@@ -102,6 +106,7 @@ class UserCard extends BaseComponent {
 						this.user.friendship_status = "removed";
 						this.renderFriendActionButton();
 						this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+						this.onActionComplete?.();
 					} catch (error) {
 						showToast(error instanceof Error ? error.message : "Error", 3000, "error");
 					}
@@ -126,6 +131,7 @@ class UserCard extends BaseComponent {
 					this.user.friendship_status = "removed";
 					this.renderFriendActionButton();
 					this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+					this.onActionComplete?.();
 				} catch (error) {
 					showToast(error instanceof Error ? error.message : "Error", 3000, "error");
 				}
@@ -148,6 +154,7 @@ class UserCard extends BaseComponent {
 					this.user.requester_id = loggedUserId;
 					this.renderFriendActionButton();
 					this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+					this.onActionComplete?.();
 				} catch (error) {
 					showToast(error instanceof Error ? error.message : "Error", 3000, "error");
 				}
@@ -197,6 +204,7 @@ class UserCard extends BaseComponent {
                     showToast(message, 3000, "success");
                 }
                 this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+				this.onActionComplete?.();
             } catch (error) {
                 showToast(error instanceof Error ? error.message : "Error", 3000, "error");
             }
