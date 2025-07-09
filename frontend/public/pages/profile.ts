@@ -3,6 +3,10 @@ import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 import { editProfile } from "./editProfile";
 import { showToast } from './toastNotification';
+import { MatchHistoryModal } from "./matchHistoryModal";
+import { FriendListModal } from "./friendListModal";
+import { LogoutModal } from "./logoutModal";
+import Socket from "../../src/Socket";
 
 console.log("executing ProfilePage.ts");
 
@@ -16,12 +20,18 @@ class ProfilePage extends BaseComponent {
 	private gamesPlayed!: HTMLElement;
 	private gamesWon!: HTMLElement;
 	private gamesLost!: HTMLElement;
+	private matchHistoryButton!: HTMLButtonElement;
+	private friendshipStatus!: HTMLElement;
+	private friendListsButton!: HTMLButtonElement;
+	private onlineStatus!: HTMLSpanElement;
 
 	private userInfo: { username: string, nickname: string };
 
-	constructor(userId?: string | number | null) {
+	constructor(userId: string | number | null) {
 		super("/pages/profile.html");
-		this.userId = userId || null;
+		const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string } | null;
+		this.userId = userId ? userId : token?.id || "me";
+		console.log(`checking userId: ${this.userId}`);
 		this.userInfo = {
 			username: "",
 			nickname: ""
@@ -29,12 +39,43 @@ class ProfilePage extends BaseComponent {
 	}
 	
 	async onInit() {
-		this.logoutButton.onclick = () => { this.logout() };
-		this.editProfileButton.onclick = () => { this.editProfile() };
+		this.editProfileButton.onclick = () => { this.showEditProfileModal() };
+		this.editProfileButton.onclick = () => { this.showEditProfileModal() };
+		this.logoutButton.onclick = () => { this.showLogoutConfirmation() };
+		this.friendListsButton.onclick = () => { this.showFriendsListModal() };
+		this.matchHistoryButton.onclick = () => { this.showMatchHistory(this.userId) };
+	
 		let id = this.userId;
+		const loggedUser = AppControl.getValidDecodedToken() as { id: string | number | null, username?: string } | null;
+		if (id !== "me" && Number(id) !== Number(loggedUser?.id)) {
+			try {
+				this.editProfileButton.remove();
+				this.logoutButton.remove();
+				const friendRequest = await AppControl.getFriendRequest(id);
+				if (friendRequest.status === "accepted") {
+					this.friendshipStatus.innerText = "Friendship Status: Friends";
+				} else if (friendRequest.status === "pending") {
+					this.friendshipStatus.innerText = "Friendship Status: Pending";
+				} else {
+					this.friendshipStatus.innerText = "Friendship Status: Not Friends";
+				}
+				console.log(`Friend request status: ${friendRequest.status}`);
+			} catch (error) {
+				if (error instanceof Error
+					&& typeof error.message === "string"
+					&& error.message.includes("Cannot get friend request with self")) {
+				} else if (error instanceof Error) {
+					showToast(error.message, 3000)
+				}
+			}
+		} else {
+			this.friendshipStatus.remove();
+		}
+		
 		if (!id || id === "me") {
 			const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string };
 			id = token?.id || null;
+			this.userId = id;
 		}
 
 		if (!id) {
@@ -63,21 +104,36 @@ class ProfilePage extends BaseComponent {
 			}
 			, 2000);
 		}
+		console.log(`before ()()()()`);
+		Socket.init();
+		Socket.addEventListener("client-arrival", (clients: { id: string, name: string }[]) => {
+			console.log("clients received:", clients);
+			if (clients.find(client => client.name === this.username.textContent)) {
+				this.onlineStatus!.style.backgroundColor = "green";
+				console.log("changed");
+			}
+		})
+		console.log(`after ()()()()`);
 	}
 
-	async logout() {
-		try {
-			await AppControl.logout();
-			showToast("Logout successful!", 3000, "success");
-			routes.navigate("/login");
-		} catch (error) {
-			showToast("Logout failed. Please try again.", 3000, "error");
-		}
-	}
-
-	async editProfile() {
+	async showEditProfileModal() {
 		const editProfilModal = new editProfile(this.userInfo);
 		this.appendChild(editProfilModal);
+	}
+
+	async showMatchHistory(id: number | string | null) {
+		const modal = new MatchHistoryModal(Number(id));
+		document.body.appendChild(modal);
+	}
+
+	async showFriendsListModal() {
+		const modal = new FriendListModal(this.userId, import.meta.env.VITE_API_URL + "uploads/");
+		document.body.appendChild(modal);
+	}
+
+	async showLogoutConfirmation() {
+		const modal = new LogoutModal();
+		document.body.appendChild(modal);
 	}
 }
 

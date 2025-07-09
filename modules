@@ -1,38 +1,41 @@
-Mandatory
-1   - Major: Use a framework to build the backend. ✅
-2   - Major: Replace basic Pong with server-side Pong and implement an API.
-3   - Major: Remote players
-4   - Major: Store the score of a tournament in the Blockchain.
-5   - Major: Live chat.
-6   - Major: Implement Two-Factor Authentication (2FA) and JWT. ❌
-6.5 - Minor: Use a framework or a toolkit to build the frontend. ✅
-7   - Minor: Use a database for the backend. ✅
+<Mandatory>
+	1   - Major: Use a framework to build the backend. ✅
+	2   - Major: Replace basic Pong with server-side Pong and implement an API.
+	3   - Major: Remote players
+	4   - Major: Live chat.
+	5   - Major: Standard user management, authentication, users tournaments. ✅/❌
+	6   - Major: Implementing a remote authentication. ✅
+	6.5 - Minor: Use a framework or a toolkit to build the frontend. ✅
+	7   - Minor: Use a database for the backend. ✅
+</Mandatory>
 
-Bonus
-1   - Major: Introduce an AI opponent.
-2   - Major: Designing the backend as microservices.
-2.5 - Minor: GDPR compliance options with user anonymization, local data management, and Account Deletion.
+<Bonus>
+	1   - Major: Introduce an AI opponent.
+	2   - Major: Store the score of a tournament in the Blockchain.
+	2.5 - Minor: GDPR compliance options with user anonymization, local data management, and Account Deletion.
+
+	extra   - Major: Designing the backend as microservices.
+	extra   - Major: Implement Two-Factor Authentication (2FA) and JWT. ❌
+</Bonus>
 
 <Interest>
-Major: Standard user management, authentication, users across tournaments.
-Major: Implementing a remote authentication.
-Major: Add another game with user history and matchmaking.
+	Major: Add another game with user history and matchmaking.
 
-Minor: Support on all devices.
-Minor: User and game stats dashboards
-Minor: Expanding browser compatibility.
-<\Interest>
+	Minor: Support on all devices.
+	Minor: User and game stats dashboards
+	Minor: Expanding browser compatibility.
+</Interest>
 
 <Disinterest>
-Major: Multiplayer (more than 2 players in the same game).
-Major: Implement WAF/ModSecurity with a hardened configuration and HashiCorp Vault for secrets management.
-Major: Infrastructure setup for log management.
-Major: Use advanced 3D techniques.
-Major: Enabling Pong gameplay via CLI against web users with API integration
+	Major: Multiplayer (more than 2 players in the same game).
+	Major: Implement WAF/ModSecurity with a hardened configuration and HashiCorp Vault for secrets management.
+	Major: Infrastructure setup for log management.
+	Major: Use advanced 3D techniques.
+	Major: Enabling Pong gameplay via CLI against web users with API integration
 
-Minor: Game customization options.
-Minor: Monitoring system.
-Minor: Supports multiple languages.
-Minor: Add accessibility features for visually impaired users.
-Minor: Server-Side Rendering (SSR) integration.
-<\Disinterest>
+	Minor: Game customization options.
+	Minor: Monitoring system.
+	Minor: Supports multiple languages.
+	Minor: Add accessibility features for visually impaired users.
+	Minor: Server-Side Rendering (SSR) integration.
+</Disinterest>

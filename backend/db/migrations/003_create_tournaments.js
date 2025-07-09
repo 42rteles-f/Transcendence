@@ -1,5 +1,5 @@
-module.exports.up = function(db, cb) {
-  return db.run(`
+export function up(db, cb) {
+  db.run(`
 	CREATE TABLE IF NOT EXISTS tournaments (
 	  id INTEGER PRIMARY KEY AUTOINCREMENT,
 	  name VARCHAR(100) NOT NULL,
@@ -11,6 +11,6 @@ module.exports.up = function(db, cb) {
   `, cb);
 };
 
-module.exports.down = function(db, cb) {
-  return db.run(`DROP TABLE IF EXISTS tournaments`, cb);
+export function down(db, cb) {
+  db.run(`DROP TABLE IF EXISTS tournaments`, cb);
 };

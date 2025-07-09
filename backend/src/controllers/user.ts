@@ -7,7 +7,8 @@ import path from 'path';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    sqlite: Database;
+	sqlite: Database;
+	io?: any;
   }
 }
 
@@ -122,6 +123,109 @@ class UserController {
 		const service = new UserService(db);
 	
 		const { status, reply } = await service.all();
+		return { status, reply };
+	}
+
+	async matchHistory(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const { page, pageSize } = req.query as { page?: string, pageSize?: string };
+		const userId: number = id === 'me' ? (req as any).user?.id : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const pageNum = page ? parseInt(page) : 1;
+		const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
+		const { status, reply } = await service.matchHistory(userId, pageNum, pageSizeNum);
+		return { status, reply };
+	}
+
+	async friendRequest(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const userId: number = (req as any).user?.id;
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { id } = req.params as { id: number | string };
+		let friendId: number | string = id;
+		if (!friendId || !/^\d+$/.test(String(friendId)))
+			return { status: 400, reply: "Invalid friend ID" };
+	
+		const { status } = req.body as { status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship' };
+		if (!['pending', 'accepted', 'rejected', 'removed', 'no friendship'].includes(status))
+			return { status: 400, reply: "Invalid status" };
+
+		friendId = Number(friendId);
+		const response = await service.friendRequest(userId, friendId, status);
+		if (req.server.io) {
+			req.server.io.to(userId.toString()).emit("friendship-updated");
+			req.server.io.to(friendId.toString()).emit("friendship-updated");
+		}
+		return response;
+	}
+
+	async getAllFriendRequests(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		
+		if (!id || !/^\d+$/.test(String(id)))
+			return { status: 400, reply: "Invalid friend ID" };
+
+		const userId: number = Number(id);
+		const { status, reply } = await service.getAllFriendRequests(userId);
+		return { status, reply };
+	}
+
+	async findUsers(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const userId: number = id === 'me' ? Number((req as any).user?.id) : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { status, reply } = await service.findUsers(userId);
+		return { status, reply };
+	}
+
+	async getFriendRequest(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const userId: number = (req as any).user?.id;
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+	
+		const { id } = req.params as { id: number | string };
+		let friendId: number | string = id;
+		if (!friendId || !/^\d+$/.test(String(friendId)))
+			return { status: 400, reply: "Invalid friend ID" };
+		
+		friendId = Number(friendId);
+		if (userId === friendId)
+			return { status: 400, reply: "Cannot get friend request with self" };
+	
+		const { status, reply } = await service.getFriendRequest(userId, friendId);
+		return { status, reply };
+	}
+
+	async getAllFriends(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const userId: number = id === 'me' ? Number((req as any).user?.id) : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { status, reply } = await service.getAllFriends(userId);
 		return { status, reply };
 	}
 };

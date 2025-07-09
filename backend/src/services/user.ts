@@ -34,5 +34,46 @@ export default class UserService {
 	async all(): Promise<IResponse> {
 		return (await this.db.all());
 	}
+
+	async matchHistory(
+		userId: number,
+		page: number = 1,
+		pageSize: number = 10
+	): Promise<IResponse> {
+		return (await this.db.matchHistory(userId, page, pageSize));
+	}
+
+	async friendRequest(
+		userId: number,
+		friendId: number,
+		stautus: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'
+	) {
+		return (await this.db.friendRequest(userId, friendId, stautus));
+	}
+
+	async getFriendRequest(
+		userId: number | string,
+		friendId: number | string
+	): Promise<IResponse> {
+		return (await this.db.getFriendRequest(userId, friendId));
+	}
+
+	async getAllFriendRequests(
+		userId: number
+	): Promise<IResponse> {
+		return (await this.db.getAllFriendRequests(userId));
+	}
+
+	async findUsers(
+		userId: number
+	): Promise<IResponse> {
+		return (await this.db.findUsers(userId));
+	}
+
+	async getAllFriends(
+		userId: number
+	): Promise<IResponse> {
+		return (await this.db.getAllFriends(userId));
+	}
 }
 

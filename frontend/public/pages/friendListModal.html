@@ -1,0 +1,14 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative max-h[445px] h-[445px]">
+    <button data-ref="closeFriendList" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-center">Friends</h2>
+    <div class="flex flex-col gap-2 mb-4">
+      <div class="flex gap-2">
+        <button class="flex-1 px-4 py-2 rounded-t-lg bg-gray-200 font-bold tab active" id="friends-tab" data-ref="friendsTab">Friends</button>
+        <button class="flex-1 px-4 py-2 rounded-t-lg bg-gray-200 font-bold tab" id="not-friends-tab" data-ref="notFriendsTab">Others</button>
+      </div>
+      <button data-ref="requestsToggleButton" class="hidden mt-2 px-4 py-1 rounded bg-gray-100 hover:bg-gray-200 transition"></button>
+    </div>
+    <div class="flex flex-col gap-3 overflow-y-auto h-[220px] max-h-[220px]" id="user-list" data-ref="userList"></div>
+  </div>
+</div>

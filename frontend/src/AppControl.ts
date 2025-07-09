@@ -38,6 +38,10 @@ export class AppControl {
 
 		this.socket.on('connect', () => {
 			console.log('Connected to server!', this.socket!.id);
+			const token = this.getValidDecodedToken() as { id: string | number } | null;
+			if (token?.id) {
+				this.socket!.emit("join", { userId: token.id });
+			}
 		});
 		
 		this.socket.on('connect_error', (err) => {
@@ -46,6 +50,13 @@ export class AppControl {
 
 		this.socket.on('disconnect', () => {
 			console.log('Disconnected from server');
+		});
+
+		this.socket.on("friendship-updated", () => {
+			const modal = document.querySelector("friend-list-modal") as any;
+			if (modal && typeof modal.fetchUsersAndRequests === "function") {
+				modal.fetchUsersAndRequests().then(() => modal.renderList());
+			}
 		});
 
 		return (!!this.socket);
@@ -120,6 +131,7 @@ export class AppControl {
 	static async getProfile(id: string | number | null): Promise<any> {
 		const token = localStorage.getItem("authToken");
 		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `profile/${id}`) || `http://localhost:3000/user/profile/${id}`;
+		console.log(`URL called: ${userApiUrl}`);
 		let data = {} as { message: any };
 		const res = await fetch(userApiUrl, {
 			method: "GET",
@@ -135,6 +147,27 @@ export class AppControl {
 		}
 		if (!res.ok)
 			throw new Error(`Get profile failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getMatchHistory(id: string | number, page: number = 1, pageSize: number = 10): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `match-history/${id}`) || `http://localhost:3000/user/match-history/${id}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl + `?page=${page}&pageSize=${pageSize}`, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get match history failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get match history failed: ${res.status} ${data.message}`);
 		return (data.message);
 	}
 	
@@ -156,6 +189,113 @@ export class AppControl {
 		}
 		if (!res.ok)
 			throw new Error(`Update profile failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async friendRequest(friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friend-request/${friendId}`) || `http://localhost:3000/user/friend-request/${friendId}`;
+		console.log(`URL called: ${userApiUrl}`);
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({ status })
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Friend request failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Friend request failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getFriendRequest(friendId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friend-request/${friendId}`) || `http://localhost:3000/user/friend-request/${friendId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get friend request failed: ${error}`);
+		}
+		if (!res.ok && res.status !== 404)
+			throw new Error(`Get friend request failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getAllFriendRequests(friendId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `all-friend-requests/${friendId}`) || `http://localhost:3000/user/all-friend-requests/${friendId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get friend request failed: ${error}`);
+		}
+		if (!res.ok && res.status !== 404)
+			throw new Error(`Get friend request failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async findUsers(userId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `not-friends-list/${userId}`) || `http://localhost:3000/user/not-friends-list/${userId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get not friends failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get not friends failed: ${res.status} ${data.message}`);
+		return (data.message);
+	}
+
+	static async getAllFriends(userId: number | string | null): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const userApiUrl = (import.meta.env.VITE_USER_API_URL + `friends-list/${userId}`) || `http://localhost:3000/user/friends-list/${userId}`;
+		let data = {} as { message: any };
+		const res = await fetch(userApiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get friends failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get friends failed: ${res.status} ${data.message}`);
 		return (data.message);
 	}
 
@@ -193,6 +333,9 @@ export class AppControl {
 //         return (false);
 //     }
 // }
+
+// Error loading profile
+// Get profile failed: SyntaxError: Unexpected token '<', "
 
 /*
 cs50 CS

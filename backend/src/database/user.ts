@@ -82,7 +82,6 @@ export default class UserDatabase {
             const token = jwt.sign(
                 { id: user.id, username: user.username },
                 process.env.JWT_SECRET!,
-                // { expiresIn: Number(process.env.JWT_EXPIRATION) }
                 { expiresIn: "1h" }
             );
             return { status: 200, reply: token };
@@ -95,6 +94,9 @@ export default class UserDatabase {
 
     async updateProfile(userId: number, username: string | undefined, nickname: string | undefined, fileName: string | undefined): Promise<IResponse> {
         try {
+			const existingUser = await this.getAsync('SELECT id FROM users WHERE username = ?', [username]);
+			if (existingUser && existingUser.id !== userId)
+				throw new Error("Username already exists");
             const result = await this.runAsync(
                 'UPDATE users SET username = ?, nickname = ?, profile_picture = ? WHERE id = ?',
                 [username, nickname, fileName, userId]
@@ -118,7 +120,7 @@ export default class UserDatabase {
 													 SUM(CASE WHEN ((g.player1 = u.id AND g.player1_score < g.player2_score) OR (g.player2 = u.id AND g.player1_score > g.player2_score) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesLost,
 													 u.profile_picture as profilePicture
 												FROM users AS u
-												LEFT JOIN games AS g ON u.id = g.player1 OR u.id = g.player2
+												LEFT JOIN games AS g ON (u.id = g.player1 OR u.id = g.player2) AND g.status = 'finished'
 												WHERE u.id = ?
 												GROUP BY u.id
 												`, [id]);
@@ -132,6 +134,37 @@ export default class UserDatabase {
         }
     }
 
+	async matchHistory(id: number, page: number = 1, pageSize: number = 10): Promise<IResponse> {
+		try {
+			const offset = (page - 1) * pageSize;
+			const games = await this.allAsync(`SELECT g.id, 
+													  g.player1 AS player1Id,
+													  g.player2 AS player2Id,
+													  u1.username AS player1_name,
+													  u2.username AS player2_name,
+													  g.player1_score,
+													  g.player2_score,
+													  g.status,
+													  g.created_at
+											 FROM games g
+											 LEFT JOIN users u1 ON g.player1 = u1.id
+											 LEFT JOIN users u2 ON g.player2 = u2.id
+											 WHERE (g.player1 = ? OR g.player2 = ?) AND g.status = 'finished'
+											 ORDER BY g.created_at DESC
+											 LIMIT ? OFFSET ?`, [id, id, pageSize, offset]);
+			if (!games || games.length === 0)
+				return { status: 404, reply: "No games found" };
+			const total = await this.getAsync(`SELECT COUNT(*) as count
+											 FROM games g
+											 WHERE g.player1 = ? OR g.player2 = ?`, [id, id]);
+			return { status: 200, reply: { games, total: total.count } };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
     async all(): Promise<IResponse> {
         try {
             const users = await this.allAsync(`SELECT u.username, 
@@ -139,6 +172,7 @@ export default class UserDatabase {
 													  COUNT(g.id) AS gamesPlayed
 												 FROM users u
 												 LEFT JOIN games g ON u.id = g.player1 OR u.id = g.player2
+												 WHERE g.status = 'finished'
 												GROUP BY u.id
 												ORDER BY gamesPlayed DESC`);
             return { status: 200, reply: users };
@@ -148,4 +182,184 @@ export default class UserDatabase {
             return { status: 500, reply: "Unknown error" };
         }
     }
+
+	async getByEmail(email: string): Promise<any | null> {
+		try {
+			const user = await this.getAsync('SELECT * FROM users WHERE email = ?', [email]);
+			return user || null;
+		} catch (error) {
+			return null;
+		}
+	}
+
+	async createGoogleUser(email: string, name: string, picture: string): Promise<any> {
+		const baseUsername = name ? name.replace(/\s+/g, '').toLowerCase() : email.split('@')[0];
+		let username = baseUsername;
+		let suffix = 1;
+		while (await this.getAsync('SELECT id FROM users WHERE username = ?', [username]))
+			username = `${baseUsername}${suffix++}`;
+
+		await this.runAsync(
+			'INSERT INTO users (username, nickname, email, profile_picture) VALUES (?, ?, ?, ?)',
+			[username, name, email, picture]
+		);
+		return await this.getByEmail(email);
+	}
+
+	async friendRequest(
+		userId: number,
+		friendId: number,
+		status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'
+	): Promise<IResponse> {
+		try {
+			const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
+
+			let request = await this.getAsync(
+				'SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?',
+				[userA, userB]
+			);
+
+			if (!request) {
+				if (status !== "pending")
+					return { status: 403, reply: "You can only send a friend request." };
+				await this.runAsync(
+					'INSERT INTO friend_requests (user_id, friend_id, status, requester_id) VALUES (?, ?, ?, ?)',
+					[userA, userB, status, userId]
+				);
+				return { status: 200, reply: "Friend request sent." };
+			}
+
+			if (request.status === "pending") {
+				if (status === "removed") {
+					if (request.requester_id !== userId)
+						return { status: 403, reply: "Only the requester can cancel the request." };
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userA, userB]
+					);
+					return { status: 200, reply: "Friend request cancelled." };
+				}
+				if (status === "accepted" || status === "rejected") {
+					if (request.requester_id === userId)
+						return { status: 403, reply: "Only the recipient can accept or reject the request." };
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userA, userB]
+					);
+					return { status: 200, reply: `Friend request ${status}.` };
+				}
+				return { status: 400, reply: "Invalid operation for pending request." };
+			}
+
+			if (request.status === "accepted") {
+				if (status === "removed") {
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userA, userB]
+					);
+					return { status: 200, reply: "Friendship removed." };
+				}
+				return { status: 400, reply: "Invalid operation for accepted friendship." };
+			}
+
+			if (status === "pending") {
+				await this.runAsync(
+					'UPDATE friend_requests SET status = ?, requester_id = ? WHERE user_id = ? AND friend_id = ?',
+					[status, userId, userA, userB]
+				);
+				return { status: 200, reply: "Friend request sent again." };
+			}
+
+			return { status: 400, reply: "Invalid operation." };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async getAllFriendRequests(userId: number): Promise<IResponse> {
+		try {
+			const requests = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? OR friend_id = ?', [userId, userId]);
+			if (!requests)
+				return { status: 200, reply: "no friendship" };
+			return { status: 200, reply: requests };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async findUsers(userId: number): Promise<IResponse> {
+		try {
+			const notFriends = await this.allAsync(`
+				SELECT
+					u.id,
+					fr.requester_id,
+					u.username,
+					u.nickname,
+					u.profile_picture,
+					fr.status as friendship_status
+				FROM users u
+				LEFT JOIN friend_requests fr
+					ON (
+						(fr.user_id = u.id AND fr.friend_id = ?)
+						OR (fr.friend_id = u.id AND fr.user_id = ?)
+					)
+				WHERE u.id != ?
+				AND (fr.status IS NULL OR fr.status != 'accepted')
+			`, [userId, userId, userId]);
+			return { status: 200, reply: notFriends };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async getFriendRequest(userId: number | string, friendId: number | string): Promise<IResponse> {
+		try {
+			const request = await this.getAsync(`
+				SELECT *
+				FROM friend_requests
+				WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+			`, [userId, friendId, friendId, userId]);
+			if (!request)
+				return { status: 200, reply: "Friend request not found" };
+			return { status: 200, reply: request };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+
+	async getAllFriends(userId: number): Promise<IResponse> {
+		try {
+			const friends = await this.allAsync(`
+				SELECT 
+					u.id, 
+					fr.requester_id,
+					u.username, 
+					u.nickname, 
+					u.profile_picture,
+					fr.status as friendship_status
+				FROM users u
+				INNER JOIN friend_requests fr
+					ON (
+						(fr.user_id = u.id AND fr.friend_id = ?)
+						OR (fr.friend_id = u.id AND fr.user_id = ?)
+					)
+					AND fr.status = 'accepted'
+				WHERE u.id != ?
+			`, [userId, userId, userId]);
+			return { status: 200, reply: friends };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
 }

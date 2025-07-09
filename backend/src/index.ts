@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken';
 import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import googleAuthRoutes from './routes/googleAuth';
+
 
 dotenv.config();
 
@@ -60,10 +62,7 @@ server.decorate('authenticate', async function (req: FastifyRequest, res: Fastif
 	}
 });
 
-
-server.get("/", async (req, res) => {
-	res.send({ ok: true });
-});
+server.register(googleAuthRoutes)
 
 const start = async (port: number) => {
 	try {
@@ -80,8 +79,6 @@ export { httpServer };
 
 import "./routes/user";
 import "./socket/setup";
-import loginRoutes from './routes/login';
-server.register(loginRoutes);
 
 const port = Number(process.env.PORT) || 3000;
 

@@ -10,8 +10,8 @@
 		"migrate": "node ./db/migrate.js",
 		"up": "node ./db/migrate.js up",
 		"down": "node ./db/migrate.js down",
-		"games": "node ./db/mocks/insert_games.js",
-		"users": "node ./db/mocks/insert_users.js"
+		"mock:up": "node ./db/migrate.js up mocks",
+		"mock:down": "node ./db/migrate.js down mocks"
 	},
 	"dependencies": {
 		"@fastify/cors": "^11.0.1",
@@ -21,6 +21,7 @@
 		"fastify": "^5.3.3",
 		"fastify-cors": "^6.0.3",
 		"fastify-plugin": "^5.0.1",
+		"google-auth-library": "^10.1.0",
 		"jsonwebtoken": "^9.0.2",
 		"pg": "^8.16.0",
 		"socket.io": "^4.8.1",
@@ -39,4 +40,3 @@
 		"typescript": "^5.8.3"
 	}
 }
- 
