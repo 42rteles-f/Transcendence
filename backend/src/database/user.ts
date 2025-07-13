@@ -116,11 +116,11 @@ export default class UserDatabase {
             const user = await this.getAsync(`SELECT u.username,
 													 u.nickname,
 													 COUNT(g.id) AS gamesPlayed,
-													 SUM(CASE WHEN ((g.player1 = u.id AND g.player1_score > g.player2_score) OR (g.player2 = u.id AND g.player1_score < g.player2_score) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesWon,
-													 SUM(CASE WHEN ((g.player1 = u.id AND g.player1_score < g.player2_score) OR (g.player2 = u.id AND g.player1_score > g.player2_score) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesLost,
+													 SUM(CASE WHEN ((u.id IN (g.player1_id, g.player2_id) AND g.winner_id = u.id) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesWon,
+													 SUM(CASE WHEN ((u.id IN (g.player1_id, g.player2_id) AND g.winner_id != u.id) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesLost,
 													 u.profile_picture as profilePicture
 												FROM users AS u
-												LEFT JOIN games AS g ON (u.id = g.player1 OR u.id = g.player2) AND g.status = 'finished'
+												LEFT JOIN games AS g ON (u.id = g.player1_id OR u.id = g.player2_id) AND g.status = 'finished'
 												WHERE u.id = ?
 												GROUP BY u.id
 												`, [id]);
@@ -138,8 +138,9 @@ export default class UserDatabase {
 		try {
 			const offset = (page - 1) * pageSize;
 			const games = await this.allAsync(`SELECT g.id, 
-													  g.player1 AS player1Id,
-													  g.player2 AS player2Id,
+													  g.player1_id AS player1Id,
+													  g.player2_id AS player2Id,
+													  g.winner_id AS winnerId,
 													  u1.username AS player1_name,
 													  u2.username AS player2_name,
 													  g.player1_score,
@@ -147,16 +148,16 @@ export default class UserDatabase {
 													  g.status,
 													  g.created_at
 											 FROM games g
-											 LEFT JOIN users u1 ON g.player1 = u1.id
-											 LEFT JOIN users u2 ON g.player2 = u2.id
-											 WHERE (g.player1 = ? OR g.player2 = ?) AND g.status = 'finished'
+											 LEFT JOIN users u1 ON g.player1_id = u1.id
+											 LEFT JOIN users u2 ON g.player2_id = u2.id
+											 WHERE (g.player1_id = ? OR g.player2_id = ?) AND g.status = 'finished'
 											 ORDER BY g.created_at DESC
 											 LIMIT ? OFFSET ?`, [id, id, pageSize, offset]);
 			if (!games || games.length === 0)
 				return { status: 404, reply: "No games found" };
 			const total = await this.getAsync(`SELECT COUNT(*) as count
 											 FROM games g
-											 WHERE g.player1 = ? OR g.player2 = ?`, [id, id]);
+											 WHERE g.player1_id = ? OR g.player2_id = ?`, [id, id]);
 			return { status: 200, reply: { games, total: total.count } };
 		} catch (error) {
 			if (error instanceof Error)
@@ -171,7 +172,7 @@ export default class UserDatabase {
 													  u.nickname,
 													  COUNT(g.id) AS gamesPlayed
 												 FROM users u
-												 LEFT JOIN games g ON u.id = g.player1 OR u.id = g.player2
+												 LEFT JOIN games g ON u.id = g.player1_id OR u.id = g.player2_id
 												 WHERE g.status = 'finished'
 												GROUP BY u.id
 												ORDER BY gamesPlayed DESC`);

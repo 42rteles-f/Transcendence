@@ -12,6 +12,6 @@ export function up(db, cb) {
 
 export function down(db, cb) {
 	db.run(`
-		DELETE FROM friend_requests WHERE (user_id, friend_id) IN ((1, 2), (1, 3), (4, 1), (2, 3), (3, 4), (4, 2))
+		DELETE FROM friend_requests WHERE (user_id, friend_id) IN ((1, 2), (1, 3), (4, 1), (2, 3), (3, 4), (2, 4))
 	`, cb);
 }

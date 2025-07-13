@@ -4,9 +4,12 @@ export function up(db, cb) {
 	  id INTEGER PRIMARY KEY AUTOINCREMENT,
 	  name VARCHAR(100) NOT NULL,
 	  start_date TEXT DEFAULT CURRENT_TIMESTAMP,
-	  end_date TEXT DEFAULT CURRENT_TIMESTAMP,
 	  winner INTEGER,
-	  FOREIGN KEY(winner) REFERENCES users(id)
+	  owner_id INTEGER NOT NULL,
+	  max_players INTEGER,
+	  status TEXT DEFAULT 'waiting',
+	  FOREIGN KEY(winner) REFERENCES users(id),
+	  FOREIGN KEY(owner_id) REFERENCES users(id)
 	)
   `, cb);
 };

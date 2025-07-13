@@ -78,6 +78,7 @@ const httpServer = server.server;
 export { httpServer };
 
 import "./routes/user";
+import "./routes/tournament";
 import "./socket/setup";
 
 const port = Number(process.env.PORT) || 3000;

@@ -299,6 +299,55 @@ export class AppControl {
 		return (data.message);
 	}
 
+	static async getAllTournaments(page: number = 1, pageSize: number = 10): Promise<{
+		tournaments: {
+		id: number,
+		name: string,
+		startDate: string,
+		winnerId: number,
+			ownerId: number,
+			ownerName: string,
+			maxPlayers: number,
+			status: string,
+			winnerName: string | null
+		}[],
+		total: number
+	}> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/all?page=${page}&pageSize=${pageSize}`) || `http://localhost:3000/tournament/all?page=${page}&pageSize=${pageSize}`;
+		let data = {} as {
+			message: {
+				tournaments: {
+					id: number,
+					name: string,
+					startDate: string,
+					winnerId: number,
+					ownerId: number,
+					ownerName: string,
+					maxPlayers: number,
+					status: string,
+					winnerName: string | null
+				}[],
+				total: number
+			}
+		};
+		const res = await fetch(apiUrl, {
+			method: "GET",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Get tournaments failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Get tournaments failed: ${res.status} ${data.message}`);
+		return data.message;
+	}
+
 	static async logout(): Promise<void> {
 		const token = localStorage.getItem("authToken");
 		if (!token) {

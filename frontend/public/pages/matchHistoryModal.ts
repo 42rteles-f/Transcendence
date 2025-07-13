@@ -46,11 +46,12 @@ class MatchHistoryModal extends BaseComponent {
         games.forEach(game => {
             const div = document.createElement("div");
             div.className = "border-b py-2";
+			const statusClass = game.status === "finished" ? "text-green-600" : "text-red-600";
             div.innerHTML = `
                 <b>${game.player1_name}</b> vs <b>${game.player2_name}</b>
                 <span class="ml-2">Score: ${game.player1_score} - ${game.player2_score}</span>
                 <span class="ml-2 text-gray-500 text-xs">${new Date(game.created_at).toLocaleString()}</span>
-                <span class="ml-2 text-xs text-blue-600">${game.status}</span>
+                <span class="ml-2 text-xs !${statusClass}">${game.status}</span>
             `;
             this.historyList.appendChild(div);
         });
