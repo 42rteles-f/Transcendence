@@ -84,11 +84,13 @@ export default class TournamentDatabase {
 
     async joinTournament(tournamentId: number, userId: number): Promise<IResponse> {
         try {
-
+			const subscribedUsers = await this.allAsync(
+				`SELECT player_id FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
+			);
 			await this.getAsync(
-				`SELECT COUNT(1) AS numberOfPlayers FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
+				`SELECT max_players AS maxPlayers FROM tournament WHERE id = ?`, [tournamentId]
 			).then((result) => {
-				if (result.numberOfPlayers >= 16)
+				if (result.maxPlayers <= subscribedUsers.length)
 					return { status: 404, reply: "Tournament is full" };
 			});
             await this.runAsync(
