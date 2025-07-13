@@ -11,7 +11,7 @@ class FriendListModal extends BaseComponent {
     private userId: number | string | null;
     private uploadUrl: string;
 
-    private activeTab: "friends" | "not-friends" | "requests" = "friends";
+    private activeTab: "friends" | "not-friends" = "friends";
     private allFriends: any[] = [];
     private allNotFriends: any[] = [];
 

@@ -104,16 +104,12 @@ class ProfilePage extends BaseComponent {
 			}
 			, 2000);
 		}
-		console.log(`before ()()()()`);
 		Socket.init();
 		Socket.addEventListener("client-arrival", (clients: { id: string, name: string }[]) => {
-			console.log("clients received:", clients);
 			if (clients.find(client => client.name === this.username.textContent)) {
 				this.onlineStatus!.style.backgroundColor = "green";
-				console.log("changed");
 			}
 		})
-		console.log(`after ()()()()`);
 	}
 
 	async showEditProfileModal() {

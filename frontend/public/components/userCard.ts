@@ -96,7 +96,7 @@ class UserCard extends BaseComponent {
 				const cancelBtn = document.createElement("button");
 				cancelBtn.className = "p-2 rounded-full bg-yellow-100 hover:bg-yellow-200 transition";
 				cancelBtn.title = "Cancel Friend Request";
-				cancelBtn.innerHTML = `<span class="text-xl">&#8617;</span>`;
+				cancelBtn.innerHTML = `<span class="text-xl">&#128465;</span>`;
                
 				cancelBtn.onclick = async (e) => {
 					e.stopPropagation();

@@ -209,7 +209,7 @@ export default class UserDatabase {
 	async friendRequest(
 		userId: number,
 		friendId: number,
-		status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'
+		status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship' | 'blocked'
 	): Promise<IResponse> {
 		try {
 			const [userA, userB] = [userId, friendId].sort((a, b) => a - b);
@@ -218,6 +218,24 @@ export default class UserDatabase {
 				'SELECT * FROM friend_requests WHERE user_id = ? AND friend_id = ?',
 				[userA, userB]
 			);
+
+			if (status === "blocked") {
+				if (!request) {
+					await this.runAsync(
+						'INSERT INTO friend_requests (user_id, friend_id, status, requester_id) VALUES (?, ?, ?, ?)',
+						[userA, userB, status, userId]
+					);
+					return { status: 200, reply: "User blocked." };
+				} else {
+					if (request.status === "blocked")
+						return { status: 400, reply: "User is already blocked." };
+					await this.runAsync(
+						'UPDATE friend_requests SET status = ?, requester_id = ? WHERE user_id = ? AND friend_id = ?',
+						[status, userId, userA, userB]
+					);
+					return { status: 200, reply: "User blocked." };
+				}
+			}
 
 			if (!request) {
 				if (status !== "pending")
@@ -280,7 +298,7 @@ export default class UserDatabase {
 
 	async getAllFriendRequests(userId: number): Promise<IResponse> {
 		try {
-			const requests = await this.getAsync('SELECT * FROM friend_requests WHERE user_id = ? OR friend_id = ?', [userId, userId]);
+			const requests = await this.getAsync('SELECT * FROM friend_requests WHERE (user_id = ? OR friend_id = ?) AND status != "blocked"', [userId, userId]);
 			if (!requests)
 				return { status: 200, reply: "no friendship" };
 			return { status: 200, reply: requests };
@@ -308,7 +326,7 @@ export default class UserDatabase {
 						OR (fr.friend_id = u.id AND fr.user_id = ?)
 					)
 				WHERE u.id != ?
-				AND (fr.status IS NULL OR fr.status != 'accepted')
+				AND (fr.status IS NULL OR (fr.status != 'accepted' AND fr.status != 'blocked'))
 			`, [userId, userId, userId]);
 			return { status: 200, reply: notFriends };
 		} catch (error) {
