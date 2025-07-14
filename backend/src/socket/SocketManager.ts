@@ -6,7 +6,8 @@ import jwt from 'jsonwebtoken';
 export type Pointer<T> = (T | undefined);
 
 interface IClient {
-	id: string;
+	id:		string;
+	name:	string;
 }
 
 class SocketManager {
@@ -55,7 +56,7 @@ class SocketManager {
 				if (!client.eventCaller(event, ...args)
 					&& !this.eventCaller(event, client, ...args))
 				{
-					// console.warn(`Unhandled event: ${event}`);
+					console.warn(`Unhandled event: ${event}`);
 				}
 			});
 
@@ -71,20 +72,12 @@ class SocketManager {
 	}
 
 	onSubscribeClientArrival(client: Client) {
+		client.subscriptions.push("client-arrival");
 		const onlineClients = Array.from(this.clients.values()).map(c => ({
 			id: c.socket.id,
 			name: c.socket.data.user.username,
 		}));
 		client.socket.emit('client-arrival', onlineClients);
-	}
-
-	broadcastClientArrive(Client: Client) {
-
-		;
-	}
-
-	broadcastClientLeft(client: Client) {
-
 	}
 
 	eventCaller(event: string, ...args: any[]) {
@@ -106,7 +99,7 @@ class SocketManager {
 	}
 
 	public addClient(client: Client) {
-		// this.clients.set(client.id, client);
+		this.clients.set(client.id, client);
 	}
 
 	public removeClient(id: string) {

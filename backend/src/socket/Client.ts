@@ -1,6 +1,5 @@
 import { Socket } from "socket.io";
 import SocketManager from "./SocketManager";
-import fastify from "fastify";
 
 class Client {
 	public id: string = '';
@@ -25,9 +24,8 @@ class Client {
 	sendChatMessage(roomId: string, text: string) {
 	}
 
-	onSubscribeToChat(event: string) {
-		console.log(`subscribing to chat ${event}`);
-		this.subscriptions.push(event);
+	onSubscribeChatMessage() {
+		this.subscriptions.push('chat-message');
 	}
 
 	onChatMessage(payload: {target: string, message: string}) {
@@ -36,14 +34,12 @@ class Client {
 			fromId: this.socket.id,
 			fromName: this.socket.data.user.username,
 			message: payload.message,
-		},
-	);
+		});
 	}
 
 	eventCaller(event: string, ...args: any[]) {
 		event = `-${event}`;
 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
-		console.log(methodName);
 		if (typeof (this as any)[methodName] === 'function') {
 			(this as any)[methodName](...args);
 			return (true);
