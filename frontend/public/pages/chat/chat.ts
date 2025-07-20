@@ -25,14 +25,12 @@ class Chat extends BaseComponent {
 			if (e.key === "Enter") this.sendMessage();
 		};
 		Socket.init();
-		Socket.emit("subscribe-chat");
 		Socket.addEventListener("chat-message", this.addMessage);
 		Socket.addEventListener("client-arrival", this.addClients);
 		Socket.addEventListener("client-departure", this.removeClient);
 		Socket.addEventListener("disconnect", () => {
 			this.clientList.innerHTML = "";
 		});
-			
 	}
 
 	sendMessage() {
