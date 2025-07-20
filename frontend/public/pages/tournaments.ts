@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { TournamentsModal } from "../components/tournamentsModal";
-import { showToast } from './toastNotification';
+import { CreateTournamentModal } from "../components/createTournamentModal";
 
 class TournamentsPage extends BaseComponent {
 	private createTournamentButton!: HTMLButtonElement;
@@ -15,6 +15,8 @@ class TournamentsPage extends BaseComponent {
     }
 
     showCreateTournamentModal() {
+		const createTournamentModal = new CreateTournamentModal();
+		this.appendChild(createTournamentModal);
     }
 
     showAllTournamentsModal() {

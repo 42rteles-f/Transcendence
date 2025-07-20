@@ -86,7 +86,7 @@ export function Post(url?: string, auth: boolean = true, preHandler: Function[] 
 		} else {
 			routes.set(targetName, [{
 				url,
-				method: "get",
+				method: "post",
 				action: descriptor.value,
 				auth,
 				preHandler

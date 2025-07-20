@@ -35,17 +35,24 @@ export default class TournamentDatabase {
         });
     }
 
-    async createTournament(name: string, userId: number, start_date?: string, max_players?: number): Promise<IResponse> {
+    async createTournament(name: string, userId: number, maxPlayers?: number): Promise<IResponse> {
         try {
-            await this.runAsync(
+            const res = await this.runAsync(
                 `INSERT INTO tournaments (name, start_date, max_players, owner_id) VALUES (?, ?, ?, ?)`,
-                [name, start_date || new Date().toISOString(), max_players || 16, userId]
+                [name, new Date().toISOString(), maxPlayers || 16, userId]
             );
+			if (res.changes !== 0) {
+				const tournamentId = await this.getAsync(`SELECT last_insert_rowid() AS id`);
+				await this.runAsync(
+					`INSERT INTO tournament_players (tournament_id, player_id) VALUES (?, ?)`,
+					[tournamentId.id, userId]
+				);
+			}
             return { status: 200, reply: "Tournament created" };
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
-            return { status: 500, reply: "Unknown error" };
+            return { status: 400, reply: "Unknown error" };
         }
     }
 
@@ -78,7 +85,7 @@ export default class TournamentDatabase {
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };
-			return { status: 500, reply: "Unknown error" };
+			return { status: 400, reply: "Unknown error" };
 		}
 	}
 
@@ -87,12 +94,17 @@ export default class TournamentDatabase {
 			const subscribedUsers = await this.allAsync(
 				`SELECT player_id FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
 			);
-			await this.getAsync(
-				`SELECT max_players AS maxPlayers FROM tournament WHERE id = ?`, [tournamentId]
-			).then((result) => {
-				if (result.maxPlayers <= subscribedUsers.length)
-					return { status: 404, reply: "Tournament is full" };
-			});
+			if (subscribedUsers.some(u => u.player_id === userId))
+				return { status: 400, reply: "Already subscribed to this tournament" };
+			const tournament = await this.getAsync(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
+			if (!tournament)
+				return { status: 404, reply: "Tournament not found" };
+			if (tournament.status !== 'waiting')
+				return { status: 400, reply: "Tournament already started or finished" };
+			if (tournament.owner_id === userId)
+				return { status: 400, reply: "You cannot join your own tournament" };
+			if (tournament.max_players && tournament.max_players <= subscribedUsers.length)
+				return { status: 404, reply: "Tournament is full" };
             await this.runAsync(
                 `INSERT INTO tournament_players (tournament_id, player_id) VALUES (?, ?)`,
                 [tournamentId, userId]
@@ -101,9 +113,33 @@ export default class TournamentDatabase {
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
-            return { status: 500, reply: "Unknown error" };
+            return { status: 400, reply: "Unknown error" };
         }
     }
+
+	async unsubscribeTournament(tournamentId: number, userId: number): Promise<IResponse> {
+		try {
+			const tournament = await this.getAsync(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
+			if (!tournament)
+				return { status: 404, reply: "Tournament not found" };
+			if (tournament.status !== 'waiting')
+				return { status: 400, reply: "Tournament already started or finished" };
+			const subscribedUsers = await this.allAsync(
+				`SELECT player_id FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
+			);
+			if (!subscribedUsers.some(u => u.player_id === userId))
+				return { status: 400, reply: "You are not subscribed to this tournament" };
+			await this.runAsync(
+				`DELETE FROM tournament_players WHERE tournament_id = ? AND player_id = ?`,
+				[tournamentId, userId]
+			);
+			return { status: 200, reply: "Unsubscribed from tournament" };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 400, reply: "Unknown error" };
+		}
+	}
 
     async startTournament(tournamentId: number, userId: number): Promise<IResponse> {
         try {
@@ -159,14 +195,14 @@ export default class TournamentDatabase {
 				);
 			}
             await this.runAsync(
-                `UPDATE tournaments SET start_date = ? WHERE id = ?`,
+                `UPDATE tournaments SET status = 'in progress', start_date = ? WHERE id = ?`,
                 [new Date().toISOString(), tournamentId]
             );
             return { status: 200, reply: "Tournament started" };
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
-            return { status: 500, reply: "Unknown error" };
+            return { status: 400, reply: "Unknown error" };
         }
     }
 
@@ -221,7 +257,7 @@ export default class TournamentDatabase {
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };
-			return { status: 500, reply: "Unknown error" };
+			return { status: 400, reply: "Unknown error" };
 		}
 	}
 
@@ -244,11 +280,49 @@ export default class TournamentDatabase {
 				ORDER BY t.id DESC`, [tournamentId]);
             if (!tournament)
                 return { status: 404, reply: "Tournament not found" };
+			const participants = await this.allAsync(
+				`SELECT u.id, u.username
+				FROM tournament_players tp
+				JOIN users u ON tp.player_id = u.id
+				WHERE tp.tournament_id = ?`,
+				[tournamentId]
+			);
+			tournament.participants = participants;
+			const games = await this.allAsync(`
+				SELECT
+					g.id,
+					g.player1_id,
+					p1.username AS player1_username,
+					g.player2_id,
+					p2.username AS player2_username,
+					g.status,
+					g.winner_id,
+					w.username AS winner_username,
+					g.player1_score AS score1,
+					g.player2_score AS score2
+				FROM tournament_games tg
+				JOIN games g ON tg.game_id = g.id
+				LEFT JOIN users p1 ON g.player1_id = p1.id
+				LEFT JOIN users p2 ON g.player2_id = p2.id
+				LEFT JOIN users w ON g.winner_id = w.id
+				WHERE tg.tournament_id = ?
+				ORDER BY g.id ASC
+			`, [tournamentId]);
+
+			tournament.games = games.map(game => ({
+				id: game.id,
+				player1: game.player1_id ? { id: game.player1_id, username: game.player1_username } : null,
+				player2: game.player2_id ? { id: game.player2_id, username: game.player2_username } : null,
+				score1: game.score1,
+				score2: game.score2,
+				winnerId: game.winner_id,
+				winnerName: game.winner_username
+			}));
             return { status: 200, reply: tournament };
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
-            return { status: 500, reply: "Unknown error" };
+            return { status: 400, reply: "Unknown error" };
         }
     }
 
@@ -262,7 +336,7 @@ export default class TournamentDatabase {
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
-            return { status: 500, reply: "Unknown error" };
+            return { status: 400, reply: "Unknown error" };
         }
     }
 
@@ -281,7 +355,30 @@ export default class TournamentDatabase {
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
-            return { status: 500, reply: "Unknown error" };
+            return { status: 400, reply: "Unknown error" };
         }
+	}
+
+	async cancelTournament(tournamentId: number, userId: number): Promise<IResponse> {
+		try {
+			const tournament = await this.getAsync(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
+			if (!tournament)
+				return { status: 404, reply: "Tournament not found" };
+			if (tournament.owner_id !== userId)
+				return { status: 403, reply: "Only the tournament owner can cancel it" };
+			if (tournament.status !== 'waiting')
+				return { status: 400, reply: "Tournament already started or finished" };
+
+			await this.runAsync(`DELETE FROM tournaments WHERE id = ?`, [tournamentId]);
+			await this.runAsync(`DELETE FROM tournament_players WHERE tournament_id = ?`, [tournamentId]);
+			await this.runAsync(`DELETE FROM tournament_games WHERE tournament_id = ?`, [tournamentId]);
+			await this.runAsync(`DELETE FROM games WHERE id IN (SELECT game_id FROM tournament_games WHERE tournament_id = ?)`, [tournamentId]);
+
+			return { status: 200, reply: "Tournament cancelled" };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 400, reply: "Unknown error" };
+		}
 	}
 }

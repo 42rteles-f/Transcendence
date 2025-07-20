@@ -18,17 +18,18 @@ class TournamentController {
     const service = new TournamentService(db);
 
 	try {
-		const { name, start_date, max_players } = req.body as { name: string, start_date?: string, max_players?: number };
+		const { name, maxPlayers } = (req.body || {}) as { name?: string, maxPlayers?: number };
 		if (!name || typeof name !== 'string')
 			return { status: 400, reply: "Invalid tournament name" };
-		if (max_players && (typeof max_players !== 'number' || max_players <= 0 || max_players > 16))
+		if (maxPlayers && (typeof maxPlayers !== 'number' || maxPlayers <= 0 || maxPlayers > 16))
 			return { status: 400, reply: "Invalid max players" };
+		console.log(`body arriving in createTournament: ${JSON.stringify(req.body)}`);
 		const userId = (req as any).user?.id;
-		const { status, reply } = await service.createTournament(name, userId, start_date, max_players);
+		const { status, reply } = await service.createTournament(name, userId, maxPlayers);
 		return { status, reply };
 	} catch (error: Error | any) {
 		console.error(`Error creating tournament: ${error.message}`);
-		return { status: 500, reply: error.message || "Internal Server Error" };
+		return { status: 400, reply: error.message || "Internal Server Error" };
 	}
   }
 
@@ -37,7 +38,7 @@ class TournamentController {
     const service = new TournamentService(db);
 
 	try {
-		const { page = 1, pageSize = 10 } = req.query as { page?: number, pageSize?: number };
+		const { page = 1, pageSize = 5 } = (req.query || {}) as { page?: number, pageSize?: number };
 		const pageNum = Math.max(1, Number(page));
 		const pageSizeNum = Math.max(1, Math.min(100, Number(pageSize)));
 
@@ -45,7 +46,7 @@ class TournamentController {
 		return { status, reply };
 	} catch (error: Error | any) {
 		console.error(`Error getting tournaments: ${error.message}`);
-		return { status: 500, reply: error.message || "Internal Server Error" };
+		return { status: 400, reply: error.message || "Internal Server Error" };
 	}
 
   }
@@ -65,7 +66,24 @@ class TournamentController {
 
 	} catch (error: Error | any) {
 		console.error(`Error joining tournament: ${error.message}`);
-		return { status: 500, reply: error.message || "Internal Server Error" };
+		return { status: 400, reply: error.message || "Internal Server Error" };
+	}
+  }
+
+  async unsubscribeTournament(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+	const db = req.server.sqlite as Database;
+	const service = new TournamentService(db);
+
+	try {
+		const tournamentId = Number((req.params as { id: string }).id);
+		const userId = (req as any).user?.id;
+		if (!userId || !tournamentId)
+			return { status: 400, reply: "Invalid user or tournament ID" };
+		const { status, reply } = await service.unsubscribeTournament(tournamentId, userId);
+		return { status, reply };
+	} catch (error: Error | any) {
+		console.error(`Error unsubscribing from tournament: ${error.message}`);
+		return { status: 400, reply: error.message || "Internal Server Error" };
 	}
   }
 
@@ -84,7 +102,7 @@ class TournamentController {
 
 	} catch (error: Error | any) {
 		console.error(`Error starting tournament: ${error.message}`);
-		return { status: 500, reply: error.message || "Internal Server Error" };
+		return { status: 400, reply: error.message || "Internal Server Error" };
 	}
   }
 
@@ -102,7 +120,7 @@ class TournamentController {
 
 	} catch (error: Error | any) {
 		console.error(`Error getting tournament: ${error.message}`);
-		return { status: 500, reply: error.message || "Internal Server Error" };
+		return { status: 400, reply: error.message || "Internal Server Error" };
 	}
   }
 
@@ -121,7 +139,25 @@ class TournamentController {
 
 	} catch (error: Error | any) {
 		console.error(`Error reporting result: ${error.message}`);
-		return { status: 500, reply: error.message || "Internal Server Error" };
+		return { status: 400, reply: error.message || "Internal Server Error" };
+	}
+  }
+
+  async cancelTournament(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+	const db = req.server.sqlite as Database;
+	const service = new TournamentService(db);
+	try {
+		const tournamentId = Number(((req.params || {}) as { id?: string }).id);
+		if (!tournamentId)
+			return { status: 400, reply: "Invalid tournament ID" };
+
+		const userId = (req as any).user?.id;
+		const { status, reply } = await service.cancelTournament(tournamentId, userId);
+		return { status, reply };
+
+	} catch (error: Error | any) {
+		console.error(`Error canceling tournament: ${error.message}`);
+		return { status: 400, reply: error.message || "Internal Server Error" };
 	}
   }
 }

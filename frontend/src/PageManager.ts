@@ -27,6 +27,9 @@ export class PageManager {
 		if (name.startsWith("/profile/")) {
 			routeName = "/profile";
 			param = name.split("/")[2] || null;
+		} else if (name.startsWith("/tournament/")) {
+			routeName = "/tournament";
+			param = name.split("/")[2] || null;
 		}
 
 		if (!AppControl.getValidDecodedToken()

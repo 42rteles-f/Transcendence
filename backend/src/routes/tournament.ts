@@ -17,13 +17,19 @@ class TournamentRoutes {
         res.status(status).send({ message: reply });
     }
 
-    @Post(":id/join", true, [])
+    @Post("join/:id", true, [])
     async joinTournament(req: FastifyRequest, res: FastifyReply) {
         const { status, reply } = await tournamentController.joinTournament(req, res);
         res.status(status).send({ message: reply });
     }
 
-    @Post(":id/start", true, [])
+	@Post("unsubscribe/:id", true, [])
+	async unsubscribeTournament(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await tournamentController.unsubscribeTournament(req, res);
+		res.status(status).send({ message: reply });
+	}
+
+    @Post("start/:id", true, [])
     async startTournament(req: FastifyRequest, res: FastifyReply) {
         const { status, reply } = await tournamentController.startTournament(req, res);
         res.status(status).send({ message: reply });
@@ -35,11 +41,17 @@ class TournamentRoutes {
         res.status(status).send({ message: reply });
     }
 
-    @Post(":id/report-result", true, [])
+    @Post("report-result/:id", true, [])
     async reportResult(req: FastifyRequest, res: FastifyReply) {
         const { status, reply } = await tournamentController.reportResult(req, res);
         res.status(status).send({ message: reply });
     }
+
+	@Post("cancel/:id", true, [])
+	async cancelTournament(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await tournamentController.cancelTournament(req, res);
+		res.status(status).send({ message: reply });
+	}
 }
 
 export {}

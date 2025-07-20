@@ -1,6 +1,7 @@
 import { AppControl } from '../../src/AppControl';
 import { BaseComponent } from "../../src/BaseComponent";
 import { TournamentInfo } from './tournamentInfo';
+import { routes } from '../../src/routes';
 
 class TournamentsModal extends BaseComponent {
 	private closeBtn!: HTMLButtonElement;
@@ -11,7 +12,7 @@ class TournamentsModal extends BaseComponent {
 	private pageInfo!: HTMLElement;
 
     page = 1;
-    pageSize = 10;
+    pageSize = 5;
     totalPages = 1;
 
     constructor() {
@@ -80,8 +81,12 @@ class TournamentsModal extends BaseComponent {
 			list.innerHTML = "";
 
 			for (const t of tournaments) {
-				console.log(`Loading tournament: ${t.name} (ID: ${t.id})`);
 				const tournamentInfo = new TournamentInfo(t);
+				tournamentInfo.classList.add("cursor-pointer", "hover:bg-blue-50", "transition");
+				tournamentInfo.addEventListener("click", () => {
+					this.remove();
+					routes.navigate(`/tournament/${t.id}`);
+				});
 				list.appendChild(tournamentInfo);
 			}
 

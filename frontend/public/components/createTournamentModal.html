@@ -1,0 +1,20 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+  <div class="!bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
+    <button data-ref="closeBtn" class="absolute top-2 right-2 !text-gray-500 !hover:text-red-500 text-2xl" title="Close">&times;</button>
+    <h3 class="text-2xl font-bold mb-6 text-center">Create Tournament</h3>
+    <form data-ref="form" class="flex flex-col gap-4">
+      <div>
+        <label class="block font-semibold mb-1" for="tournamentName">Tournament Name</label>
+        <input data-ref="nameInput" id="tournamentName" type="text" class="w-full border rounded px-3 py-2" maxlength="32" required />
+      </div>
+      <div>
+        <label class="block font-semibold mb-1" for="maxPlayers">Max Participants</label>
+        <input data-ref="maxPlayersInput" id="maxPlayers" type="number" min="2" max="16" class="w-full border rounded px-3 py-2" required />
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button data-ref="cancelBtn" type="button" class="px-4 py-2 rounded !bg-gray-200 !hover:bg-gray-300">Cancel</button>
+        <button data-ref="submitBtn" type="submit" class="px-4 py-2 rounded !bg-green-500 !hover:bg-green-600 !text-white font-semibold">Create</button>
+      </div>
+    </form>
+  </div>
+</div>

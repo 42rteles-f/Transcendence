@@ -7,6 +7,8 @@ import { ProfilePage } from "../public/pages/profile.ts";
 import { NotFoundPage } from "../public/pages/404.ts";
 import { ticTacToePage } from "../public/pages/ticTacToe.ts";
 import { TournamentsPage } from "../public/pages/tournaments.ts";
+import { TournamentHubPage } from "../public/pages/tournamentHub.ts"
+
 
 const routes: PageManager = new PageManager();
 
@@ -18,5 +20,6 @@ routes.register("/profile", ProfilePage);
 routes.register("/404", NotFoundPage);
 routes.register("/tic-tac-toe", ticTacToePage);
 routes.register("/tournaments", TournamentsPage);
+routes.register("/tournament", TournamentHubPage);
 
 export { routes };

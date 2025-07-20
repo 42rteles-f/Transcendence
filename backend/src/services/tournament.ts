@@ -12,10 +12,9 @@ export default class TournamentService {
     async createTournament(
         name: string,
 		userId: number,
-        start_date?: string,
-        max_players?: number
+        maxPlayers?: number
     ): Promise<IResponse> {
-        return await this.db.createTournament(name, userId, start_date, max_players);
+        return await this.db.createTournament(name, userId, maxPlayers);
     }
 
     async getAllTournaments(pageNum: number, pageSizeNum: number): Promise<IResponse> {
@@ -28,6 +27,13 @@ export default class TournamentService {
     ): Promise<IResponse> {
         return await this.db.joinTournament(tournamentId, userId);
     }
+
+	async unsubscribeTournament(
+		tournamentId: number,
+		userId: number
+	): Promise<IResponse> {
+		return await this.db.unsubscribeTournament(tournamentId, userId);
+	}
 
     async startTournament(
         tournamentId: number,
@@ -49,4 +55,11 @@ export default class TournamentService {
     ): Promise<IResponse> {
         return await this.db.reportResult(tournamentId, gameId, winnerId);
     }
+
+	async cancelTournament(
+		tournamentId: number,
+		userId: number
+	): Promise<IResponse> {
+		return await this.db.cancelTournament(tournamentId, userId);
+	}
 }

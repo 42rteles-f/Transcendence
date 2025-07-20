@@ -96,7 +96,7 @@ export class AppControl {
 			throw new Error(`Login failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Login failed: ${res.status} ${data.message}`);
+			throw new Error(`Login failed:  ${data.message}`);
 		Socket.init();
 		localStorage.setItem("authToken", data.message);
 		return (res.ok);
@@ -122,7 +122,7 @@ export class AppControl {
 		}
 		// console.log("Register response:", data);
 		if (!res.ok)
-			throw new Error(`Register failed: ${res.status} ${data.message}`);
+			throw new Error(`Register failed:  ${data.message}`);
 		this.createSocket();
 		localStorage.setItem("authToken", data.message);
 		return (res.ok);
@@ -146,7 +146,7 @@ export class AppControl {
 			throw new Error(`Get profile failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Get profile failed: ${res.status} ${data.message}`);
+			throw new Error(`Get profile failed:  ${data.message}`);
 		return (data.message);
 	}
 
@@ -167,7 +167,7 @@ export class AppControl {
 			throw new Error(`Get match history failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Get match history failed: ${res.status} ${data.message}`);
+			throw new Error(`Get match history failed:  ${data.message}`);
 		return (data.message);
 	}
 	
@@ -188,7 +188,7 @@ export class AppControl {
 			throw new Error(`Update profile failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Update profile failed: ${res.status} ${data.message}`);
+			throw new Error(`Update profile failed:  ${data.message}`);
 		return (data.message);
 	}
 
@@ -211,7 +211,7 @@ export class AppControl {
 			throw new Error(`Friend request failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Friend request failed: ${res.status} ${data.message}`);
+			throw new Error(`Friend request failed:  ${data.message}`);
 		return (data.message);
 	}
 
@@ -232,7 +232,7 @@ export class AppControl {
 			throw new Error(`Get friend request failed: ${error}`);
 		}
 		if (!res.ok && res.status !== 404)
-			throw new Error(`Get friend request failed: ${res.status} ${data.message}`);
+			throw new Error(`Get friend request failed:  ${data.message}`);
 		return (data.message);
 	}
 
@@ -253,7 +253,7 @@ export class AppControl {
 			throw new Error(`Get friend request failed: ${error}`);
 		}
 		if (!res.ok && res.status !== 404)
-			throw new Error(`Get friend request failed: ${res.status} ${data.message}`);
+			throw new Error(`Get friend request failed:  ${data.message}`);
 		return (data.message);
 	}
 
@@ -274,7 +274,7 @@ export class AppControl {
 			throw new Error(`Get not friends failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Get not friends failed: ${res.status} ${data.message}`);
+			throw new Error(`Get not friends failed:  ${data.message}`);
 		return (data.message);
 	}
 
@@ -295,11 +295,11 @@ export class AppControl {
 			throw new Error(`Get friends failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Get friends failed: ${res.status} ${data.message}`);
+			throw new Error(`Get friends failed:  ${data.message}`);
 		return (data.message);
 	}
 
-	static async getAllTournaments(page: number = 1, pageSize: number = 10): Promise<{
+	static async getAllTournaments(page: number = 1, pageSize: number = 5): Promise<{
 		tournaments: {
 		id: number,
 		name: string,
@@ -344,7 +344,131 @@ export class AppControl {
 			throw new Error(`Get tournaments failed: ${error}`);
 		}
 		if (!res.ok)
-			throw new Error(`Get tournaments failed: ${res.status} ${data.message}`);
+			throw new Error(`Get tournaments failed:  ${data.message}`);
+		return data.message;
+	}
+
+	static async createTournament(name: string, maxPlayers: number): Promise<{ tournamentId: number }> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/create`) || "http://localhost:3000/tournament/create";
+		let data = {} as { message: { tournamentId: number } };
+		const res = await fetch(apiUrl, {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({ name, maxPlayers })
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Create tournament failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Create tournament failed:  ${data.message}`);
+		return data.message;
+	}
+
+	static async getTournament(tournamentId: number): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/${tournamentId}`) || `http://localhost:3000/tournament/${tournamentId}`;
+		let data = {} as { message: any };
+		const res = await fetch(apiUrl, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Getting tournament failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Getting Tournament failed:  ${data.message}`);
+		return data.message;
+	}
+
+	static async cancelTournament(tournamentId: number): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/cancel/${tournamentId}`) || `http://localhost:3000/tournament/cancel/${tournamentId}`;
+		let data = {} as { message: any };
+		const res = await fetch(apiUrl, {
+			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Canceling tournament failed: ${error}`);
+		}
+		if (!res.ok){
+			throw new Error(`Canceling Tournament failed: ${data.message}`);
+		}
+		return data.message;
+	}
+
+	static async joinTournament(tournamentId: number): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/join/${tournamentId}`) || `http://localhost:3000/tournament/join/${tournamentId}`;
+		let data = {} as { message: any };
+		const res = await fetch(apiUrl, {
+			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Joining tournament failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Joining Tournament failed:  ${data.message}`);
+		return data.message;
+	}
+
+	static async unsubscribeTournament(tournamentId: number): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/unsubscribe/${tournamentId}`) || `http://localhost:3000/tournament/unsubscribe/${tournamentId}`;
+		let data = {} as { message: any };
+		const res = await fetch(apiUrl, {
+			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Unsubscribing from tournament failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Unsubscribing from Tournament failed:  ${data.message}`);
+		return data.message;
+	}
+
+	static async startTournament(tournamentId: number): Promise<any> {
+		const token = localStorage.getItem("authToken");
+		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/start/${tournamentId}`) || `http://localhost:3000/tournament/start/${tournamentId}`;
+		let data = {} as { message: any };
+		const res = await fetch(apiUrl, {
+			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${token}`
+			}
+		});
+		try {
+			data = await res.json();
+		} catch (error) {
+			throw new Error(`Starting tournament failed: ${error}`);
+		}
+		if (!res.ok)
+			throw new Error(`Starting Tournament failed:  ${data.message}`);
 		return data.message;
 	}
 
