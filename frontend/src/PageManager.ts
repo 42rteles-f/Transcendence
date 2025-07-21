@@ -30,6 +30,9 @@ export class PageManager {
 		} else if (name.startsWith("/tournament/")) {
 			routeName = "/tournament";
 			param = name.split("/")[2] || null;
+		} else if (name.startsWith("/tournament-dashboard/")) {
+			routeName = "/tournament-dashboard";
+			param = name.split("/")[2] || null;
 		}
 
 		if (!AppControl.getValidDecodedToken()

@@ -181,9 +181,7 @@ class TournamentHubPage extends BaseComponent {
 	async reportResult() {
 		if (!this.tournamentId) return;
 		try {
-			// To be implemented: Logic to report result
-			// await AppControl.reportResult(this.tournamentId, gameId, winnerId);
-			showToast("Report result clicked!", 2000, "info");
+			routes.navigate(`/tournament-dashboard/${this.tournamentId}`);
 		} catch (e: Error | any) {
 			showToast(e.message || "Failed to report result", 3000, "error");
 		}
