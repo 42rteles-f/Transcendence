@@ -3,7 +3,7 @@ import { Server, Socket } from 'socket.io';
 import Client from './Client';
 import jwt from 'jsonwebtoken';
 // import { jwtdecode } from '../utils/jwtdecode'; // Adjust the import path as necessary
-export type Pointer<T> = (T | undefined);
+export type Pointer<T> = (T | null);
 
 interface IClient {
 	id:		string;

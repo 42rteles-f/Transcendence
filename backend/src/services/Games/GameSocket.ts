@@ -1,6 +1,6 @@
 // GameSocket.ts
 import { Server, Socket } from "socket.io";
-import SocketManager from "./../socket/SocketManager";
+import SocketManager from "../../socket/SocketManager";
 
 abstract class GameSocket {
     protected io: Server;
