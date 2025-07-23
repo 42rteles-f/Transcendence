@@ -2,15 +2,20 @@
 import { Server, Socket } from "socket.io";
 import SocketManager from "../../socket/SocketManager";
 
+export interface PongScore {
+	playerId: string;
+	score: number;
+}
+
 abstract class GameSocket {
-    protected io: Server;
-    protected socket: Socket;
-    protected manager: SocketManager;
-    protected room: string;
-	protected state: any = {};
-    protected clients: Map<string, Socket> = new Map();
-    private tickHandle?: NodeJS.Timeout;
-    private tickInterval: number;
+    protected	io: Server;
+    protected	socket: Socket;
+    protected	manager: SocketManager;
+    protected	room: string;
+	protected	state: any = {};
+    protected	clients: Map<string, Socket> = new Map();
+    private		tickHandle?: NodeJS.Timeout;
+    private		tickInterval: number;
 
     constructor(
         manager: SocketManager,
@@ -65,7 +70,7 @@ abstract class GameSocket {
         if (this.tickHandle) return;
 
         this.tickHandle = setInterval(() => {
-            this.onTick(this.state);
+            this.onTick();
             this.broadcastState();
         }, this.tickInterval);
     }
@@ -89,7 +94,7 @@ abstract class GameSocket {
 
     protected abstract onPlayerLeave(socket: Socket): void;
 
-    protected abstract onTick(state: S): void;
+    protected abstract onTick(): void;
 
     protected abstract onRoomEmpty(): void;
 }
