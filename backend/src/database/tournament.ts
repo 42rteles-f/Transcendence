@@ -35,7 +35,7 @@ export default class TournamentDatabase {
         });
     }
 
-    async createTournament(name: string, userId: number, maxPlayers?: number): Promise<IResponse> {
+    async createTournament(name: string, userId: number, displayName: string, maxPlayers?: number): Promise<IResponse> {
         try {
             const res = await this.runAsync(
                 `INSERT INTO tournaments (name, start_date, max_players, owner_id) VALUES (?, ?, ?, ?)`,
@@ -44,8 +44,8 @@ export default class TournamentDatabase {
 			if (res.changes !== 0) {
 				const tournamentId = await this.getAsync(`SELECT last_insert_rowid() AS id`);
 				await this.runAsync(
-					`INSERT INTO tournament_players (tournament_id, player_id) VALUES (?, ?)`,
-					[tournamentId.id, userId]
+					`INSERT INTO tournament_players (tournament_id, player_id, display_name) VALUES (?, ?, ?)`,
+					[tournamentId.id, userId, displayName]
 				);
 			}
             return { status: 200, reply: "Tournament created" };
@@ -89,10 +89,10 @@ export default class TournamentDatabase {
 		}
 	}
 
-    async joinTournament(tournamentId: number, userId: number): Promise<IResponse> {
+    async joinTournament(tournamentId: number, userId: number, displayName: string): Promise<IResponse> {
         try {
 			const subscribedUsers = await this.allAsync(
-				`SELECT player_id FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
+				`SELECT player_id, display_name FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
 			);
 			if (subscribedUsers.some(u => u.player_id === userId))
 				return { status: 400, reply: "Already subscribed to this tournament" };
@@ -104,10 +104,12 @@ export default class TournamentDatabase {
 			if (tournament.owner_id === userId)
 				return { status: 400, reply: "You cannot join your own tournament" };
 			if (tournament.max_players && tournament.max_players <= subscribedUsers.length)
-				return { status: 404, reply: "Tournament is full" };
+				return { status: 400, reply: "Tournament is full" };
+			if (subscribedUsers.some(u => u.display_name === displayName))
+				return { status: 400, reply: "Display name already taken in this tournament" };
             await this.runAsync(
-                `INSERT INTO tournament_players (tournament_id, player_id) VALUES (?, ?)`,
-                [tournamentId, userId]
+                `INSERT INTO tournament_players (tournament_id, player_id, display_name) VALUES (?, ?, ?)`,
+                [tournamentId, userId, displayName]
             );
             return { status: 200, reply: "Joined tournament" };
         } catch (error) {
@@ -281,9 +283,9 @@ export default class TournamentDatabase {
             if (!tournament)
                 return { status: 404, reply: "Tournament not found" };
 			const participants = await this.allAsync(
-				`SELECT u.id, u.username
+				`SELECT u.id, u.username, tp.display_name AS displayName
 				FROM tournament_players tp
-				JOIN users u ON tp.player_id = u.id
+				LEFT JOIN users u ON tp.player_id = u.id
 				WHERE tp.tournament_id = ?`,
 				[tournamentId]
 			);
@@ -293,8 +295,10 @@ export default class TournamentDatabase {
 					g.id,
 					g.player1_id,
 					p1.username AS player1_username,
+					tp1.display_name AS player1_display_name,
 					g.player2_id,
 					p2.username AS player2_username,
+					tp2.display_name AS player2_display_name,
 					g.status,
 					g.winner_id,
 					w.username AS winner_username,
@@ -305,14 +309,16 @@ export default class TournamentDatabase {
 				LEFT JOIN users p1 ON g.player1_id = p1.id
 				LEFT JOIN users p2 ON g.player2_id = p2.id
 				LEFT JOIN users w ON g.winner_id = w.id
+				LEFT JOIN tournament_players tp1 ON tp1.tournament_id = tg.tournament_id AND tp1.player_id = g.player1_id
+    			LEFT JOIN tournament_players tp2 ON tp2.tournament_id = tg.tournament_id AND tp2.player_id = g.player2_id
 				WHERE tg.tournament_id = ?
 				ORDER BY g.id ASC
 			`, [tournamentId]);
 
 			tournament.games = games.map(game => ({
 				id: game.id,
-				player1: game.player1_id ? { id: game.player1_id, username: game.player1_username } : null,
-				player2: game.player2_id ? { id: game.player2_id, username: game.player2_username } : null,
+				player1: game.player1_id ? { id: game.player1_id, username: game.player1_username, displayName: game.player1_display_name } : null,
+				player2: game.player2_id ? { id: game.player2_id, username: game.player2_username, displayName: game.player2_display_name } : null,
 				score1: game.score1,
 				score2: game.score2,
 				winnerId: game.winner_id,

@@ -2,22 +2,31 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { routes } from '../../src/routes';
 
-type Player = { id: number, username: string };
+type Player = {
+    id: number;
+    username: string | null;
+    displayName: string;
+};
+
 type Game = {
     id: number;
-    round: number;
     player1: Player | null;
     player2: Player | null;
     score1: number | null;
     score2: number | null;
     winnerId: number | null;
+	winnerName?: string | null;
 };
+
 type Tournament = {
     id: number;
     name: string;
     participants: Player[];
     games: Game[];
     maxPlayers: number;
+	winnerId?: number | null;
+    winnerName?: string | null;
+    status?: string;
 };
 
 class TournamentDashboardPage extends BaseComponent {
@@ -92,9 +101,9 @@ class TournamentDashboardPage extends BaseComponent {
 
 				card.innerHTML = `
 				<div class="font-semibold text-gray-700 mb-1">
-					${game.player1 ? game.player1.username : "BYE"}
+					${game.player1 ? `${game.player1.displayName} (${game.player1.username || "no user"})` : "BYE"}
 					<span class="mx-1 text-gray-400">vs</span>
-					${game.player2 ? game.player2.username : "BYE"}
+					${game.player2 ? `${game.player2.displayName} (${game.player2.username || "no user"})` : "BYE"}
 				</div>
 				<div class="text-sm mb-1">
 					<span class="font-semibold">Score:</span>
@@ -124,7 +133,7 @@ class TournamentDashboardPage extends BaseComponent {
         this.rankingList.innerHTML = "";
         ranked.forEach((p, i) => {
             const li = document.createElement("li");
-            li.textContent = `${p.username} [${winCount[p.id] || 0} win${(winCount[p.id] || 0) === 1 ? "s" : ""}]`;
+            li.textContent = `${p.displayName} (${p.username}) [${winCount[p.id] || 0} win${(winCount[p.id] || 0) === 1 ? "s" : ""}]`;
             this.rankingList.appendChild(li);
         });
     }

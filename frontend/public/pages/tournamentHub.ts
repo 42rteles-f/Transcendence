@@ -2,6 +2,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { showToast } from "./toastNotification";
 import { routes } from '../../src/routes';
+import { JoinTournamentModal } from "../components/joinTournamentModal";
 
 class TournamentHubPage extends BaseComponent {
     private tournamentId!: number | null;
@@ -102,7 +103,10 @@ class TournamentHubPage extends BaseComponent {
             for (const p of this.tournament.participants) {
                 const div = document.createElement("div");
                 div.className = "flex items-center gap-2 bg-gray-100 hover:bg-blue-100 rounded-lg px-3 py-2 cursor-pointer shadow-sm transition";
-                div.innerHTML = `<span class="font-semibold text-gray-700">${p.username}</span>`;
+                div.innerHTML = `
+								<span class="font-semibold text-gray-700">${p.username}</span>
+								<span class="text-sm text-gray-500">${p.displayName}</span>
+								`;
                 div.addEventListener("click", () => {
                     routes.navigate(`/profile/${p.id}`);
                 });
@@ -148,9 +152,14 @@ class TournamentHubPage extends BaseComponent {
     async joinTournament() {
 		if (!this.tournamentId) return;
 		try {
-			const res = await AppControl.joinTournament(this.tournamentId);
-			showToast(res || "Joined tournament successfully", 3000, "success");
-			this.loadTournament();
+			const modal = new JoinTournamentModal(this.tournamentId);
+			this.appendChild(modal);
+
+			const onModalClosed = () => {
+				this.loadTournament();
+				this.removeEventListener("modal-closed", onModalClosed);
+			};
+			modal.addEventListener("modal-closed", onModalClosed);
 		} catch (e: Error | any) {
 			showToast(e.message || "Failed to join tournament", 3000, "error");
 		}
