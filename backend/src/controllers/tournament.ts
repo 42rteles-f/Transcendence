@@ -18,14 +18,15 @@ class TournamentController {
     const service = new TournamentService(db);
 
 	try {
-		const { name, maxPlayers } = (req.body || {}) as { name?: string, maxPlayers?: number };
-		if (!name || typeof name !== 'string')
+		const { name, maxPlayers, displayName } = (req.body || {}) as { name?: string, maxPlayers?: number, displayName?: string };
+		if (!displayName || typeof displayName !== 'string' || displayName.trim() === "" || !/^[A-Za-z0-9_]+$/.test(displayName))
+			return { status: 400, reply: "Invalid display name" };
+		if (!name || typeof name !== 'string' || name.trim() === "" || !/^[A-Za-z0-9_ ]+$/.test(name))
 			return { status: 400, reply: "Invalid tournament name" };
 		if (maxPlayers && (typeof maxPlayers !== 'number' || maxPlayers <= 0 || maxPlayers > 16))
 			return { status: 400, reply: "Invalid max players" };
-		console.log(`body arriving in createTournament: ${JSON.stringify(req.body)}`);
 		const userId = (req as any).user?.id;
-		const { status, reply } = await service.createTournament(name, userId, maxPlayers);
+		const { status, reply } = await service.createTournament(name, userId, displayName, maxPlayers);
 		return { status, reply };
 	} catch (error: Error | any) {
 		console.error(`Error creating tournament: ${error.message}`);
@@ -57,11 +58,14 @@ class TournamentController {
 
 	try {
 		const tournamentId = Number((req.params as { id: string }).id);
+		const { displayName } = req.body as { displayName?: string };
+		const displayNameRegex = /^(?=.*[A-Za-z])[A-Za-z0-9_]+$/;
+		if (!displayName || !displayNameRegex.test(displayName))
+			return { status: 400, reply: "Invalid display name, only letter, underscore, and digits are allowed" };
 		const userId = (req as any).user?.id;
 		if (!userId || !tournamentId)
 		  return { status: 400, reply: "Invalid user or tournament ID" };
-	
-		const { status, reply } = await service.joinTournament(tournamentId, userId);
+		const { status, reply } = await service.joinTournament(tournamentId, userId, displayName);
 		return { status, reply };
 
 	} catch (error: Error | any) {

@@ -7,7 +7,7 @@ export function up(db, cb) {
 
   db.serialize(() => {
     db.run(`INSERT INTO tournaments (id, name, start_date, max_players, owner_id) VALUES (1, '4 players tournament', CURRENT_TIMESTAMP, 4, 1)`);
-    db.run(`INSERT INTO tournament_players (tournament_id, player_id) VALUES (1, 1), (1, 2), (1, 3), (1, 4)`);
+    db.run(`INSERT INTO tournament_players (tournament_id, player_id, display_name) VALUES (1, 1, 'display 1'), (1, 2, 'display 2'), (1, 3, 'display 3'), (1, 4, 'display 4')`);
 
     pending += 3;
     db.run(`INSERT INTO games (player1_id, player2_id, status, winner_id) VALUES (1, 2, 'finished', 2)`, function(err) {
@@ -40,7 +40,7 @@ export function up(db, cb) {
 
   db.serialize(() => {
     db.run(`INSERT INTO tournaments (id, name, start_date, max_players, owner_id) VALUES (2, '5 players tournament', CURRENT_TIMESTAMP, 5, 5)`);
-    db.run(`INSERT INTO tournament_players (tournament_id, player_id) VALUES (2, 5), (2, 6), (2, 7), (2, 8), (2, 9)`);
+    db.run(`INSERT INTO tournament_players (tournament_id, player_id, display_name) VALUES (2, 5, 'display 5'), (2, 6, 'display 6'), (2, 7, 'display 7'), (2, 8, 'display 8'), (2, 9, 'display 9')`);
 
     pending += 6;
     db.run(`INSERT INTO games (player1_id, player2_id, status, winner_id) VALUES (5, 6, 'finished', 5)`, function(err) {

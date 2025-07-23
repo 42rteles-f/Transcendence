@@ -12,9 +12,10 @@ export default class TournamentService {
     async createTournament(
         name: string,
 		userId: number,
+		displayName: string,
         maxPlayers?: number
     ): Promise<IResponse> {
-        return await this.db.createTournament(name, userId, maxPlayers);
+        return await this.db.createTournament(name, userId, displayName, maxPlayers);
     }
 
     async getAllTournaments(pageNum: number, pageSizeNum: number): Promise<IResponse> {
@@ -23,9 +24,10 @@ export default class TournamentService {
 
     async joinTournament(
         tournamentId: number,
-        userId: number
+        userId: number,
+		displayName: string
     ): Promise<IResponse> {
-        return await this.db.joinTournament(tournamentId, userId);
+        return await this.db.joinTournament(tournamentId, userId, displayName);
     }
 
 	async unsubscribeTournament(

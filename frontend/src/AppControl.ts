@@ -348,7 +348,7 @@ export class AppControl {
 		return data.message;
 	}
 
-	static async createTournament(name: string, maxPlayers: number): Promise<{ tournamentId: number }> {
+	static async createTournament(name: string, maxPlayers: number, displayName: string): Promise<{ tournamentId: number }> {
 		const token = localStorage.getItem("authToken");
 		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/create`) || "http://localhost:3000/tournament/create";
 		let data = {} as { message: { tournamentId: number } };
@@ -358,7 +358,7 @@ export class AppControl {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${token}`
 			},
-			body: JSON.stringify({ name, maxPlayers })
+			body: JSON.stringify({ name, maxPlayers, displayName })
 		});
 		try {
 			data = await res.json();
@@ -383,6 +383,7 @@ export class AppControl {
 		});
 		try {
 			data = await res.json();
+			console.log(`Getting tournament data: ${JSON.stringify(data)}`);
 		} catch (error) {
 			throw new Error(`Getting tournament failed: ${error}`);
 		}
@@ -412,15 +413,17 @@ export class AppControl {
 		return data.message;
 	}
 
-	static async joinTournament(tournamentId: number): Promise<any> {
+	static async joinTournament(tournamentId: number, displayName: string): Promise<any> {
 		const token = localStorage.getItem("authToken");
 		const apiUrl = (import.meta.env.VITE_API_URL + `tournament/join/${tournamentId}`) || `http://localhost:3000/tournament/join/${tournamentId}`;
 		let data = {} as { message: any };
 		const res = await fetch(apiUrl, {
 			method: "POST",
 			headers: {
+				"Content-Type": "application/json",
 				"Authorization": `Bearer ${token}`
-			}
+			},
+			body: JSON.stringify({ displayName })
 		});
 		try {
 			data = await res.json();

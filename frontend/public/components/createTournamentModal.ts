@@ -8,6 +8,7 @@ class CreateTournamentModal extends BaseComponent {
     private submitBtn!: HTMLButtonElement;
     private cancelBtn!: HTMLButtonElement;
     private nameInput!: HTMLInputElement;
+	private displayNameInput!: HTMLInputElement;
     private maxPlayersInput!: HTMLInputElement;
     private form!: HTMLFormElement;
 
@@ -31,6 +32,11 @@ class CreateTournamentModal extends BaseComponent {
     async handleSubmit(e: Event) {
         e.preventDefault();
         const name = this.nameInput.value.trim();
+		const displayName = this.displayNameInput.value.trim();
+		if (!name || !displayName) {
+			showToast("Please provide a valid tournament name and display name", 3000, "error");
+			return;
+		}
         const maxPlayers = parseInt(this.maxPlayersInput.value);
 
         if (!name || isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 16) {
@@ -39,7 +45,7 @@ class CreateTournamentModal extends BaseComponent {
         }
 
         try {
-            const res = await AppControl.createTournament(name, maxPlayers);
+            const res = await AppControl.createTournament(name, maxPlayers, displayName);
             showToast("Tournament created!", 2000, "success");
             this.remove();
             if (res && res.tournamentId)
