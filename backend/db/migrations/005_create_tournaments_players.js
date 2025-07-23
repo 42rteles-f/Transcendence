@@ -4,6 +4,7 @@ export function up(db, cb) {
 	  id INTEGER PRIMARY KEY AUTOINCREMENT,
 	  tournament_id INTEGER,
 	  player_id INTEGER,
+	  display_name TEXT NOT NULL,
 	  FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
 	  FOREIGN KEY(player_id) REFERENCES users(id)
 	)
