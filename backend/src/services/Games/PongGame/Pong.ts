@@ -1,4 +1,5 @@
 import GameSocket from '../GameSocket';
+import { PongScore } from '../GameSocket';
 import SocketManager from '../../../socket/SocketManager';
 import { Socket } from 'socket.io';
 import { Pointer } from "../../../socket/SocketManager"
@@ -12,6 +13,7 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const LEFT = 0;
 const RIGHT = 1;
+const MAX_SCORE = 11;
 
 interface Position {
 	x: number;
@@ -24,17 +26,18 @@ interface Paddle {
 	yPos: number;
 }
 
+interface PongPlayer {
+	id: string;
+	paddle: Paddle;
+	score: number;
+}
+
 interface Collidable {
 	x: number;
 	y: number;
 	width: number;
 	height: number;
 	onCollision(target: Collidable): Boolean;
-}
-
-interface Score {
-	playerId: string;
-	score: number;
 }
 
 interface PongLimits {
@@ -45,37 +48,39 @@ interface PongLimits {
 }
 
 interface PongState {
-	score: Score[];
+	score: PongScore[];
 	ball: Position;
 	paddleLeft: Position;
 	paddleRight: Position;
 }
 
 class Paddle implements Collidable {
-	private speed: number;
-	public width = PADDLE_WIDTH;
-	public height = PADDLE_HEIGHT;
-	public x: number;
-	public y: number;
-	public vx: number;
-	public vy: number;
+	public	width = PADDLE_WIDTH;
+	public 	height = PADDLE_HEIGHT;
+	public 	x: number;
+	public 	y: number;
+	private	direction: number;
 
-	constructor(x: number, y: number, vx: number, vy: number) {
-		this.speed = PADDLE_SPEED;
+	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;
-		this.vx = vx;
-		this.vy = vy;
+		this.direction = 0;
 	}
 
 	onCollision(target: Collidable): Boolean {
 		return (false);
 	}
 
-	update() {}
+	update() {
+		this.y += this.direction;
+	}
+
+	position(): Position {
+		return ({x: this.x, y: this.y});
+	}
 }
 
-class Ball implements Collidable{
+class Ball implements Collidable {
 	public x: number;
 	public y: number;
 	public width = BALL_SIZE;
@@ -153,6 +158,7 @@ class Ball implements Collidable{
 }
 
 class Pong extends GameSocket {
+	private	players: PongPlayer[] = [];
 	private paddles: Paddle[] = [];
 	private ball: Pointer<Ball> = null;
 
@@ -184,19 +190,25 @@ class Pong extends GameSocket {
 			this.ball!.onCollision(paddle);
 		});
 
-		const point: number = this.isPoint();
-		if (point) {
-			this.markPoint(point);
+		this.update();
+
+		(this.state as PongState) = {
+			score: this.score,
+			ball: this.ball!.position(),
+			paddleLeft: this.paddles[LEFT].position(),
+			paddleRight: this.paddles[RIGHT].position()
+		};
+	}
+
+	protected update(): void {
+		const side: number = this.isPoint();
+		if (side) {
+			this.players[side].score += 1;
 			this.resetRound();
 		}
 
-		(this.state as PongState) = {
-			score: this.state.players,
-			ball: this.ball!.position(),
-			paddleLeft: {x: 0, y: 0},
-			paddleRight: {x: 0, y: 0}
-		};
-		this.broadcastState();
+		if (this.players[side].score >= MAX_SCORE)
+			this.stopGameLoop();
 	}
 
 	private isPoint(): number {
@@ -207,10 +219,6 @@ class Pong extends GameSocket {
 		else if (ballPosition.x >= GAME_WIDTH)
 			return (LEFT);
 		return (0);
-	}
-
-	private	markPoint(side: number) {
-
 	}
 
 	private	resetRound() {}
