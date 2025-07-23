@@ -178,10 +178,9 @@ class Pong extends GameSocket {
 	}
 
 	protected onTick(): void {
-		this.paddles[LEFT].update();
-		this.paddles[RIGHT].update();
 		this.ball!.update();
 		this.paddles.forEach((paddle) => {
+			paddle.update();
 			this.ball!.onCollision(paddle);
 		});
 
