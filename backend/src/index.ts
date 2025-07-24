@@ -89,7 +89,6 @@ export { httpServer };
 import "./routes/user";
 import "./routes/tournament";
 import "./socket/setup";
-import TournamentDatabase from './database/tournament';
 
 const port = Number(process.env.PORT) || 3000;
 

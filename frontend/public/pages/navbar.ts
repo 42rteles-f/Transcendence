@@ -1,5 +1,7 @@
 import { routes } from "../../src/routes";
 import { BaseComponent } from "../../src/BaseComponent";
+import { PongModal } from "../components/PongModal";
+
 
 console.log("executing navbar copy");
 
@@ -16,10 +18,13 @@ class Navbar extends BaseComponent {
 
 	onInit() {
 		this.homeButton.onclick = () => routes.navigate("/home");
-		this.pongButton.onclick = () => routes.navigate("/pong");
 		this.profileButton.onclick = () => routes.navigate("/profile/me");
 		this.ticTacToeButton.onclick = () => routes.navigate("/tic-tac-toe");
 		this.tournamentsButton.onclick = () => routes.navigate("/tournaments");
+		this.pongButton.onclick = () => {
+			const pongModal = new PongModal();
+			this.appendChild(pongModal);
+		}
 	}
 }
 
