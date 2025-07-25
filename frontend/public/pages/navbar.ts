@@ -21,10 +21,7 @@ class Navbar extends BaseComponent {
 		this.profileButton.onclick = () => routes.navigate("/profile/me");
 		this.ticTacToeButton.onclick = () => routes.navigate("/tic-tac-toe");
 		this.tournamentsButton.onclick = () => routes.navigate("/tournaments");
-		this.pongButton.onclick = () => {
-			const pongModal = new PongModal();
-			this.appendChild(pongModal);
-		}
+		this.pongButton.onclick = () => this.appendChild(new PongModal());
 	}
 }
 

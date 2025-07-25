@@ -2,6 +2,7 @@
 import { Server, Socket } from 'socket.io';
 import Client from './Client';
 import jwt from 'jsonwebtoken';
+import { GameManagerInstance } from '../game/gameManger';
 // import { jwtdecode } from '../utils/jwtdecode'; // Adjust the import path as necessary
 export type Pointer<T> = (T | null);
 
@@ -69,6 +70,21 @@ class SocketManager {
 				});
 			});
 		});
+	}
+
+	onUnsubscribeSearchGame(client: Client) {
+		console.log(`Player ${client.socket.data.user.username} removed from matchmaking queue`);
+		GameManagerInstance.removePlayerFromQueue(client.socket.data.user.id);
+	}
+
+	onSubscribeSearchGame(client: Client) {
+		console.log(`Player ${client.socket.data.user.username} added to matchmaking queue`);
+		client.subscriptions.push("search-game");
+		GameManagerInstance.addPlayerToQueue({
+			id: client.socket.data.user.id,
+			socketId: client.socket.id,
+		});
+		
 	}
 
 	onSubscribeClientArrival(client: Client) {

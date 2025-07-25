@@ -1,6 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "../pages/toastNotification";
 import { routes } from "../../src/routes";
+import Socket from '../../src/Socket';
 
 const fakeMatchmaking = {
     searching: false,
@@ -38,33 +39,40 @@ class PongModal extends BaseComponent {
 			this.handleCancel();
 		}
         this.cancelBtn.onclick = () => this.handleCancel();
-        this.searchBtn.onclick = () => this.handleSearch();
+        this.searchBtn.onclick = this.handleSearch;
         this.updateUI();
         this.addEventListener("keydown", (e) => {
             if (e.key === "Escape") this.handleCancel();
         });
+		Socket.init();
     }
+	
+    handleSearch = () => {
+		console.log("Searching for game...");
+		if (this.searching) return;
 
-    handleSearch() {
-        if (this.searching) return;
         this.searching = true;
         this.updateUI();
         this.statusMsg.textContent = "Searching for an opponent...";
-		// Change for the real matchmaking logic
-        fakeMatchmaking.start((gameId: string) => {
-            this.statusMsg.textContent = "Opponent found! Redirecting...";
-            setTimeout(() => {
-                this.remove();
-                // routes.navigate(`/pong/${gameId}`);
-            }, 1000);
-        });
+		Socket.addEventListener("search-game", this.handleGameFound);
     }
 
-    handleCancel() {
-        if (this.searching) {
-            fakeMatchmaking.cancel();
+	handleGameFound = (gameId: string) => {
+		this.searching = false;
+		this.statusMsg.textContent = "Opponent found! Redirecting to game...";
+		showToast(this.statusMsg.textContent, 2000, "success");
+		setTimeout(() => {
+			this.remove();
+			routes.navigate(`/game/${gameId}`);
+		}, 2000);
+		Socket.removeEventListener("search-game", this.handleGameFound);
+	}
+
+    handleCancel = () => {
+		console.log("Cancelling search...");
+        if (this.searching)
             this.searching = false;
-        }
+		Socket.removeEventListener("search-game", this.handleGameFound);
         this.remove();
     }
 

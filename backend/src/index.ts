@@ -83,8 +83,10 @@ const start = async (port: number) => {
 	}
 };
 const httpServer = server.server;
+const dbLite = server.sqlite;
 
 export { httpServer };
+export { dbLite };
 
 import "./routes/user";
 import "./routes/tournament";
