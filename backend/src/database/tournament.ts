@@ -387,4 +387,40 @@ export default class TournamentDatabase {
 			return { status: 400, reply: "Unknown error" };
 		}
 	}
+
+	async closeInProgressEntities(): Promise<void> {
+		try {
+			const deletedTournaments = await this.runAsync(
+				`DELETE FROM tournaments WHERE status = 'in progress'`
+			);
+			if (deletedTournaments.changes > 0) {
+				console.log(`Deleted ${deletedTournaments.changes} tournaments in progress`);
+			}
+
+			const deletedTournamentPlayers = await this.runAsync(
+				`DELETE FROM tournament_players WHERE tournament_id NOT IN (SELECT id FROM tournaments)`
+			);
+			if (deletedTournamentPlayers.changes > 0) {
+				console.log(`Deleted ${deletedTournamentPlayers.changes} tournament players with missing tournaments`);
+			}
+
+			const deletedTournamentGames = await this.runAsync(
+				`DELETE FROM tournament_games WHERE tournament_id NOT IN (SELECT id FROM tournaments)`
+			);
+			if (deletedTournamentGames.changes > 0) {
+				console.log(`Deleted ${deletedTournamentGames.changes} tournament games with missing tournaments`);
+			}
+
+			const deletedGames = await this.runAsync(
+				`DELETE FROM games WHERE id NOT IN (SELECT game_id FROM tournament_games)
+					OR status = 'in progress'`
+			);
+			if (deletedGames.changes > 0) {
+				console.log(`Deleted ${deletedGames.changes} games that were not linked to tournaments or were in progress`);
+			}
+
+		} catch (error) {
+			console.error(`Error closing running games: ${error instanceof Error ? error.message : "Unknown error"}`);
+		}
+	}
 }

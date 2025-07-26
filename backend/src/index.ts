@@ -8,6 +8,8 @@ import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import googleAuthRoutes from './routes/googleAuth';
+import { Database } from 'sqlite3';
+import TournamentDatabase from './database/tournament';
 
 
 dotenv.config();
@@ -29,7 +31,6 @@ server.register(fastifyStatic, {
 	prefix: '/uploads/',
 });
 
-console.log("DB_PATH:", process.env.DB_PATH);
 server.register(sqlitePlugin, {
     filename: String('./db/db.sqlite3'),
 });
@@ -69,18 +70,27 @@ const start = async (port: number) => {
 		console.log("starting server...");
 		await server.listen({ port, host: "0.0.0.0" })
 		console.log(`Server is running at port ${port}`);
+
+		const db = server.sqlite as Database;
+        const database = new TournamentDatabase(db);
+        try {
+            await database.closeInProgressEntities();
+        } catch (error: Error | any) {
+            console.error(`Error closing running games: ${error.message}`);
+        }
 	} catch (err) {
 		server.log.error(err);
 	}
 };
 const httpServer = server.server;
+const dbLite = server.sqlite;
 
 export { httpServer };
+export { dbLite };
 
 import "./routes/user";
 import "./routes/tournament";
 import "./socket/setup";
-import TournamentDatabase from './database/tournament';
 
 const port = Number(process.env.PORT) || 3000;
 
