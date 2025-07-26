@@ -1,5 +1,5 @@
 // GameSocket.ts
-import { Server, Socket } from "socket.io";
+import { Socket } from "socket.io";
 import SocketManager from "../../socket/SocketManager";
 
 export interface PongScore {
@@ -7,43 +7,38 @@ export interface PongScore {
 	score: number;
 }
 
+interface Player {
+	id: string;
+}
+
 abstract class GameSocket {
-    protected	io: Server;
-    protected	socket: Socket;
-    protected	manager: SocketManager;
-    protected	room: string;
+    // protected	manager: SocketManager;
+    protected	room: string | null = null;
 	protected	state: any = {};
     protected	clients: Map<string, Socket> = new Map();
     private		tickHandle?: NodeJS.Timeout;
     private		tickInterval: number;
 
     constructor(
-        manager: SocketManager,
-        socket: Socket,
-		room: string,
-    ) {
-        this.manager = manager;
-        this.io = manager.getIo();
-        this.socket = socket;
-		this.room = room;
-		this.tickInterval = 1000 / 60; // default to 60 FPS
-        // join the socket to the game room
-        socket.join(this.room);
-        this.clients.set(socket.id, socket);
-
-        // wire up socket events to the generic dispatcher
-        socket.onAny((event, ...args) => this.eventCaller(event, ...args));
-
-        // handle disconnect
-        socket.on("disconnect", () => this.handleDisconnect());
-
-        this.onInit();
+        clients: Socket[],
+	) {
+		this.tickInterval = 1000 / 60;
+		clients.forEach(client => {
+			this.clients.set(client.id, client);
+		});
+		this.initRoom();
     }
 
-    /** Called once at construction for subclass to hook extra events */
-    protected abstract onInit(): void;
+	private initRoom() {
+		const ids = Array.from(this.clients.keys()).join('-');
+		const date = `-${new Date().toISOString().split('T')[0]}`;
+		this.room = `pong-${ids}-${date}`;
 
-    /** Dispatch any incoming event to a handler method if it exists */
+		this.clients.forEach(client => {
+			client.join(this.room!);
+		});
+	}
+
 	eventCaller(event: string, ...args: any[]) {
 		event = `-${event}`;
 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
@@ -54,11 +49,10 @@ abstract class GameSocket {
 		return (false);
  	}
 
-    /** Example disconnect cleanup */
     protected handleDisconnect() {
         this.clients.delete(this.socket.id);
         this.onPlayerLeave(this.socket);
-        this.io.to(this.room).emit("player-left", { id: this.socket.id });
+        // this.io.to(this.room).emit("player-left", { id: this.socket.id });
         // if room empty, maybe stop loop?
         if (this.clients.size === 0) {
             this.stopGameLoop();
@@ -75,6 +69,16 @@ abstract class GameSocket {
         }, this.tickInterval);
     }
 
+	protected	addEventHook(player: Player, event: string, callback: (...args: any[]) => void) {
+		
+	}
+
+	protected removeEventHook(event: string, callback: (...args: any[]) => void) {
+		this.clients.forEach((client) => {
+			client.off(event, callback);
+		});
+	}
+
     protected stopGameLoop() {
         if (this.tickHandle) {
             clearInterval(this.tickHandle);
@@ -90,13 +94,12 @@ abstract class GameSocket {
         this.io.to(socketId).emit(event, payload);
     }
 
-    protected abstract onPlayerJoin(socket: Socket, info?: C): void;
+    // protected abstract onPlayerJoin(socket: Socket, info?: C): void;
 
-    protected abstract onPlayerLeave(socket: Socket): void;
+    // protected abstract onPlayerLeave(socket: Socket): void;
 
     protected abstract onTick(): void;
 
-    protected abstract onRoomEmpty(): void;
 }
 
 export default GameSocket;
