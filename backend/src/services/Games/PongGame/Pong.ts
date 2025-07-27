@@ -1,6 +1,4 @@
 import GameSocket from '../GameSocket';
-import { PongScore } from '../GameSocket';
-import SocketManager from '../../../socket/SocketManager';
 import { Socket } from 'socket.io';
 import { Pointer } from "../../../socket/SocketManager"
 
@@ -59,6 +57,7 @@ interface PongLimits {
 interface PongState {
 	playersState:	PongPlayerState[];
 	ball:			Position;
+	gameStatus:		string;
 }
 
 class Paddle implements Collidable {
@@ -81,11 +80,22 @@ class Paddle implements Collidable {
 	public changeDirection(direction: number) {
 		if (direction < -1 || direction > 1)
 			direction = 0;
+		console.log(`Paddle direction changed to ${direction}`);
 		this.direction = direction;
 	}
 
 	public update(): void {
 		this.y += this.direction * PADDLE_SPEED;
+		if (this.y < 0) {
+			this.y = 0;
+		} else if (this.y + this.height > GAME_HEIGHT) {
+			this.y = GAME_HEIGHT - this.height;
+		}
+	}
+
+	public reset(position: Position): void {
+		this.x = position.x;
+		this.y = position.y;
 	}
 
 	public position(): Position {
@@ -115,27 +125,36 @@ class Ball implements Collidable {
 			this.y + this.height > target.y &&
 			this.y < target.y + target.height)
 		{
+			console.log(`Ball collided with paddle at (${this.x}, ${this.y})`);
 			const targetCenter = target.y + target.height / 2;
 			const ballCenter = this.y + this.height / 2;
 			const angle = (ballCenter - targetCenter) / (target.height / 2);
 			this.vy = angle * this.speed;
 			this.vx = -this.vx;
-			this.x = target.x + target.width;
+			// this.x = target.x + target.width;
 			return (true);
 		}
 		return (false);
 	}
 
-	public reset(): void {
-		this.x = GAME_WIDTH / 2;
-		this.y = GAME_HEIGHT / 2;
-		this.vx = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
-		this.vy = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
+	public reset(position: Position, speed: number): void {
+		this.x = position.x;
+		this.y = position.y;
+		this.vx = speed * (Math.random() < 0.5 ? 1 : -1);
+		this.vy = speed * (Math.random() < 0.5 ? 1 : -1);
 	}
 
+	// public reset(): void {
+	// 	this.x = GAME_WIDTH / 2;
+	// 	this.y = GAME_HEIGHT / 2;
+	// 	this.vx = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
+	// 	this.vy = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
+	// }
+
 	public update(): void {
-		this.x += this.vx;
-		this.y += this.vy;
+		this.x += this.vx * this.speed;
+		this.y += this.vy * this.speed;
+		this.wallCollision();
 	}
 
 	public nextPosition(): Position {
@@ -147,10 +166,6 @@ class Ball implements Collidable {
 
 	public position(): Position {
 		return { x: this.x, y: this.y };
-	}
-
-	public reverseX(): void {
-		this.vx = -this.vx;
 	}
 
 	private wallCollision(): boolean {
@@ -173,10 +188,13 @@ class Ball implements Collidable {
 class Pong extends GameSocket {
 	private	players:	PongPlayer[] = [];
 	private ball:		Pointer<Ball> = null;
+	private status: 	"waiting" | "playing" | "finished" | "error";
+	public	winner:		Pointer<PongPlayer> = null;
 
 	constructor(clients: Socket[]) {
 		super(clients);
 		if (clients.length !== 2) {
+			this.status = 'error';
 			console.error("Pong game requires exactly 2 players.");
 			return ;
 		}
@@ -185,11 +203,16 @@ class Pong extends GameSocket {
 			this.players.push({
 				id: client.id,
 				name: client.data.user.username,
-				paddle: new Paddle(index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH, GAME_HEIGHT / 2),
+				paddle: new Paddle(index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH, GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2),
 				score: 0
 			});
+			this.addEventHook(client, `paddle-update`, ({ direction }: { direction: number }) => {
+				this.players[index].paddle.changeDirection(direction);
+			});
 		});
-		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2, 1, 0);
+
+		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2 - BALL_SIZE / 2, 1, 0);
+		this.status = 'playing';
 		this.updateState();
 		this.startGameLoop();
 	}
@@ -208,23 +231,25 @@ class Pong extends GameSocket {
 
 	protected gameCheck(): void {
 		const side: number = this.isPoint();
-		if (side) {
+		if (side > -1) {
 			this.players[side].score += 1;
 			this.resetRound();
+			if (this.players[side].score >= MAX_SCORE) {
+				this.stopGameLoop();
+				this.winner = this.players[side];
+				this.status = 'finished';
+			}
 		}
 
-		if (this.players[side].score >= MAX_SCORE)
-			this.stopGameLoop();
 	}
 
 	private isPoint(): number {
 		const ballPosition: Position = this.ball!.position();
-
 		if (ballPosition.x <= 0)
 			return (RIGHT);
 		else if (ballPosition.x >= GAME_WIDTH)
 			return (LEFT);
-		return (0);
+		return (-1);
 	}
 
 	private updateState(): void {
@@ -236,10 +261,29 @@ class Pong extends GameSocket {
 				score: player.score
 			})),
 			ball: this.ball!.position(),
+			gameStatus: this.status
 		};
 	}
 
-	private	resetRound(): void {}
+	public	getState(): PongState {
+		return (this.state);
+	}
+
+	private	resetRound(): void {
+		this.ball!.reset({ x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 }, BALL_SPEED);
+		this.players.forEach((player, index) => {
+			player.paddle.reset({
+				x: index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH,
+				y: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2
+			});
+		});
+	}
+
+	public destructor(): void {
+		this.stopGameLoop();
+		this.removeEventHook(`paddle-update`);
+		super.destructor();
+	}
 }
 
 export default Pong;

@@ -1,6 +1,5 @@
 // GameSocket.ts
-import { Socket } from "socket.io";
-import SocketManager from "../../socket/SocketManager";
+import { Namespace, Socket } from "socket.io";
 
 export interface PongScore {
 	playerId: string;
@@ -12,7 +11,7 @@ interface Player {
 }
 
 abstract class GameSocket {
-    // protected	manager: SocketManager;
+	private 	io: Namespace;
     protected	room: string | null = null;
 	protected	state: any = {};
     protected	clients: Map<string, Socket> = new Map();
@@ -23,6 +22,7 @@ abstract class GameSocket {
         clients: Socket[],
 	) {
 		this.tickInterval = 1000 / 60;
+		this.io = clients[0].nsp;
 		clients.forEach(client => {
 			this.clients.set(client.id, client);
 		});
@@ -49,16 +49,16 @@ abstract class GameSocket {
 		return (false);
  	}
 
-    protected handleDisconnect() {
-        this.clients.delete(this.socket.id);
-        this.onPlayerLeave(this.socket);
-        // this.io.to(this.room).emit("player-left", { id: this.socket.id });
-        // if room empty, maybe stop loop?
-        if (this.clients.size === 0) {
-            this.stopGameLoop();
-            this.onRoomEmpty();
-        }
-    }
+    // protected handleDisconnect() {
+    //     this.clients.delete(this.socket.id);
+    //     this.onPlayerLeave(this.socket);
+    //     // this.io.to(this.room).emit("player-left", { id: this.socket.id });
+    //     // if room empty, maybe stop loop?
+    //     if (this.clients.size === 0) {
+    //         this.stopGameLoop();
+    //         this.onRoomEmpty();
+    //     }
+    // }
 
     protected startGameLoop() {
         if (this.tickHandle) return;
@@ -66,16 +66,17 @@ abstract class GameSocket {
         this.tickHandle = setInterval(() => {
             this.onTick();
             this.broadcastState();
-        }, this.tickInterval);
+		},
+		this.tickInterval);
     }
 
-	protected	addEventHook(player: Player, event: string, callback: (...args: any[]) => void) {
-		
+	protected	addEventHook(player: Socket, event: string, callback: (...args: any[]) => void) {
+		player.on(event, callback);
 	}
 
-	protected removeEventHook(event: string, callback: (...args: any[]) => void) {
+	protected removeEventHook(event: string): void {
 		this.clients.forEach((client) => {
-			client.off(event, callback);
+			client.removeAllListeners(event);
 		});
 	}
 
@@ -87,7 +88,7 @@ abstract class GameSocket {
     }
 
     protected broadcastState() {
-        this.io.to(this.room).emit("state-update", this.state);
+        this.io.to(this.room!).emit("pong-state", this.state);
     }
 
     protected sendTo(socketId: string, event: string, payload: any) {
@@ -99,6 +100,14 @@ abstract class GameSocket {
     // protected abstract onPlayerLeave(socket: Socket): void;
 
     protected abstract onTick(): void;
+
+	public	destructor() {
+		this.stopGameLoop();
+		this.clients.forEach(client => {
+			client.leave(this.room!);
+		});
+		this.clients.clear();
+	}
 
 }
 
