@@ -34,6 +34,10 @@ export class PageManager {
 			routeName = "/tournament-dashboard";
 			param = name.split("/")[2] || null;
 		}
+		else if (name.startsWith("/pong/")) {
+			routeName = "/pong";
+			param = name.split("/")[2] || null;
+		}
 
 		if (!AppControl.getValidDecodedToken()
 			&& routeName != "/login"

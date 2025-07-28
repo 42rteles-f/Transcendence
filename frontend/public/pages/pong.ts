@@ -29,28 +29,47 @@ interface PongState {
 class PongGame extends BaseComponent {
     private canvas!: HTMLCanvasElement;
     private radius = 10;
+	private	localPlay: boolean = false;
 
-    constructor() {
+    constructor(args: string) {
         super("/pages/pong.html");
+		this.localPlay = args === "local-play";
     }
 
     onInit() {
         this.setupSocket();
+
+		this.setKeyEvents();
+		this.canvas.tabIndex = 0;
+		this.canvas.focus();
+		this.canvas.style.outline = "none";
+    }
+
+	private setKeyEvents() {
 		this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
 			if (event.key === "w" || event.key === "s") {
-				Socket.emit("paddle-update", { direction: event.key === "w" ? -1 : 1 });
+				Socket.emit("paddle-update", { direction: (event.key === "w") ? -1 : 1 });
 			}
 		});
 		this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
-			if (event.key === "w" || event.key === "s") {
-				console.log("Key released:", event.key);
+			if (event.key === "w" || event.key === "s")
 				Socket.emit("paddle-update", { direction: 0 });
+		});
+
+		if (!this.localPlay)
+			return;
+
+		Socket.emit("pong-local-play");
+		this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
+			if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+				Socket.emit("second-paddle-update", { direction: (event.key === "ArrowUp") ? -1 : 1 });
 			}
 		});
-		this.canvas.tabIndex = 0; // Make the canvas focusable
-		this.canvas.focus();
-		this.canvas.style.outline = "none"; // Remove focus outline
-    }
+		this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
+			if (event.key === "ArrowUp" || event.key === "ArrowDown")
+				Socket.emit("second-paddle-update", { direction: 0 });
+		});
+	}
 
     private setupSocket() {
         Socket.init();

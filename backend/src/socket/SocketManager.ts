@@ -75,6 +75,14 @@ class SocketManager {
 		});
 	}
 
+	onPongLocalPlay(client: Client) {
+		this.testPongCounter = 0;
+		if (this.pongGame) {
+			this.pongGame.destructor();
+		}
+		this.pongGame = new Pong([client.socket, client.socket]);
+	}
+
 	onPongJoin(client: Client) {
 		this.testPongCounter++;
 		console.log(`pong counter: ${this.testPongCounter}`);

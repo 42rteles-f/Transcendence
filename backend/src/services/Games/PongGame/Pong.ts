@@ -131,6 +131,7 @@ class Ball implements Collidable {
 			const angle = (ballCenter - targetCenter) / (target.height / 2);
 			this.vy = angle * this.speed;
 			this.vx = -this.vx;
+			this.speed += 0.5;
 			// this.x = target.x + target.width;
 			return (true);
 		}
@@ -142,14 +143,8 @@ class Ball implements Collidable {
 		this.y = position.y;
 		this.vx = speed * (Math.random() < 0.5 ? 1 : -1);
 		this.vy = speed * (Math.random() < 0.5 ? 1 : -1);
+		this.speed = speed;
 	}
-
-	// public reset(): void {
-	// 	this.x = GAME_WIDTH / 2;
-	// 	this.y = GAME_HEIGHT / 2;
-	// 	this.vx = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
-	// 	this.vy = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
-	// }
 
 	public update(): void {
 		this.x += this.vx * this.speed;
@@ -171,6 +166,7 @@ class Ball implements Collidable {
 	private wallCollision(): boolean {
 		if (this.y < 0 || this.y + BALL_SIZE > GAME_HEIGHT) {
 			this.vy = -this.vy;
+			this.speed += 0.5;
 			return true;
 		}
 		return false;
@@ -206,10 +202,22 @@ class Pong extends GameSocket {
 				paddle: new Paddle(index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH, GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2),
 				score: 0
 			});
-			this.addEventHook(client, `paddle-update`, ({ direction }: { direction: number }) => {
-				this.players[index].paddle.changeDirection(direction);
-			});
 		});
+
+		this.addEventHook(clients[0], `paddle-update`, ({ direction }: { direction: number }) => {
+			this.players[0].paddle.changeDirection(direction);
+		});
+
+		if (clients[0].id === clients[1].id) {
+			this.addEventHook(clients[1], `second-paddle-update`, ({ direction }: { direction: number }) => {
+				this.players[1].paddle.changeDirection(direction);
+			})
+		}
+		else {
+			this.addEventHook(clients[1], `paddle-update`, ({ direction }: { direction: number }) => {
+				this.players[1].paddle.changeDirection(direction);
+			})
+		}
 
 		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2 - BALL_SIZE / 2, 1, 0);
 		this.status = 'playing';
@@ -240,7 +248,6 @@ class Pong extends GameSocket {
 				this.status = 'finished';
 			}
 		}
-
 	}
 
 	private isPoint(): number {
