@@ -1,9 +1,9 @@
 // SocketManager.ts
+import Matchmaker from './Matchmaker';
 import { Server, Socket } from 'socket.io';
 import Client from './Client';
 import jwt from 'jsonwebtoken';
 import { GameManagerInstance } from '../game/gameManger';
-// import { jwtdecode } from '../utils/jwtdecode'; // Adjust the import path as necessary
 export type Pointer<T> = (T | null);
 import Pong from '../services/Games/PongGame/Pong';
 
@@ -15,8 +15,7 @@ interface IClient {
 class SocketManager {
 	private clients:	Map<string, Client> = new Map();
 	private io: 		Server;
-	private				testPongCounter: number = 0;
-	private				pongGame: Pointer<Pong> = null;
+	private				matchmaker: Matchmaker | null = null;
 
 	constructor(httpServer: any) {
 		this.io = new Server(httpServer, {
@@ -25,7 +24,7 @@ class SocketManager {
 				methods: ['GET', 'POST'],
 			},
 		});
-
+		this.matchmaker = new Matchmaker();
 		this.setupConnection();
 	}
 
@@ -76,39 +75,37 @@ class SocketManager {
 	}
 
 	onPongLocalPlay(client: Client) {
-		this.testPongCounter = 0;
-		if (this.pongGame) {
-			this.pongGame.destructor();
-		}
-		this.pongGame = new Pong([client.socket, client.socket]);
+		new Pong([client.socket, client.socket]);
 	}
 
-	onPongJoin(client: Client) {
-		this.testPongCounter++;
-		console.log(`pong counter: ${this.testPongCounter}`);
-		if (this.testPongCounter >= 2){
-			this.testPongCounter = 0;
-			if (this.pongGame) {
-				this.pongGame.destructor();
-			}
-			this.pongGame = new Pong(Array.from(this.clients.values()).map(c => c.socket));
-			console.log("Pong game started");
-		}
+	onPongMatchFind(client: Client) {
+		this.matchmaker!.addToQueue(client);
 	}
+	// this.testPongCounter++;
+	// console.log(`pong counter: ${this.testPongCounter}`);
+	// if (this.testPongCounter >= 2){
+	// 	this.testPongCounter = 0;
+	// 	if (this.pongGame) {
+	// 		this.pongGame.destructor();
+	// 	}
+	// 	this.pongGame = new Pong(Array.from(this.clients.values()).map(c => c.socket));
+	// 	console.log("Pong game started");
+	// }
 
-	onPongLeave(client: Client) {
-		this.testPongCounter--;
-		if (this.testPongCounter < 0) {
-			this.testPongCounter = 0;
-		}
-		console.log(`pong counter: ${this.testPongCounter}`);
-
-		if (this.pongGame) {
-			this.pongGame.destructor();
-			this.pongGame = null;
-			console.log("Pong game ended");
-		}
+	onPongMatchLeave(client: Client) {
+		this.matchmaker!.removeFromQueue(client);
 	}
+	// this.testPongCounter--;
+	// if (this.testPongCounter < 0) {
+	// 	this.testPongCounter = 0;
+	// }
+	// console.log(`pong counter: ${this.testPongCounter}`);
+
+	// if (this.pongGame) {
+	// 	this.pongGame.destructor();
+	// 	this.pongGame = null;
+	// 	console.log("Pong game ended");
+	// }
 
 	onUnsubscribeSearchGame(client: Client) {
 		console.log(`Player ${client.socket.data.user.username} removed from matchmaking queue`);

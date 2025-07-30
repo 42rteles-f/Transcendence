@@ -3,32 +3,31 @@ import Socket from "../../src/Socket";
 
 console.log("executing PongGame");
 
-interface PaddlePosition {
+interface Position {
     x: number;
     y: number;
 }
 
-interface PlayerState {
+interface PongPlayerState {
     id: string;
     name: string;
-    paddle: PaddlePosition;
+    paddle: Position;
+	paddleDimensions: {
+		width: number;
+		height: number;
+	};
     score: number;
 }
 
-interface BallPosition {
-    x: number;
-    y: number;
-}
-
 interface PongState {
-    playersState: PlayerState[];
-    ball: BallPosition;
+    playersState: PongPlayerState[];
+    ball: Position;
+	ballSize: number;
     gameStatus: string;
 }
 
 class PongGame extends BaseComponent {
     private canvas!: HTMLCanvasElement;
-    private radius = 10;
 	private	localPlay: boolean = false;
 
     constructor(args: string) {
@@ -56,8 +55,10 @@ class PongGame extends BaseComponent {
 				Socket.emit("paddle-update", { direction: 0 });
 		});
 
-		if (!this.localPlay)
+		if (!this.localPlay) {
+			Socket.emit("pong-match-find");
 			return;
+		}
 
 		Socket.emit("pong-local-play");
 		this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -73,7 +74,6 @@ class PongGame extends BaseComponent {
 
     private setupSocket() {
         Socket.init();
-        Socket.emit("pong-join");
         Socket.addEventListener("pong-state", (state: PongState) => {
             this.drawGame(state);
         });
@@ -87,19 +87,22 @@ class PongGame extends BaseComponent {
 		// Draw paddles
 		state.playersState.forEach(player => {
 			ctx.fillStyle = "white";
-			ctx.fillRect(player.paddle.x, player.paddle.y, 10, 60);
+			ctx.fillRect(
+				player.paddle.x, player.paddle.y,
+				player.paddleDimensions.width, player.paddleDimensions.height
+			);
 		});
 
 		// Draw ball
 		ctx.beginPath();
-		ctx.arc(state.ball.x, state.ball.y, this.radius, 0, Math.PI * 2);
+		ctx.arc(state.ball.x, state.ball.y, state.ballSize, 0, Math.PI * 2);
 		ctx.fillStyle = "white";
 		ctx.fill();
 		ctx.closePath();
 	}
 
     onDestroy() {
-        Socket.emit("pong-leave");
+        Socket.emit("pong-match-leave");
     }
 }
 

@@ -26,6 +26,11 @@ abstract class GameSocket {
 		clients.forEach(client => {
 			this.clients.set(client.id, client);
 		});
+		this.clients.forEach(client => {
+			client.on("pong-match-leave", () => {
+				this.handleDisconnect(client);
+			});
+		})
 		this.initRoom();
     }
 
@@ -49,16 +54,12 @@ abstract class GameSocket {
 		return (false);
  	}
 
-    // protected handleDisconnect() {
-    //     this.clients.delete(this.socket.id);
-    //     this.onPlayerLeave(this.socket);
-    //     // this.io.to(this.room).emit("player-left", { id: this.socket.id });
-    //     // if room empty, maybe stop loop?
-    //     if (this.clients.size === 0) {
-    //         this.stopGameLoop();
-    //         this.onRoomEmpty();
-    //     }
-    // }
+    protected handleDisconnect(client: Socket) {
+        this.clients.delete(client.id);
+        if (this.clients.size === 0) {
+            this.destructor();
+        }
+    }
 
     protected startGameLoop() {
         if (this.tickHandle) return;

@@ -1,59 +1,85 @@
-class PongBall {
-	private x: number;
-	private y: number;
-	private vx: number;
-	private vy: number;
+import {
+    Position,
+    Collidable,
+    BALL_SIZE,
+    BALL_SPEED,
+    GAME_HEIGHT,
+    GAME_WIDTH,
+} from "./PongTypes";
 
-	constructor(x: number, y: number, vx: number, vy: number) {
-		this.x = x;
-		this.y = y;
-		this.vx = vx;
-		this.vy = vy;
-	}
+class PongBall implements Collidable {
+    public x: number;
+    public y: number;
+    public width = BALL_SIZE;
+    public height = BALL_SIZE;
+    private vx: number;
+    private vy: number;
+    public speed: number = BALL_SPEED;
 
-	reset() {
-		this.x = GAME_WIDTH / 2;
-		this.y = GAME_HEIGHT / 2;
-		this.vx = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
-		this.vy = BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
-	}
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() < 0.5 ? 1 : -1);
+        this.vy = (Math.random() < 0.5 ? 1 : -1);    }
 
-	updatePosition() {
-		this.x += this.vx;
-		this.y += this.vy;
-	}
+    public onCollision(target: Collidable): boolean {
+        if (
+            this.x + this.width >= target.x &&
+            this.x < target.x + target.width &&
+            this.y + this.height > target.y &&
+            this.y < target.y + target.height
+        ) {
+            console.log(`Ball collided with paddle at (${this.x}, ${this.y})`);
+            const targetCenter = target.y + target.height / 2;
+            const ballCenter = this.y + this.height / 2;
+            const angle = (ballCenter - targetCenter) / (target.height / 2);
+            this.vy = angle * this.speed;
+            this.vx = -this.vx;
+            this.speed += 0.5;
+            return true;
+        }
+        return false;
+    }
 
-	position(): Position {
-		return { x: this.x, y: this.y };
-	}
+    public reset(position: Position, speed: number): void {
+        this.x = position.x;
+        this.y = position.y;
+        this.vx = (Math.random() < 0.5 ? 1 : -1);
+        this.vy = (Math.random() < 0.5 ? 1 : -1);
+        this.speed = speed;
+    }
 
-	reverseX() {
-		this.vx = -this.vx;
-	}
+    public update(): void {
+        this.x += this.vx * this.speed;
+        this.y += this.vy * this.speed;
+        this.wallCollision();
+    }
 
-	collision(target: any): boolean {
-		if (this.x + BALL_SIZE > target.x &&
-			this.x < target.x + target.width &&
-			this.y + BALL_SIZE > target.y &&
-			this.y < target.y + target.height)
-		{
-	}}
+    public nextPosition(): Position {
+        return {
+            x: this.x + this.vx,
+            y: this.y + this.vy,
+        };
+    }
 
-	wallCollision(): boolean {
-		if (this.y < 0 || this.y + BALL_SIZE > GAME_HEIGHT) {
-			this.vy = -this.vy;
-			return true;
-		}
-		return false;
-	}
+    public position(): Position {
+        return { x: this.x, y: this.y };
+    }
 
-	isPoint(): Number {
-		if (this.x < 0)
-			return (-1);
-		else if (this.x > GAME_WIDTH)
-			return (1);
-		return (0);
-	}
+    private wallCollision(): boolean {
+        if (this.y < 0 || this.y + BALL_SIZE > GAME_HEIGHT) {
+            this.vy = -this.vy;
+            this.speed += 0.5;
+            return true;
+        }
+        return false;
+    }
+
+    public isPoint(): Number {
+        if (this.x < 0) return 1;
+        else if (this.x > GAME_WIDTH) return 2;
+        return 0;
+    }
 }
 
 export default PongBall;
