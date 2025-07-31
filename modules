@@ -1,7 +1,7 @@
 <Mandatory>
 	1   - Major: Use a framework to build the backend. ✅
-	2   - Major: Replace basic Pong with server-side Pong and implement an API.
-	3   - Major: Remote players
+	2   - Major: Replace basic Pong with server-side Pong and implement an API. ✅/❌
+	3   - Major: Remote players ✅
 	4   - Major: Live chat. ✅/❌
 	5   - Major: Standard user management, authentication, users tournaments. ✅
 	6   - Major: Implementing a remote authentication. ✅
