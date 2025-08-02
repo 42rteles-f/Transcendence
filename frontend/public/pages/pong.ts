@@ -59,7 +59,7 @@ class PongGame extends BaseComponent {
 		});
 
 		if (!this.localPlay) {
-			// Socket.emit("pong-match-find");
+			Socket.emit("pong-match-find");
 			return;
 		}
 

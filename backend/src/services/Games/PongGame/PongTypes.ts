@@ -21,6 +21,7 @@ export interface PongPlayer {
     name: string;
     paddle: Paddle;
     score: number;
+	online: boolean;
 }
 
 export interface PongPlayerState {

@@ -3,8 +3,8 @@ import { Pointer } from "../PageManager";
 import { routes } from "../routes";
 
 class Api {
-    private static apiUrl: string = "http://192.168.1.8:3000/"; // ou use import.meta.env.VITE_API_URL
-    private static userApiUrl: string = "http://192.168.1.8:3000/user/"; // ou use import.meta.env.VITE_USER_API_URL
+    private static apiUrl: string = import.meta.env.VITE_API_URL
+    private static userApiUrl: string = import.meta.env.VITE_USER_API_URL
     private static token: Pointer<string> = null;
 
     static errorCheck(response: Response) {
