@@ -92,24 +92,8 @@ import "./routes/user";
 import "./routes/tournament";
 import "./socket/setup";
 import { Tournament } from './services/Tournament/Tournament';
-import os from 'os';
 
 const port = Number(process.env.PORT) || 3000;
-
-function getLocalIpAddress(): string | undefined {
-	const interfaces = os.networkInterfaces();
-	for (const name of Object.keys(interfaces)) {
-		for (const iface of interfaces[name]!) {
-			if (iface.family === 'IPv4' && !iface.internal) {
-				return iface.address;
-			}
-		}
-	}
-	return undefined;
-}
-
-const localIp = getLocalIpAddress();
-console.log(`Machine local IP address: ${localIp ?? 'Not found'}`);
 
 start(port);
 

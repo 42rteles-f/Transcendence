@@ -85,8 +85,7 @@ class ProfilePage extends BaseComponent {
 		}
 
 		try {
-			const profile = await Api.getProfile(id);
-
+			const { message: profile} = await Api.getProfile(id);
 			this.username.innerText = profile.username;
 			this.nickname.innerText = profile.nickname;
 			this.gamesPlayed.innerText = `Games Played: ${profile.gamesPlayed.toString()}`;

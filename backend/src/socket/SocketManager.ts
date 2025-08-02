@@ -171,11 +171,11 @@ class SocketManager {
 		return this.io;
 	}
 
-	public onTournamentJoin(client: Client) {
-		this.tournamentCounter.push(client.socket);
-		if (this.tournamentCounter.length > 3)
-			new Tournament(this.tournamentCounter);
-	}
+	// public onTournamentJoin(client: Client) {
+	// 	this.tournamentCounter.push(client.socket);
+	// 	if (this.tournamentCounter.length > 3)
+	// 		new Tournament(this.tournamentCounter);
+	// }
 }
 
 export default SocketManager;

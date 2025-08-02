@@ -11,7 +11,7 @@ class Socket {
 			return true;
 		}
 
-		const apiUrl = "http://192.168.1.8:3000/" //  import.meta.env.API_URL || "http://localhost:3000";
+		const apiUrl = "http://192.168.1.8:3000/"
 
 		this.socket = io(apiUrl, {
 			transports: ['websocket'],
