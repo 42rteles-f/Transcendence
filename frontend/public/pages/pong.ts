@@ -33,6 +33,9 @@ class PongGame extends BaseComponent {
     constructor(args: string) {
         super("/pages/pong.html");
 		this.localPlay = args === "local-play";
+		if (args === "tournament") {
+			Socket.emit("tournament-join");
+		}
     }
 
     onInit() {
@@ -56,7 +59,7 @@ class PongGame extends BaseComponent {
 		});
 
 		if (!this.localPlay) {
-			Socket.emit("pong-match-find");
+			// Socket.emit("pong-match-find");
 			return;
 		}
 

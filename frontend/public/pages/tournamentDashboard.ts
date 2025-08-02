@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { routes } from '../../src/routes';
+import Api from '../../src/api/Api';
 
 type Player = {
     id: number;
@@ -51,7 +51,7 @@ class TournamentDashboardPage extends BaseComponent {
 
     async loadTournament() {
         try {
-            const res = await AppControl.getTournament(this.tournamentId);
+            const res = await Api.getTournament(this.tournamentId);
             this.tournament = res.message ?? res;
 
             this.tournamentName.textContent = this.tournament.name;

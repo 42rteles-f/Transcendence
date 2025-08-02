@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 import { showToast } from "./toastNotification";
+import Api from '../../src/api/Api';
 
 class LogoutModal extends BaseComponent {
     private closeLogoutModal!: HTMLButtonElement;
@@ -30,7 +30,7 @@ class LogoutModal extends BaseComponent {
 
     async handleLogout() {
         try {
-            await AppControl.logout();
+            await Api.logout();
             showToast("Logged out successfully!", 2000, "success");
             this.close();
             routes.navigate("/login");

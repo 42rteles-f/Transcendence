@@ -3,6 +3,7 @@ import { AppControl } from "../../src/AppControl";
 import { showToast } from "./toastNotification";
 import { routes } from '../../src/routes';
 import { JoinTournamentModal } from "../components/joinTournamentModal";
+import Api from '../../src/api/Api';
 
 class TournamentHubPage extends BaseComponent {
     private tournamentId!: number | null;
@@ -49,7 +50,7 @@ class TournamentHubPage extends BaseComponent {
         try {
             if (!this.tournamentId)
                 return;
-            const res = await AppControl.getTournament(this.tournamentId);
+            const res = await Api.getTournament(this.tournamentId);
 			console.log("Loaded tournament:", res);
             this.tournament = res.message ?? res;
 
@@ -141,7 +142,7 @@ class TournamentHubPage extends BaseComponent {
     async startTournament() {
 		if (!this.tournamentId) return;
 		try {
-			const res = await AppControl.startTournament(this.tournamentId);
+			const res = await Api.startTournament(this.tournamentId);
 			showToast(res || "Tournament started successfully", 3000, "success");
 			this.loadTournament();
 		} catch (e: Error | any) {
@@ -168,7 +169,7 @@ class TournamentHubPage extends BaseComponent {
     async unsubscribeTournament() {
 		if (!this.tournamentId) return;
 		try {
-			const res = await AppControl.unsubscribeTournament(this.tournamentId);
+			const res = await Api.unsubscribeTournament(this.tournamentId);
 			showToast(res || "Unsubscribed from tournament successfully", 3000, "success");
 			this.loadTournament();
 		} catch (e: Error | any) {
@@ -179,7 +180,7 @@ class TournamentHubPage extends BaseComponent {
     async cancelTournament() {
 		if (!this.tournamentId) return;
 		try {
-			const res = await AppControl.cancelTournament(this.tournamentId);
+			const res = await Api.cancelTournament(this.tournamentId);
 			showToast(res || "Tournament cancelled successfully", 3000, "success");
 			routes.navigate("/tournaments");
 		} catch (e: Error | any) {

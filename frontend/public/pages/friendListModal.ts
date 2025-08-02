@@ -2,6 +2,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { showToast } from "./toastNotification";
 import { UserCard } from "../components/userCard";
+import Api from '../../src/api/Api';
 
 class FriendListModal extends BaseComponent {
     private closeFriendList!: HTMLButtonElement;
@@ -36,8 +37,8 @@ class FriendListModal extends BaseComponent {
 
     async fetchUsersAndRequests() {
         try {
-            this.allNotFriends = await AppControl.findUsers(this.userId);
-            this.allFriends = await AppControl.getAllFriends(this.userId);
+            this.allNotFriends = await Api.findUsers(this.userId);
+            this.allFriends = await Api.getAllFriends(this.userId);
 		
             const token = AppControl.getValidDecodedToken() as { id: number | string } | null;
             const loggedUserId = token?.id;

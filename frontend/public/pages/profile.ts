@@ -7,6 +7,7 @@ import { MatchHistoryModal } from "./matchHistoryModal";
 import { FriendListModal } from "./friendListModal";
 import { LogoutModal } from "./logoutModal";
 import Socket from "../../src/Socket";
+import Api from '../../src/api/Api';
 
 console.log("executing ProfilePage.ts");
 
@@ -51,7 +52,7 @@ class ProfilePage extends BaseComponent {
 			try {
 				this.editProfileButton.remove();
 				this.logoutButton.remove();
-				const friendRequest = await AppControl.getFriendRequest(id);
+				const friendRequest = await Api.getFriendRequest(id);
 				if (friendRequest.status === "accepted") {
 					this.friendshipStatus.innerText = "Friendship Status: Friends";
 				} else if (friendRequest.status === "pending") {
@@ -84,7 +85,7 @@ class ProfilePage extends BaseComponent {
 		}
 
 		try {
-			const profile = await AppControl.getProfile(id);
+			const profile = await Api.getProfile(id);
 
 			this.username.innerText = profile.username;
 			this.nickname.innerText = profile.nickname;

@@ -1,7 +1,7 @@
-import { AppControl } from '../../src/AppControl';
 import { BaseComponent } from "../../src/BaseComponent";
 import { TournamentInfo } from './tournamentInfo';
 import { routes } from '../../src/routes';
+import Api from '../../src/api/Api';
 
 class TournamentsModal extends BaseComponent {
 	private closeBtn!: HTMLButtonElement;
@@ -53,7 +53,7 @@ class TournamentsModal extends BaseComponent {
             list.classList.add("hidden");
             pagination.classList.add("hidden");
 
-			const response = await AppControl.getAllTournaments(this.page, this.pageSize) as {
+			const response = await Api.getAllTournaments(this.page, this.pageSize) as {
 					tournaments: {
 						id: number,
 						name: string,
