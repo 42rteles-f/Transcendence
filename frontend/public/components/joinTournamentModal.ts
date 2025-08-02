@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { showToast } from "../pages/toastNotification";
+import Api from '../../src/api/Api';
 
 class JoinTournamentModal extends BaseComponent {
     private closeBtn!: HTMLButtonElement;
@@ -34,7 +34,7 @@ class JoinTournamentModal extends BaseComponent {
             return;
         }
         try {
-            await AppControl.joinTournament(this.tournamentId, displayName);
+            await Api.joinTournament(this.tournamentId, displayName);
             showToast("Successfully joined the tournament!", 3000, "success");
             this.close();
         } catch (e: any) {

@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 import { showToast } from './toastNotification';
+import Api from '../../src/api/Api';
 
 console.log("executing RegisterPage.ts");
 
@@ -38,7 +38,7 @@ class RegisterPage extends BaseComponent {
 			return;
 		}
 
-		AppControl.register(
+		Api.register(
 			this.userInput.value.trim(),
 			this.nickInput.value.trim(),
 			this.passInput.value.trim()

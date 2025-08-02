@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { showToast } from "../pages/toastNotification";
 import { routes } from '../../src/routes';
+import Api from '../../src/api/Api';
 
 class CreateTournamentModal extends BaseComponent {
     private closeBtn!: HTMLButtonElement;
@@ -45,7 +45,7 @@ class CreateTournamentModal extends BaseComponent {
         }
 
         try {
-            const res = await AppControl.createTournament(name, maxPlayers, displayName);
+            const res = await Api.createTournament(name, maxPlayers, displayName);
             showToast("Tournament created!", 2000, "success");
             this.remove();
             if (res && res.tournamentId)

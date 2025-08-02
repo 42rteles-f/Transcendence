@@ -1,4 +1,4 @@
-import { AppControl } from '../../src/AppControl';
+import Api from '../../src/api/Api';
 import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from './toastNotification';
 
@@ -29,7 +29,7 @@ class MatchHistoryModal extends BaseComponent {
 
     async loadHistory() {
         try {
-            const matches = await AppControl.getMatchHistory(this.userId, this.page, this.pageSize);
+            const matches = await Api.getMatchHistory(this.userId, this.page, this.pageSize);
             this.renderHistory(matches.games, matches.total);
         } catch (error) {
             showToast("Failed to load match history matchHistoryModal", 3000, "error");

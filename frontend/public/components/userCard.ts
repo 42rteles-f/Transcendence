@@ -1,3 +1,4 @@
+import Api from '../../src/api/Api';
 import { AppControl } from '../../src/AppControl';
 import { BaseComponent } from "../../src/BaseComponent";
 import { routes } from '../../src/routes';
@@ -59,7 +60,7 @@ class UserCard extends BaseComponent {
                 acceptBtn.onclick = async (e) => {
                     e.stopPropagation();
                     try {
-                        const message = await AppControl.friendRequest(this.user.id, "accepted");
+                        const message = await Api.friendRequest(this.user.id, "accepted");
                         showToast(message, 3000, "success");
 						this.user.friendship_status = "accepted";
 						this.renderFriendActionButton();
@@ -78,7 +79,7 @@ class UserCard extends BaseComponent {
                 rejectBtn.onclick = async (e) => {
                     e.stopPropagation();
                     try {
-                        const message = await AppControl.friendRequest(this.user.id, "rejected");
+                        const message = await Api.friendRequest(this.user.id, "rejected");
                         showToast(message, 3000, "info");
 						this.user.friendship_status = "rejected";
 						this.renderFriendActionButton();
@@ -101,7 +102,7 @@ class UserCard extends BaseComponent {
 				cancelBtn.onclick = async (e) => {
 					e.stopPropagation();
 					try {
-						const message = await AppControl.friendRequest(this.user.id, "removed");
+						const message = await Api.friendRequest(this.user.id, "removed");
 						showToast(message, 3000, "info");
 						this.user.friendship_status = "removed";
 						this.renderFriendActionButton();
@@ -126,7 +127,7 @@ class UserCard extends BaseComponent {
 			removeBtn.onclick = async (e) => {
 				e.stopPropagation();
 				try {
-					const message = await AppControl.friendRequest(this.user.id, "removed");
+					const message = await Api.friendRequest(this.user.id, "removed");
 					showToast(message, 3000, "success");
 					this.user.friendship_status = "removed";
 					this.renderFriendActionButton();
@@ -148,7 +149,7 @@ class UserCard extends BaseComponent {
 			addBtn.onclick = async (e) => {
 				e.stopPropagation();
 				try {
-					const message = await AppControl.friendRequest(this.user.id, "pending");
+					const message = await Api.friendRequest(this.user.id, "pending");
 					showToast(message, 3000, "success");
 					this.user.friendship_status = "pending";
 					this.user.requester_id = loggedUserId;
@@ -197,10 +198,10 @@ class UserCard extends BaseComponent {
             e.stopPropagation();
             try {
                 if (status === "accepted") {
-                    const message = await AppControl.friendRequest(this.user.id, "removed");
+                    const message = await Api.friendRequest(this.user.id, "removed");
                     showToast(message, 3000, "success");
                 } else if (status === "rejected" || status === "removed" || status === "no friendship" || !status) {
-                    const message = await AppControl.friendRequest(this.user.id, "pending");
+                    const message = await Api.friendRequest(this.user.id, "pending");
                     showToast(message, 3000, "success");
                 }
                 this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));

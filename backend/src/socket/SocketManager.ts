@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { GameManagerInstance } from '../game/gameManger';
 export type Pointer<T> = (T | null);
 import Pong from '../services/Games/PongGame/Pong';
+import { Tournament } from '../services/Tournament/Tournament';
 
 interface IClient {
 	id:		string;
@@ -15,7 +16,8 @@ interface IClient {
 class SocketManager {
 	private clients:	Map<string, Client> = new Map();
 	private io: 		Server;
-	private				matchmaker: Matchmaker | null = null;
+	private matchmaker:	Matchmaker | null = null;
+	private tournamentCounter: Socket[] = [];
 
 	constructor(httpServer: any) {
 		this.io = new Server(httpServer, {
@@ -146,6 +148,12 @@ class SocketManager {
 
 	public getIo(): Server {
 		return this.io;
+	}
+
+	public onTournamentJoin(client: Client) {
+		this.tournamentCounter.push(client.socket);
+		if (this.tournamentCounter.length > 3)
+			new Tournament(this.tournamentCounter);
 	}
 }
 

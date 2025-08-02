@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { AppControl } from "../../src/AppControl";
 import { routes } from "../../src/routes";
 import { showToast } from './toastNotification';
+import Api from '../../src/api/Api';
 
 console.log("executing editProfile.ts");
 
@@ -52,7 +52,7 @@ class editProfile extends BaseComponent {
 		}
 
 		try {
-			await AppControl.updateProfile(formData);
+			await Api.updateProfile(formData);
 			showToast("Profile updated successfully!");
 			this.closeEditModal();
 			routes.navigate("/profile/me");
