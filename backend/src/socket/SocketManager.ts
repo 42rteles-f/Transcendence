@@ -81,31 +81,10 @@ class SocketManager {
 	onPongMatchFind(client: Client) {
 		this.matchmaker!.addToQueue(client);
 	}
-	// this.testPongCounter++;
-	// console.log(`pong counter: ${this.testPongCounter}`);
-	// if (this.testPongCounter >= 2){
-	// 	this.testPongCounter = 0;
-	// 	if (this.pongGame) {
-	// 		this.pongGame.destructor();
-	// 	}
-	// 	this.pongGame = new Pong(Array.from(this.clients.values()).map(c => c.socket));
-	// 	console.log("Pong game started");
-	// }
 
 	onPongMatchLeave(client: Client) {
 		this.matchmaker!.removeFromQueue(client);
 	}
-	// this.testPongCounter--;
-	// if (this.testPongCounter < 0) {
-	// 	this.testPongCounter = 0;
-	// }
-	// console.log(`pong counter: ${this.testPongCounter}`);
-
-	// if (this.pongGame) {
-	// 	this.pongGame.destructor();
-	// 	this.pongGame = null;
-	// 	console.log("Pong game ended");
-	// }
 
 	onUnsubscribeSearchGame(client: Client) {
 		console.log(`Player ${client.socket.data.user.username} removed from matchmaking queue`);

@@ -118,8 +118,10 @@ class Pong extends GameSocket {
 	}
 
 	public destructor(): void {
+		console.log(`Pong game ended. Winner: ${this.winner ? this.winner.name : 'None'}`);
 		this.stopGameLoop();
 		this.removeEventHook(`paddle-update`);
+		this.removeEventHook(`second-paddle-update`);
 		super.destructor();
 	}
 }

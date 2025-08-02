@@ -50,7 +50,6 @@ class Matchmaker {
 			}
 		});
 	}
-
 }
 
 export default Matchmaker;
