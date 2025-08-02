@@ -113,7 +113,8 @@ export default class UserDatabase {
 
     async profile(id: number): Promise<IResponse> {
         try {
-            const user = await this.getAsync(`SELECT u.username,
+            const user = await this.getAsync(`SELECT u.id,
+													 u.username,
 													 u.nickname,
 													 COUNT(g.id) AS gamesPlayed,
 													 SUM(CASE WHEN ((u.id IN (g.player1_id, g.player2_id) AND g.winner_id = u.id) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesWon,

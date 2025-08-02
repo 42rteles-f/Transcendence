@@ -41,13 +41,14 @@ class Matchmaker {
 		this.queue = [];
 	}
 
-	private	watchGames(): void {
-		this.games.forEach((game, index) => {
+	private watchGames(): void {
+		this.games = this.games.filter(game => {
 			const { gameStatus } = game.game.getState();
 			if (gameStatus === 'finished' || gameStatus === 'error') {
 				game.game.destructor();
-				this.games.splice(index, 1);
+				return false;
 			}
+			return true;
 		});
 	}
 }

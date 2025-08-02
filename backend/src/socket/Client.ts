@@ -1,6 +1,15 @@
 import { Socket } from "socket.io";
 import SocketManager from "./SocketManager";
 
+interface IUserProfile {
+	id?: string;
+	username: string;
+  nickname: string;
+  gamesPlayed: number;
+  gamesWon: number;
+  gamesLost: number;
+}
+
 class Client {
 	public id: string = '';
 	public socket: Socket;
@@ -8,7 +17,7 @@ class Client {
 	public currentGameRoom?: string;
 	private server: SocketManager;
 
-	constructor(manager: SocketManager, socket: Socket) {
+	constructor(manager: SocketManager, socket: Socket, info: IUserProfile) {
 	  this.server = manager;
 	  this.socket = socket;
 	}
@@ -49,7 +58,15 @@ class Client {
 
 	quitGame() {
 	}
-  
+
+	public basicInfo() {
+		return {
+			id: this.socket.data.user.id,
+			socketId: this.socket.id,
+			name: this.socket.data.user.username,
+		};
+	}
+
 	disconnect() {
 	  this.socket.disconnect();
 	}

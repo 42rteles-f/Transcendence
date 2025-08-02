@@ -91,7 +91,6 @@ export { dbLite };
 import "./routes/user";
 import "./routes/tournament";
 import "./socket/setup";
-import { Tournament } from './services/Tournament/Tournament';
 import os from 'os';
 
 const port = Number(process.env.PORT) || 3000;

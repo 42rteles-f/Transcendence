@@ -60,6 +60,15 @@ class Socket {
 		}
 		this.socket.emit(event, ...args);
 	}
+
+	static	disconnect(): void {
+		if (!this.socket) {
+			console.error("Socket not initialized");
+			return;
+		}
+		this.socket.disconnect();
+		this.socket = null;
+	}
 }
 
 export default Socket;

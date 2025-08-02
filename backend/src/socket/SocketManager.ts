@@ -7,10 +7,16 @@ import { GameManagerInstance } from '../game/gameManger';
 export type Pointer<T> = (T | null);
 import Pong from '../services/Games/PongGame/Pong';
 import { Tournament } from '../services/Tournament/Tournament';
+import { dbLite } from '../index';
+import UserDatabase from '../database/user';
 
-interface IClient {
-	id:		string;
-	name:	string;
+interface IUserProfile {
+	  id?: string;
+  username: string;
+  nickname: string;
+  gamesPlayed: number;
+  gamesWon: number;
+  gamesLost: number;
 }
 
 class SocketManager {
@@ -18,6 +24,7 @@ class SocketManager {
 	private io: 		Server;
 	private matchmaker:	Matchmaker | null = null;
 	private tournamentCounter: Socket[] = [];
+	private	userDatabase?: UserDatabase;
 
 	constructor(httpServer: any) {
 		this.io = new Server(httpServer, {
@@ -26,6 +33,7 @@ class SocketManager {
 				methods: ['GET', 'POST'],
 			},
 		});
+		this.userDatabase = new UserDatabase(dbLite);
 		this.matchmaker = new Matchmaker();
 		this.setupConnection();
 	}
@@ -45,17 +53,36 @@ class SocketManager {
 		}
 	}
 
+	getUserData(id: number): Promise<IUserProfile | null> {
+		return (
+			this.userDatabase!.profile(id).then((result) => {
+				if (result && result.reply) {
+					return result.reply as IUserProfile;
+				}
+				return null;
+			})
+			.catch((err) => {
+				console.error(`Error fetching user data: ${err.message}`);
+				return null;
+			})
+		);
+	}
+
 	private setupConnection() {
 		this.io.use((socket, next) => this.socketAuthMiddleware(socket, next));
 
-		this.io.on('connection', (socket) => {
-			const client = new Client(this, socket);
+		this.io.on('connection', async (socket) => {
+			const clientData = await this.getUserData(socket.data.user.id);
+			if (!clientData) {
+				console.error(`User data not found for socket ID: ${socket.id}`);
+				socket.disconnect();
+				return;
+			}
+
+			const client = new Client(this, socket, clientData!);
 			this.clients.set(socket.id, client);
 
-			socket.broadcast.emit('client-arrival', [{
-					id: socket.id,
-					name: socket.data.user.username
-			}]);
+			socket.broadcast.emit('client-arrival', [client.basicInfo()]);
 
 			socket.onAny((event: string, ...args: any[]) => {
 				if (!client.eventCaller(event, ...args)
@@ -67,11 +94,8 @@ class SocketManager {
 
 			socket.on('disconnect', () => {
 				console.log('Client disconnected:', socket.id);
+				this.io.emit('client-departure', client.basicInfo());
 				this.clients.delete(socket.id);
-				this.io.emit('client-departure', {
-					id: client.socket.id,
-					name: client.socket.data.user.username,
-				});
 			});
 		});
 	}
@@ -105,10 +129,7 @@ class SocketManager {
 
 	onSubscribeClientArrival(client: Client) {
 		client.subscriptions.push("client-arrival");
-		const onlineClients = Array.from(this.clients.values()).map(c => ({
-			id: c.socket.id,
-			name: c.socket.data.user.username,
-		}));
+		const onlineClients = Array.from(this.clients.values()).map(c => c.basicInfo());
 		client.socket.emit('client-arrival', onlineClients);
 	}
 

@@ -77,19 +77,30 @@ class Chat extends BaseComponent {
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
     };
 
-    addClients = (clients: { id: string; name: string }[]) => {
+    addClients = (
+        clients: { id: string; socketId: string; name: string }[]
+    ) => {
         clients.forEach((client) => {
-            const listItem = document.createElement("li");
-            listItem.dataset.clientId = client.id;
-            listItem.dataset.clientName = client.name;
-            listItem.textContent = client.name;
-            listItem.className = "cursor-pointer p-2 hover:bg-gray-200";
-            listItem.onclick = () => this.openChat(client);
-            this.clientList.appendChild(listItem);
+			console.log(`Adding client: ${client.name} (${client.id}) with socket id: ${client.socketId}`);
+			let newClient: boolean = false;
+			let listItem: HTMLLIElement | null = null;
+			if (this.clientList.querySelector(`li[data-client-id="${client.id}"]`)) {
+				listItem = this.clientList.querySelector(`li[data-client-id="${client.id}"]`);
+			} else {
+				listItem = document.createElement("li");
+				newClient = true;
+			}
+            listItem!.dataset.clientId = client.id;
+            listItem!.dataset.socketId = client.socketId;
+            listItem!.dataset.clientName = client.name;
+            listItem!.textContent = client.name;
+            listItem!.className = "cursor-pointer p-2 hover:bg-gray-200";
+            listItem!.onclick = () => this.openChat(client);
+			if (newClient) this.clientList.appendChild(listItem!);
         });
     };
 
-    removeClient = (client: { id: string; name: string }) => {
+    removeClient = (client: { id: string; socketId: string, name: string }) => {
         this.clientList.querySelectorAll("li").forEach((item) => {
             const clientId = item.dataset.clientId;
             if (client.id == clientId) {
@@ -99,7 +110,7 @@ class Chat extends BaseComponent {
         console.log("Clients removed");
     };
 
-    openChat(client: { id: string; name: string }) {
+    openChat(client: { id: string; socketId:string, name: string }) {
         this.chatName.textContent = `${client.name}`;
         this.chatName.dataset.id = client.id;
         this.chatMessages.innerHTML = "";

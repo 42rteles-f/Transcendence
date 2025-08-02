@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { Pointer } from "../PageManager";
 import { routes } from "../routes";
+import Socket from "../Socket";
 
 class Api {
     private static apiUrl: string = import.meta.env.VITE_API_URL
@@ -10,6 +11,7 @@ class Api {
     static errorCheck(response: Response) {
         if (response.status === 401) {
             localStorage.removeItem("authToken");
+			Socket.disconnect();
             routes.navigate("/login");
         } else if (response.status === 403) {
             const error = new Error('Forbidden');
@@ -285,6 +287,7 @@ class Api {
 
     static async logout(): Promise<void> {
         const token = localStorage.getItem("authToken");
+		Socket.disconnect();
         if (!token) {
             console.error('No token found. Cannot logout.');
             return;
