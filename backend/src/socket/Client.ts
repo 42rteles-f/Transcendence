@@ -12,6 +12,7 @@ interface IUserProfile {
 
 class Client {
 	public id: string = '';
+	public username: string;
 	public socket: Socket;
 	public subscriptions: string[] = [];
 	public currentGameRoom?: string;
@@ -20,6 +21,9 @@ class Client {
 	constructor(manager: SocketManager, socket: Socket, info: IUserProfile) {
 	  this.server = manager;
 	  this.socket = socket;
+	  this.username = info.username;
+	  this.id = info.id || '';
+	  console.log(`Client created: ${info}`);
 	}
   
 	inviteToGame(opponentId: string) {
@@ -40,8 +44,8 @@ class Client {
 	onChatMessage(payload: {target: string, message: string}) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
 		this.socket.to(payload.target).emit('chat-message', {
-			fromId: this.socket.id,
-			fromName: this.socket.data.user.username,
+			fromId: this.id,
+			fromName: this.username,
 			message: payload.message,
 		});
 	}

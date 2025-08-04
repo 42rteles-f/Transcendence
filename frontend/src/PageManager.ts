@@ -64,7 +64,7 @@ export class PageManager {
 			return (false);
         }
 
-		const newComponent = new (this.pageMap.get(name) as any)(...param!);
+		const newComponent = new (this.pageMap.get(name) as any)(...(param ?? []));
 		this.currentPage.push(newComponent);
 		document.body.appendChild(newComponent as Node);
 		return (true);

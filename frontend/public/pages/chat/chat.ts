@@ -3,6 +3,12 @@ import Socket from "../../../src/Socket";
 
 console.log("executing home.ts");
 
+interface IClient {
+	id: string;
+	socketId: string;
+	name: string;
+}
+
 class Chat extends BaseComponent {
     private chatMessages!: HTMLDivElement;
     private chatInput!: HTMLInputElement;
@@ -36,11 +42,12 @@ class Chat extends BaseComponent {
         if (!message) return;
 
         Socket.emit("chat-message", {
-            target: this.chatName.dataset.id,
+            target: this.chatName.dataset.socketId,
             message: message,
         });
+		console.log(`Sending message: ${message} to ${this.chatName.dataset.socketId}`);
         this.addMessage(
-            { fromId: "self", fromName: this.chatName.textContent!, message },
+            { fromId: this.chatName.dataset.id!, fromName: this.chatName.textContent!, message },
             "outgoing"
         );
         this.chatInput.value = "";
@@ -54,21 +61,31 @@ class Chat extends BaseComponent {
         data: { fromId: string; fromName: string; message: string },
         type?: "incoming" | "outgoing"
     ): void => {
+		data.fromId = data.fromId.toString();
         if (type !== "outgoing") type = "incoming";
         console.log(
-            `chatName (${this.chatName.textContent}) != fromName (${data.fromName}) && type (${type})`
+            `addMessageReceived (${data.fromName}), fromid: ${data.fromId} fromName (${data.fromName}) && type (${type})`
         );
+		console.log(`typeof data: ${typeof data.fromId}`);
 
         const messageElement = document.createElement("div");
         messageElement.className = `chat-message-${type}`;
         messageElement.textContent = data.message;
 
-        if (!this.chatHistory.has(data.fromName))
-            this.chatHistory.set(data.fromName, []);
-        this.chatHistory.get(data.fromName)!.push(messageElement);
+        if (!this.chatHistory.has(data.fromId))
+            this.chatHistory.set(data.fromId, []);
+        this.chatHistory.get(data.fromId)!.push(messageElement);
+		//print all messages in the console
+		this.chatHistory.get(data.fromId)!.forEach((msg) => {
+			console.log(`history ${data.fromId}: ${msg.textContent}`);
+		});		
+		
+			// console.log(`new entry for ${data.fromId} ${data.message}`);
 
-        if (this.chatName.textContent != data.fromName && type != "outgoing")
+        if (this.chatName.textContent != data.fromName && type != "outgoing") {
+			this.showNotification(data.fromId);
             return;
+		}
         this.chatMessages.appendChild(messageElement);
 
         while (this.chatMessages.children.length > this.messageLimit)
@@ -77,30 +94,65 @@ class Chat extends BaseComponent {
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
     };
 
-    addClients = (
-        clients: { id: string; socketId: string; name: string }[]
-    ) => {
-        clients.forEach((client) => {
+	showNotification(clientId: string) {
+		const listItem = this.clientList.querySelector(
+			`li[data-client-id="${clientId}"]`
+		);
+		if (listItem) {
+			const statusBall = listItem.querySelector("span");
+			if (statusBall) {
+				statusBall.style.visibility = "visible";
+			}
+		}
+	}
+
+	hideNotification(clientId: string) {
+		const listItem = this.clientList.querySelector(
+			`li[data-client-id="${clientId}"]`
+		);
+		if (listItem) {
+			const statusBall = listItem.querySelector("span");
+			if (statusBall) {
+				statusBall.style.visibility = "hidden";
+			}
+		}
+	}
+
+	addClients = (
+		clients: IClient[]
+	) => {
+		clients.forEach((client) => {
 			console.log(`Adding client: ${client.name} (${client.id}) with socket id: ${client.socketId}`);
-			let newClient: boolean = false;
-			let listItem: HTMLLIElement | null = null;
-			if (this.clientList.querySelector(`li[data-client-id="${client.id}"]`)) {
-				listItem = this.clientList.querySelector(`li[data-client-id="${client.id}"]`);
-			} else {
+
+			let newClient = false;
+			let listItem: HTMLLIElement | null = this.clientList.querySelector(`li[data-client-id="${client.id}"]`);
+
+			if (!listItem) {
 				listItem = document.createElement("li");
 				newClient = true;
+			} else {
+				listItem.innerHTML = '';
 			}
-            listItem!.dataset.clientId = client.id;
-            listItem!.dataset.socketId = client.socketId;
-            listItem!.dataset.clientName = client.name;
-            listItem!.textContent = client.name;
-            listItem!.className = "cursor-pointer p-2 hover:bg-gray-200";
-            listItem!.onclick = () => this.openChat(client);
-			if (newClient) this.clientList.appendChild(listItem!);
-        });
-    };
 
-    removeClient = (client: { id: string; socketId: string, name: string }) => {
+			client.id = client.id.toString();
+			listItem.dataset.clientId = client.id;
+			listItem.dataset.socketId = client.socketId;
+			listItem.dataset.clientName = client.name;
+			listItem!.textContent = client.name;
+			listItem.onclick = () => this.openChat(client);
+			listItem.className = "flex pl-6 cursor-pointer p-2 hover:bg-gray-200";
+
+			const statusBall = document.createElement("span");
+			statusBall.className = "-top-1 -right-4 w-3 h-3 bg-red-500 rounded-full";
+			statusBall.style.visibility = "hidden";
+
+			listItem.appendChild(statusBall);
+
+			if (newClient) this.clientList.appendChild(listItem);
+		});
+	};
+
+    removeClient = (client: IClient) => {
         this.clientList.querySelectorAll("li").forEach((item) => {
             const clientId = item.dataset.clientId;
             if (client.id == clientId) {
@@ -110,17 +162,16 @@ class Chat extends BaseComponent {
         console.log("Clients removed");
     };
 
-    openChat(client: { id: string; socketId:string, name: string }) {
+    openChat(client: IClient) {
         this.chatName.textContent = `${client.name}`;
         this.chatName.dataset.id = client.id;
+        this.chatName.dataset.socketId = client.socketId;
         this.chatMessages.innerHTML = "";
         this.chatInput.value = "";
-        if (!this.chatHistory.has(client.id)) {
-            this.chatHistory.set(client.id, []);
-        }
-        this.chatHistory.get(client.name)?.forEach((msg) => {
+        this.chatHistory.get(client.id)?.forEach((msg) => {
             this.chatMessages.appendChild(msg);
         });
+		this.hideNotification(client.id);
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
         console.log("Chat opened");
     }

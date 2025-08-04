@@ -4,15 +4,6 @@ import SocketManager from './SocketManager';
 
 const socketManager = new SocketManager(httpServer);
 
-socketManager.getIo().on("connection", (socket) => {
-	socket.on("join", ({ userId }) => {
-		if (userId) {
-			socket.join(userId.toString());
-			console.log(`User ${userId} joined room ${userId}`);
-		}
-	});
-});
-
 export default socketManager;
 
 //   io.use((socket, next) => {
