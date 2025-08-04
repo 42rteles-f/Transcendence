@@ -16,13 +16,14 @@ class Client {
 	public socket: Socket;
 	public subscriptions: string[] = [];
 	public currentGameRoom?: string;
+	public blockedList: string[] = [];
 	private server: SocketManager;
 
 	constructor(manager: SocketManager, socket: Socket, info: IUserProfile) {
 	  this.server = manager;
 	  this.socket = socket;
 	  this.username = info.username;
-	  this.id = info.id || '';
+	  this.id = info.id?.toString() || '';
 	  console.log(`Client created: ${info}`);
 	}
   
@@ -41,14 +42,14 @@ class Client {
 		this.subscriptions.push('chat-message');
 	}
 
-	onChatMessage(payload: {target: string, message: string}) {
-		console.log(`target ${payload.target}, message ${payload.message}`)
-		this.socket.to(payload.target).emit('chat-message', {
-			fromId: this.id,
-			fromName: this.username,
-			message: payload.message,
-		});
-	}
+	// onChatMessage(payload: {target: string, message: string}) {
+	// 	console.log(`target ${payload.target}, message ${payload.message}`)
+	// 	this.socket.to(payload.target).emit('chat-message', {
+	// 		fromId: this.id,
+	// 		fromName: this.username,
+	// 		message: payload.message,
+	// 	});
+	// }
 
 	eventCaller(event: string, ...args: any[]) {
 		event = `-${event}`;

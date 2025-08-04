@@ -63,10 +63,6 @@ class Chat extends BaseComponent {
     ): void => {
 		data.fromId = data.fromId.toString();
         if (type !== "outgoing") type = "incoming";
-        console.log(
-            `addMessageReceived (${data.fromName}), fromid: ${data.fromId} fromName (${data.fromName}) && type (${type})`
-        );
-		console.log(`typeof data: ${typeof data.fromId}`);
 
         const messageElement = document.createElement("div");
         messageElement.className = `chat-message-${type}`;
@@ -75,12 +71,6 @@ class Chat extends BaseComponent {
         if (!this.chatHistory.has(data.fromId))
             this.chatHistory.set(data.fromId, []);
         this.chatHistory.get(data.fromId)!.push(messageElement);
-		//print all messages in the console
-		this.chatHistory.get(data.fromId)!.forEach((msg) => {
-			console.log(`history ${data.fromId}: ${msg.textContent}`);
-		});		
-		
-			// console.log(`new entry for ${data.fromId} ${data.message}`);
 
         if (this.chatName.textContent != data.fromName && type != "outgoing") {
 			this.showNotification(data.fromId);
@@ -122,8 +112,6 @@ class Chat extends BaseComponent {
 		clients: IClient[]
 	) => {
 		clients.forEach((client) => {
-			console.log(`Adding client: ${client.name} (${client.id}) with socket id: ${client.socketId}`);
-
 			let newClient = false;
 			let listItem: HTMLLIElement | null = this.clientList.querySelector(`li[data-client-id="${client.id}"]`);
 

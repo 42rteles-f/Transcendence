@@ -82,6 +82,7 @@ class SocketManager {
             }
 
             const client = new Client(this, socket, clientData!);
+			client.blockedList.push("1");
             this.clients.set(socket.id, client);
 
             socket.broadcast.emit("client-arrival", [client.basicInfo()]);
@@ -133,12 +134,30 @@ class SocketManager {
         });
     }
 
+	onChatMessage(client: Client, payload: {target: string, message: string}) {
+		console.log(`target ${payload.target}, message ${payload.message}`)
+		const targetClient = this.clients.get(payload.target);
+		if (!targetClient || targetClient.blockedList.includes(client.id) ||
+			client.blockedList.includes(targetClient.id)
+		)
+			return ;
+		client.socket.to(payload.target).emit('chat-message', {
+			fromId: client.id,
+			fromName: client.username,
+			message: payload.message,
+		});
+	}
+
     onSubscribeClientArrival(client: Client) {
         client.subscriptions.push("client-arrival");
-        const onlineClients = Array.from(this.clients.values()).map((c) =>
-            c.basicInfo()
-        );
-        client.socket.emit("client-arrival", onlineClients);
+        let onlineClients = Array.from(this.clients.values()).map((c) => {
+			if (c.id === client.id || c.blockedList.includes(client.id)
+				|| client.blockedList.includes(c.id))
+				return null;
+			return c.basicInfo();
+		});
+
+		client.socket.emit("client-arrival", onlineClients);
     }
 
     eventCaller(event: string, ...args: any[]) {
