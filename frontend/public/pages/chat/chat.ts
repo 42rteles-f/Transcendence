@@ -39,7 +39,10 @@ class Chat extends BaseComponent {
 
     sendMessage() {
         const message = this.chatInput.value.trim();
-        if (!message) return;
+        if (!message || !this.chatName.textContent) {
+			this.chatInput.value = "";
+			return;
+		}
 
         Socket.emit("chat-message", {
             target: this.chatName.dataset.socketId,

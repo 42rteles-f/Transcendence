@@ -82,7 +82,7 @@ class SocketManager {
             }
 
             const client = new Client(this, socket, clientData!);
-			client.blockedList.push("1");
+			// client.blockedList.push("1");
             this.clients.set(socket.id, client);
 
             socket.broadcast.emit("client-arrival", [client.basicInfo()]);
@@ -94,6 +94,8 @@ class SocketManager {
                 ) {
                     console.warn(`Unhandled event: ${event}`);
                 }
+				else
+					console.log(`Event ${event} handled: ${client.id}`);
             });
 
             socket.on("disconnect", () => {
@@ -150,12 +152,14 @@ class SocketManager {
 
     onSubscribeClientArrival(client: Client) {
         client.subscriptions.push("client-arrival");
-        let onlineClients = Array.from(this.clients.values()).map((c) => {
-			if (c.id === client.id || c.blockedList.includes(client.id)
-				|| client.blockedList.includes(c.id))
+        let onlineClients = Array.from(this.clients.values()).map((target) => {
+			if (target.id === client.id || target.blockedList.includes(client.id)
+				|| client.blockedList.includes(target.id))
 				return null;
-			return c.basicInfo();
-		});
+			return target.basicInfo();
+		})
+		.filter(Boolean);
+		console.log(`Online clients: ${onlineClients}`);
 
 		client.socket.emit("client-arrival", onlineClients);
     }
