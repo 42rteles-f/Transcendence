@@ -111,6 +111,20 @@ class Chat extends BaseComponent {
 		}
 	}
 
+	createNotification() {
+		const statusBall = document.createElement("span");
+		statusBall.className = "-top-1 -right-4 w-3 h-3 bg-yellow-500 rounded-full";
+		statusBall.style.visibility = "hidden";
+		return (statusBall);
+	}
+	
+	createButton(text: string, callback: () => void): HTMLButtonElement {
+		const button = document.createElement("button");
+		button.textContent = text;
+		button.onclick = callback;
+		return (button);
+	}
+
 	addClients = (
 		clients: IClient[]
 	) => {
@@ -130,14 +144,14 @@ class Chat extends BaseComponent {
 			listItem.dataset.socketId = client.socketId;
 			listItem.dataset.clientName = client.name;
 			listItem!.textContent = client.name;
+			listItem.className = "flex items-center justify-between pl-6 cursor-pointer p-2 hover:bg-gray-200";
 			listItem.onclick = () => this.openChat(client);
-			listItem.className = "flex pl-6 cursor-pointer p-2 hover:bg-gray-200";
 
-			const statusBall = document.createElement("span");
-			statusBall.className = "-top-1 -right-4 w-3 h-3 bg-red-500 rounded-full";
-			statusBall.style.visibility = "hidden";
-
-			listItem.appendChild(statusBall);
+			listItem.appendChild(this.createNotification());
+			listItem.appendChild(this.createButton("Invite", () => { console.log("Invite clicked for", client.name); }));
+			listItem.appendChild(this.createButton("⃠",
+				() => Socket.emit("block-client", { clientId: client.id }
+			)));
 
 			if (newClient) this.clientList.appendChild(listItem);
 		});
@@ -166,6 +180,8 @@ class Chat extends BaseComponent {
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
         console.log("Chat opened");
     }
+
+
 
     onDestroy(): void {
         Socket.removeEventListener("chat-message", this.addMessage);

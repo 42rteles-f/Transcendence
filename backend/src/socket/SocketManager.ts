@@ -82,10 +82,9 @@ class SocketManager {
             }
 
             const client = new Client(this, socket, clientData!);
-			// client.blockedList.push("1");
             this.clients.set(socket.id, client);
 
-            socket.broadcast.emit("client-arrival", [client.basicInfo()]);
+			this.emitConnection(client);
 
             socket.onAny((event: string, ...args: any[]) => {
                 if (
@@ -105,6 +104,11 @@ class SocketManager {
             });
         });
     }
+
+	onBlockClient(client: Client, { clientId }: { clientId: string }) {
+		client.blockedList.push(clientId);
+		console.log(`Client ${client.id} blocked ${clientId}`);
+	}
 
     onPongLocalPlay(client: Client) {
         new Pong([client.socket, client.socket]);
@@ -147,6 +151,15 @@ class SocketManager {
 			fromId: client.id,
 			fromName: client.username,
 			message: payload.message,
+		});
+	}
+
+	emitConnection(client: Client) {
+		this.clients.forEach((target) => {
+			if (target.id === client.id || target.blockedList.includes(client.id)
+				|| client.blockedList.includes(target.id))
+				return;
+			target.socket.emit("client-arrival", [client.basicInfo()]);
 		});
 	}
 
