@@ -35,7 +35,7 @@ class SocketManager {
         });
         this.userDatabase = new UserDatabase(dbLite);
         console.log(`db connected: ${dbLite}`);
-        this.matchmaker = new Matchmaker();
+        this.matchmaker = new Matchmaker(this.io);
         this.setupConnection();
     }
 
@@ -104,6 +104,14 @@ class SocketManager {
             });
         });
     }
+
+	onInviteToPlay(host: Client, { guest }: { guest: string }) {
+		this.matchmaker!.createInvite(host, this.clients.get(guest)!);
+	}
+
+	onAcceptInvite(guest: Client, { host }: { host: string }) {
+		this.matchmaker!.joinInvite(this.clients.get(host)!, guest);
+	}
 
 	onBlockClient(client: Client, { clientId }: { clientId: string }) {
 		client.blockedList.push(clientId);
