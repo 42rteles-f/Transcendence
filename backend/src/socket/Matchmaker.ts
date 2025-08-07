@@ -75,18 +75,9 @@ class Matchmaker {
 
 	public startMatchmaking(): void {
 		this.watcher = setInterval(() => {
-			this.watchGames();
-			while (this.queue.length >= 2) {
-				const players = this.queue.splice(0, 2).map(c => c.socket);
-				this.games.push({ id: "Teste", game: new Pong(players) });
-			}
-			this.invites.forEach((invite, host) => {
-				const guest = invite.guest;
-				if (invite.status === 'accepted') {
-					this.games.push({ id: invite.room, game: new Pong([host.socket, guest.socket]) });
-					this.server.to(invite!.room).emit('start-game-invite', { room: invite!.room });
-				}
-			});
+			this.checkGames();
+			this.startQueueGames();
+			this.startInviteGames();
 		}, INTERVAL_MATCHMAKING);
 	}
 
@@ -96,9 +87,26 @@ class Matchmaker {
 		this.games.forEach(game => game.game.destructor());
 		this.games = [];
 		this.queue = [];
+		this.invites.clear();
 	}
 
-	private watchGames(): void {
+	private startQueueGames(): void {
+		while (this.queue.length >= 2) {
+			const players = this.queue.splice(0, 2).map(c => c.socket);
+			this.games.push({ id: "Teste", game: new Pong(players) });
+		}
+	}
+
+	private startInviteGames(): void {
+		this.invites.forEach((invite, host) => {
+			const guest = invite.guest;
+			if (invite.status === 'accepted') {
+				this.games.push({ id: invite.room, game: new Pong([host.socket, guest.socket]) });
+				this.server.to(invite!.room).emit('start-game-invite', { room: invite!.room });
+			}
+		});
+	}
+	private checkGames(): void {
 		this.games = this.games.filter(game => {
 			const { gameStatus } = game.game.getState();
 			if (gameStatus === 'finished' || gameStatus === 'error') {
