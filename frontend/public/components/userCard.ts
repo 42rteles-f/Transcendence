@@ -8,7 +8,6 @@ import { showToast } from '../pages/toastNotification';
 class UserCard extends BaseComponent {
 	private userCard!: HTMLDivElement;
     private userCardImage!: HTMLImageElement;
-    private userCardNickname!: HTMLElement;
     private userCardUsername!: HTMLElement;
 	private friendActionButton!: HTMLDivElement;
 	private onActionComplete?: () => void;
@@ -34,7 +33,6 @@ class UserCard extends BaseComponent {
 			routes.navigate(`/profile/${this.user.id}`);
 		}
         this.userCardImage.src = this.uploadUrl + this.user.profile_picture;
-        this.userCardNickname.textContent = this.user.nickname || "";
         this.userCardUsername.textContent = "@" + (this.user.username || "");
 		this.renderFriendActionButton();
     }	

@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { Get, Post, Router } from '.';
 import { userController } from '../controllers/user';
 import {
-	verifyNickname,
 	verifyPassword,
 	verifyUsername,
 } from '../middlewares/user';
@@ -22,7 +21,7 @@ class UserRoutes {
 		res.status(status).send({ message: reply });
 	}
 
-	@Post(undefined, false, [verifyUsername, verifyNickname, verifyPassword])
+	@Post(undefined, false, [verifyUsername, verifyPassword])
 	async register(req: FastifyRequest, res: FastifyReply) {
 		const { status, reply } = await userController.register(req, res);
 		res.status(status).send({ message: reply });

@@ -7,16 +7,15 @@ console.log("executing editProfile.ts");
 
 class editProfile extends BaseComponent {
 	private username!: HTMLInputElement;
-	private nickname!: HTMLInputElement;
 	private profilePicture!: HTMLImageElement;
 	private closeModalButton!: HTMLButtonElement;
 	private editProfileForm!: HTMLFormElement;
-	private userInfo: { username: string, nickname: string };
+	private userNameValue!: string;
 
-	constructor(userInfo: { username: string, nickname: string }) {
+	constructor(username: string) {
 		super("/pages/editProfile.html");
 		this.tabIndex = -1;
-		this.userInfo = userInfo;
+		this.userNameValue = username;
 	}
 	
 	async onInit() {
@@ -24,15 +23,12 @@ class editProfile extends BaseComponent {
 		this.addEventListener("keydown", this.handleEsc);
 		this.closeModalButton.onclick = () => { this.closeEditModal() };
 		this.editProfileForm.onsubmit = (e: Event) => { this.submitEditProfile(e); };
-		this.username.value = this.userInfo.username;
-		this.nickname.value = this.userInfo.nickname;
+		this.username.value = this.userNameValue;
 	}
 
 	trimingForms() {
 		this.username.value = this.username.value.trim();
-		this.nickname.value = this.nickname.value.trim();
-
-		return !(this.username.value.length === 0 || this.nickname.value.length === 0);
+		return !(this.username.value.length === 0);
 	}
 
 	async submitEditProfile(e: Event) {

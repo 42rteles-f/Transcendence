@@ -46,8 +46,8 @@ class Api {
         return response;
     }
 
-    static async register(username: string, nickname: string, password: string) {
-        const body = JSON.stringify({ username, nickname, password });
+    static async register(username: string, password: string) {
+        const body = JSON.stringify({ username, password });
         const response = await this.makeRequest("user/register", "POST", body);
         this.token = response.message;
         localStorage.setItem("authToken", this.token!);
@@ -55,12 +55,14 @@ class Api {
     }
 
     static async getProfile(id: string | number | null): Promise<any> {
-        return this.makeRequest(`user/profile/${id}`, "GET");
+		const data = await this.makeRequest(`user/profile/${id}`, "GET");
+		return data.message;
     }
 
     static async getMatchHistory(id: string | number, page: number = 1, pageSize: number = 10): Promise<any> {
         const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-        return this.makeRequest(`user/match-history/${id}`, "GET", undefined, params);
+		const data = await this.makeRequest(`user/match-history/${id}`, "GET", undefined, params);
+        return data.message;
     }
 
     static async updateProfile(form: FormData): Promise<any> {
@@ -79,59 +81,70 @@ class Api {
 
     static async friendRequest(friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<any> {
         const body = JSON.stringify({ status });
-        return this.makeRequest(`user/friend-request/${friendId}`, "POST", body);
+		const data = await this.makeRequest(`user/friend-request/${friendId}`, "POST", body);
+        return data.message;
     }
 
     static async getFriendRequest(friendId: number | string | null): Promise<any> {
-        return this.makeRequest(`user/friend-request/${friendId}`, "GET");
+		const data = await this.makeRequest(`user/friend-request/${friendId}`, "GET");
+        return data.message;
     }
 
     static async getAllFriendRequests(friendId: number | string | null): Promise<any> {
-        return this.makeRequest(`user/all-friend-requests/${friendId}`, "GET");
+		const data = await this.makeRequest(`user/all-friend-requests/${friendId}`, "GET");
+		return data.message;
     }
 
     static async findUsers(userId: number | string | null): Promise<any> {
-        return this.makeRequest(`user/not-friends-list/${userId}`, "GET");
+		const data = await this.makeRequest(`user/not-friends-list/${userId}`, "GET");
+		return data.message;
     }
 
     static async getAllFriends(userId: number | string | null): Promise<any> {
-        return this.makeRequest(`user/friends-list/${userId}`, "GET");
+		const data = await this.makeRequest(`user/friends-list/${userId}`, "GET");
+		return data.message;
     }
 
     static async getAllTournaments(page: number = 1, pageSize: number = 5): Promise<any> {
         const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-        return this.makeRequest(`tournament/all`, "GET", undefined, params);
+		const data = await this.makeRequest(`tournament/all`, "GET", undefined, params);
+		return data.message;
     }
 
     static async createTournament(name: string, maxPlayers: number, displayName: string): Promise<{ tournamentId: number }> {
         const body = JSON.stringify({ name, maxPlayers, displayName });
-        return this.makeRequest(`tournament/create`, "POST", body);
+		const data = await this.makeRequest(`tournament/create`, "POST", body);
+		return data.message;
     }
 
     static async getTournament(tournamentId: number): Promise<any> {
-        return this.makeRequest(`tournament/${tournamentId}`, "GET");
+		const data = await this.makeRequest(`tournament/${tournamentId}`, "GET");
+		return data.message;
     }
 
     static async cancelTournament(tournamentId: number): Promise<any> {
-        return this.makeRequest(`tournament/cancel/${tournamentId}`, "POST");
+		const data = await this.makeRequest(`tournament/cancel/${tournamentId}`, "POST");
+		return data.message;
     }
 
     static async joinTournament(tournamentId: number, displayName: string): Promise<any> {
         const body = JSON.stringify({ displayName });
-        return this.makeRequest(`tournament/join/${tournamentId}`, "POST", body);
+		const data = await this.makeRequest(`tournament/join/${tournamentId}`, "POST", body);
+		return data.message;
     }
 
     static async unsubscribeTournament(tournamentId: number): Promise<any> {
-        return this.makeRequest(`tournament/unsubscribe/${tournamentId}`, "POST");
+		const data = await this.makeRequest(`tournament/unsubscribe/${tournamentId}`, "POST");
+		return data.message;
     }
 
     static async startTournament(tournamentId: number): Promise<any> {
-        return this.makeRequest(`tournament/start/${tournamentId}`, "POST");
+		const data = await this.makeRequest(`tournament/start/${tournamentId}`, "POST");
+		return data.message;
     }
 
     static async logout(): Promise<void> {
         localStorage.removeItem("authToken");
-        console.log('Logged out successfully');
     }
 }
 

@@ -11,7 +11,6 @@ class RegisterPage extends BaseComponent {
 	private passInput!: HTMLInputElement;
 	private confirmPassInput!: HTMLInputElement;
 	private signIn!: HTMLButtonElement;
-	private nickInput!: HTMLInputElement;
 
 	constructor() {
 		super("/pages/register.html");
@@ -27,8 +26,7 @@ class RegisterPage extends BaseComponent {
 
 		if (this.userInput.value.trim() === ""
 			|| this.passInput.value.trim() === ""
-			|| this.confirmPassInput.value.trim() === ""
-			|| this.nickInput.value.trim() === "") {
+			|| this.confirmPassInput.value.trim() === "") {
 			showToast("Fields cannot be empty.", 3000, "error");
 			return;
 		}
@@ -40,7 +38,6 @@ class RegisterPage extends BaseComponent {
 
 		Api.register(
 			this.userInput.value.trim(),
-			this.nickInput.value.trim(),
 			this.passInput.value.trim()
 		)
 		.then(() => {
