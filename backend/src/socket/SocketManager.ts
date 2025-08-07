@@ -54,7 +54,7 @@ class SocketManager {
         }
     }
 
-    getUserData(id: number): Promise<IUserProfile | null> {
+    async getUserData(id: number): Promise<IUserProfile | null> {
         return this.userDatabase!.profile(id)
             .then((result) => {
                 if (result && result.reply) {
@@ -72,19 +72,8 @@ class SocketManager {
         this.io.use((socket, next) => this.socketAuthMiddleware(socket, next));
 
         this.io.on("connection", async (socket) => {
-            const clientData = await this.getUserData(socket.data.user.id);
-            if (!clientData) {
-                console.error(
-                    `User data not found for socket ID: ${socket.id}`
-                );
-                socket.disconnect();
-                return;
-            }
-
-            const client = new Client(this, socket, clientData!);
-            this.clients.set(socket.id, client);
-
-			this.emitConnection(client);
+			const client = await this.createClient(socket);
+			if (!client) return ;
 
             socket.onAny((event: string, ...args: any[]) => {
                 if (
@@ -105,6 +94,22 @@ class SocketManager {
         });
     }
 
+	async createClient(socket: Socket) {
+		const clientData = await this.getUserData(socket.data.user.id);
+		if (!clientData) {
+			console.error(
+				`User data not found for socket ID: ${socket.id}`
+			);
+			socket.disconnect();
+			return undefined;
+		}
+
+		const client = new Client(this, socket, clientData!);
+		this.clients.set(socket.id, client);
+		this.emitConnection(client);
+		return (client);
+	}
+	
 	onInviteToPlay(host: Client, { guest }: { guest: string }) {
 		this.matchmaker!.createInvite(host, this.clients.get(guest)!);
 	}
