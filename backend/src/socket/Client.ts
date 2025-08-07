@@ -1,16 +1,30 @@
 import { Socket } from "socket.io";
 import SocketManager from "./SocketManager";
 
+interface IUserProfile {
+	id?: string;
+	username: string;
+  nickname: string;
+  gamesPlayed: number;
+  gamesWon: number;
+  gamesLost: number;
+}
+
 class Client {
 	public id: string = '';
+	public username: string;
 	public socket: Socket;
 	public subscriptions: string[] = [];
 	public currentGameRoom?: string;
+	public blockedList: string[] = [];
 	private server: SocketManager;
 
-	constructor(manager: SocketManager, socket: Socket) {
+	constructor(manager: SocketManager, socket: Socket, info: IUserProfile) {
 	  this.server = manager;
 	  this.socket = socket;
+	  this.username = info.username;
+	  this.id = info.id?.toString() || '';
+	  console.log(`Client created: ${info}`);
 	}
   
 	inviteToGame(opponentId: string) {
@@ -28,14 +42,14 @@ class Client {
 		this.subscriptions.push('chat-message');
 	}
 
-	onChatMessage(payload: {target: string, message: string}) {
-		console.log(`target ${payload.target}, message ${payload.message}`)
-		this.socket.to(payload.target).emit('chat-message', {
-			fromId: this.socket.id,
-			fromName: this.socket.data.user.username,
-			message: payload.message,
-		});
-	}
+	// onChatMessage(payload: {target: string, message: string}) {
+	// 	console.log(`target ${payload.target}, message ${payload.message}`)
+	// 	this.socket.to(payload.target).emit('chat-message', {
+	// 		fromId: this.id,
+	// 		fromName: this.username,
+	// 		message: payload.message,
+	// 	});
+	// }
 
 	eventCaller(event: string, ...args: any[]) {
 		event = `-${event}`;
@@ -49,7 +63,15 @@ class Client {
 
 	quitGame() {
 	}
-  
+
+	public basicInfo() {
+		return {
+			id: this.socket.data.user.id,
+			socketId: this.socket.id,
+			name: this.socket.data.user.username,
+		};
+	}
+
 	disconnect() {
 	  this.socket.disconnect();
 	}

@@ -11,7 +11,7 @@ class Socket {
 			return true;
 		}
 
-		const apiUrl = "http://192.168.1.8:3000/"
+		const apiUrl = import.meta.env.API_URL || "http://localhost:3000";
 
 		this.socket = io(apiUrl, {
 			transports: ['websocket'],
@@ -59,6 +59,15 @@ class Socket {
 			return;
 		}
 		this.socket.emit(event, ...args);
+	}
+
+	static	disconnect(): void {
+		if (!this.socket) {
+			console.error("Socket not initialized");
+			return;
+		}
+		this.socket.disconnect();
+		this.socket = null;
 	}
 }
 

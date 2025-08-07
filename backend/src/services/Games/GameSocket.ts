@@ -55,7 +55,9 @@ abstract class GameSocket {
  	}
 
     protected handleDisconnect(client: Socket) {
-        this.clients.delete(client.id);
+		client.removeAllListeners("pong-match-leave");
+		client.leave(this.room!);
+		this.clients.delete(client.id);
         if (this.clients.size === 0) {
             this.destructor();
         }
@@ -80,6 +82,10 @@ abstract class GameSocket {
 			client.removeAllListeners(event);
 		});
 	}
+	
+	protected clientRemoveEventHook(client: Socket, event: string): void {
+			client.removeAllListeners(event);
+	}
 
     protected stopGameLoop() {
         if (this.tickHandle) {
@@ -103,10 +109,12 @@ abstract class GameSocket {
     protected abstract onTick(): void;
 
 	public	destructor() {
+		console.log(`GameSocket destructor called for room: ${this.room}`);
 		this.stopGameLoop();
 		this.clients.forEach(client => {
 			client.leave(this.room!);
 		});
+		this.removeEventHook("pong-match-leave");
 		this.clients.clear();
 	}
 

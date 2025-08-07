@@ -59,7 +59,7 @@ class PongGame extends BaseComponent {
 		});
 
 		if (!this.localPlay) {
-			// Socket.emit("pong-match-find");
+			Socket.emit("pong-match-find");
 			return;
 		}
 
@@ -87,7 +87,6 @@ class PongGame extends BaseComponent {
 		const ctx = this.canvas.getContext("2d")!;
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-		// Draw paddles
 		state.playersState.forEach(player => {
 			ctx.fillStyle = "white";
 			ctx.fillRect(
@@ -96,7 +95,6 @@ class PongGame extends BaseComponent {
 			);
 		});
 
-		// Draw ball
 		ctx.beginPath();
 		ctx.arc(state.ball.x, state.ball.y, state.ballSize, 0, Math.PI * 2);
 		ctx.fillStyle = "white";

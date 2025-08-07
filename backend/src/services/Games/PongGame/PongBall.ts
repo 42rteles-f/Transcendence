@@ -29,7 +29,6 @@ class PongBall implements Collidable {
             this.y + this.height > target.y &&
             this.y < target.y + target.height
         ) {
-            console.log(`Ball collided with paddle at (${this.x}, ${this.y})`);
             const targetCenter = target.y + target.height / 2;
             const ballCenter = this.y + this.height / 2;
             const angle = (ballCenter - targetCenter) / (target.height / 2);

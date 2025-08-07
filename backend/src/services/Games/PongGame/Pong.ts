@@ -35,19 +35,23 @@ class Pong extends GameSocket {
 			this.players.push({
 				id: client.id,
 				name: client.data.user.username,
-				paddle: new Paddle(index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH, GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2),
-				score: 0
+				paddle: new Paddle(
+					index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH,
+					GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2
+				),
+				score: 0,
+				online: false
 			});
 			const localPlay = (clients[0].id === clients[1].id && index === RIGHT) ? "second-" : "";
 			this.addEventHook(clients[index], localPlay + `paddle-update`, ({ direction }: { direction: number }) => {
 				this.players[index].paddle.changeDirection(direction);
 			});
-
 		});
 
 		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2 - BALL_SIZE / 2);
 		this.status = 'playing';
 		this.updateState();
+		// if (!this.players.some(player => !player.online))
 		this.startGameLoop();
 	}
 
@@ -118,8 +122,10 @@ class Pong extends GameSocket {
 	}
 
 	public destructor(): void {
+		console.log(`Pong game ended. Winner: ${this.winner ? this.winner.name : 'None'}`);
 		this.stopGameLoop();
 		this.removeEventHook(`paddle-update`);
+		this.removeEventHook(`second-paddle-update`);
 		super.destructor();
 	}
 }

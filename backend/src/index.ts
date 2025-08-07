@@ -82,16 +82,26 @@ const start = async (port: number) => {
 		server.log.error(err);
 	}
 };
-const httpServer = server.server;
-const dbLite = server.sqlite;
 
+import SocketManager from './socket/SocketManager';
+
+let dbLite: Database;
+let httpServer: any;
+let socketManager = null;
+
+server.after(() => {
+	httpServer = server.server;
+	dbLite = server.sqlite;
+	console.log(`Database connected: ${dbLite}`);
+	socketManager = new SocketManager(httpServer);	
+});
 export { httpServer };
 export { dbLite };
 
+
+
 import "./routes/user";
 import "./routes/tournament";
-import "./socket/setup";
-import { Tournament } from './services/Tournament/Tournament';
 
 const port = Number(process.env.PORT) || 3000;
 
