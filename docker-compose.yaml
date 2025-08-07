@@ -25,7 +25,7 @@ services:
     networks:
       - transcendence_net
     env_file:
-      - ./frontend/config/.frontend.env
+      - ./frontend/.env
     depends_on:
       - backend
     

@@ -37,7 +37,7 @@ export default class UserDatabase {
         });
     }
 
-    async register(username: string, nickname: string, password: string): Promise<IResponse> {
+    async register(username: string, password: string): Promise<IResponse> {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         try {
@@ -46,8 +46,8 @@ export default class UserDatabase {
                 return { status: 400, reply: "Username already exists" };
 
             await this.runAsync(
-                'INSERT INTO users (username, nickname, password) VALUES (?, ?, ?)',
-                [username, nickname, hashedPassword]
+                'INSERT INTO users (username, password) VALUES (?, ?)',
+                [username, hashedPassword]
             );
 
             const user = await this.getAsync('SELECT id, username FROM users WHERE username = ?', [username]);
@@ -92,14 +92,14 @@ export default class UserDatabase {
         }
     }
 
-    async updateProfile(userId: number, username: string | undefined, nickname: string | undefined, fileName: string | undefined): Promise<IResponse> {
+    async updateProfile(userId: number, username: string | undefined, fileName: string | undefined): Promise<IResponse> {
         try {
 			const existingUser = await this.getAsync('SELECT id FROM users WHERE username = ?', [username]);
 			if (existingUser && existingUser.id !== userId)
 				throw new Error("Username already exists");
             const result = await this.runAsync(
-                'UPDATE users SET username = ?, nickname = ?, profile_picture = ? WHERE id = ?',
-                [username, nickname, fileName, userId]
+                'UPDATE users SET username = ?, profile_picture = ? WHERE id = ?',
+                [username, fileName, userId]
             );
             if (result.changes === 0)
                 throw new Error("User update failed");
@@ -115,7 +115,6 @@ export default class UserDatabase {
         try {
             const user = await this.getAsync(`SELECT u.id,
 													 u.username,
-													 u.nickname,
 													 COUNT(g.id) AS gamesPlayed,
 													 SUM(CASE WHEN ((u.id IN (g.player1_id, g.player2_id) AND g.winner_id = u.id) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesWon,
 													 SUM(CASE WHEN ((u.id IN (g.player1_id, g.player2_id) AND g.winner_id != u.id) AND g.status = 'finished') THEN 1 ELSE 0 END) AS gamesLost,
@@ -170,7 +169,6 @@ export default class UserDatabase {
     async all(): Promise<IResponse> {
         try {
             const users = await this.allAsync(`SELECT u.username, 
-													  u.nickname,
 													  COUNT(g.id) AS gamesPlayed
 												 FROM users u
 												 LEFT JOIN games g ON u.id = g.player1_id OR u.id = g.player2_id
@@ -202,8 +200,8 @@ export default class UserDatabase {
 			username = `${baseUsername}${suffix++}`;
 
 		await this.runAsync(
-			'INSERT INTO users (username, nickname, email, profile_picture) VALUES (?, ?, ?, ?)',
-			[username, name, email, picture]
+			'INSERT INTO users (username, email, profile_picture) VALUES (?, ?, ?)',
+			[username, email, picture]
 		);
 		return await this.getByEmail(email);
 	}
@@ -318,7 +316,6 @@ export default class UserDatabase {
 					u.id,
 					fr.requester_id,
 					u.username,
-					u.nickname,
 					u.profile_picture,
 					fr.status as friendship_status
 				FROM users u
@@ -362,8 +359,7 @@ export default class UserDatabase {
 				SELECT 
 					u.id, 
 					fr.requester_id,
-					u.username, 
-					u.nickname, 
+					u.username,
 					u.profile_picture,
 					fr.status as friendship_status
 				FROM users u

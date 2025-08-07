@@ -14,7 +14,6 @@ console.log("executing ProfilePage.ts");
 class ProfilePage extends BaseComponent {
 	private userId!: string | number | null;
 	private username!: HTMLElement;
-	private nickname!: HTMLElement;
 	private profilePicture!: HTMLImageElement;
 	private logoutButton!: HTMLButtonElement;
 	private editProfileButton!: HTMLButtonElement;
@@ -26,17 +25,11 @@ class ProfilePage extends BaseComponent {
 	private friendListsButton!: HTMLButtonElement;
 	private onlineStatus!: HTMLSpanElement;
 
-	private userInfo: { username: string, nickname: string };
-
 	constructor(userId: string | number | null) {
 		super("/pages/profile.html");
 		const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string } | null;
 		this.userId = userId ? userId : token?.id || "me";
 		console.log(`checking userId: ${this.userId}`);
-		this.userInfo = {
-			username: "",
-			nickname: ""
-		};
 	}
 	
 	async onInit() {
@@ -86,24 +79,13 @@ class ProfilePage extends BaseComponent {
 
 		try {
 			const profile = await Api.getProfile(id);
-
 			this.username.innerText = profile.username;
-			this.nickname.innerText = profile.nickname;
 			this.gamesPlayed.innerText = `Games Played: ${profile.gamesPlayed.toString()}`;
 			this.gamesWon.innerText = `Games Won: ${profile.gamesWon.toString()}`;
 			this.gamesLost.innerText = `Games lost: ${profile.gamesLost.toString()}`;
 			this.profilePicture.src = `${import.meta.env.VITE_API_URL}uploads/${profile.profilePicture}`;
-
-			this.userInfo.username = profile.username;
-			this.userInfo.nickname = profile.nickname;
-
 		} catch (error) {
-			this.innerHTML = `<h2>Error loading profile</h2>
-			<p>${error instanceof Error ? error.message : "Unknown error"}</p>`;
-			setTimeout(() => {
-				routes.navigate("/home");
-			}
-			, 2000);
+			routes.navigate("/404");
 		}
 		Socket.init();
 		Socket.addEventListener("client-arrival", (clients: { id: string, name: string }[]) => {
@@ -114,7 +96,7 @@ class ProfilePage extends BaseComponent {
 	}
 
 	async showEditProfileModal() {
-		const editProfilModal = new editProfile(this.userInfo);
+		const editProfilModal = new editProfile(this.username.textContent || "");
 		this.appendChild(editProfilModal);
 	}
 

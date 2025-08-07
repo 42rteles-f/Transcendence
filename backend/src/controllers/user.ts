@@ -20,8 +20,8 @@ class UserController {
 		const db = req.server.sqlite as Database;
 		const service = new UserService(db);
 	
-		const { username, nickname, password } = req.body as { username: string, nickname: string, password: string };
-		const { status, reply } = await service.register(username, nickname, password);
+		const { username, password } = req.body as { username: string, password: string };
+		const { status, reply } = await service.register(username, password);
 		return { status, reply };
 	}
 
@@ -39,7 +39,6 @@ class UserController {
 		try {
 			let userId: number;
 			let username: string | undefined;
-			let nickname: string | undefined;
 			let fileName: string | undefined;
 
 			userId = (req as any).user?.id;
@@ -84,20 +83,18 @@ class UserController {
 							});
 						});
 					}
-				} else if (part.type === 'field' && part.fieldname === 'nickname')
-					nickname = part.value;
-				else if (part.type === 'field' && part.fieldname === 'username')
+				} else if (part.type === 'field' && part.fieldname === 'username')
 					username = part.value;
 			}
 
-			if (!username || !nickname) {
-				throw new Error("Username and nickname are required");
+			if (!username) {
+				throw new Error("Username are required");
 			}
 
 			const db = req.server.sqlite as Database;
 			const service = new UserService(db);
 
-			const {status, reply } = await service.updateProfile(userId, username, nickname, fileName);
+			const {status, reply } = await service.updateProfile(userId, username, fileName);
 			return { status, reply };
 			
 		} catch (error) {

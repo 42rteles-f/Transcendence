@@ -4,35 +4,30 @@ import { routes } from "../routes";
 import Socket from "../Socket";
 
 class Api {
-    private static apiUrl: string = import.meta.env.VITE_API_URL
-    private static userApiUrl: string = import.meta.env.VITE_USER_API_URL
+    private static apiUrl: string = import.meta.env.VITE_API_URL;
+    private static userApiUrl: string = import.meta.env.VITE_USER_API_URL;
     private static token: Pointer<string> = null;
 
-    static errorCheck(response: Response) {
+    static async errorCheck(response: Response) {
+		let error = null;
         if (response.status === 401) {
             localStorage.removeItem("authToken");
 			Socket.disconnect();
             routes.navigate("/login");
-        } else if (response.status === 403) {
-            const error = new Error('Forbidden');
-            (error as any).status = response.status;
-            throw error;
-        } else if (response.status === 404) {
-            const error = new Error('Not Found');
-            (error as any).status = response.status;
-            throw error;
-        } else if (!response.ok) {
-            const error = new Error('Server Error');
-            (error as any).status = response.status;
-            throw error;
-        }
+			return ;
+		}
+         else if (!response.ok) {
+            error = new Error(await response.json().then(data => data.message || "Handled Unknown error"));
+			(error as any).status = response.status;
+			throw error;
+		}
     }
 
     static async makeRequest(apiPath: string, method: "GET" | "POST", body?: string, params?: URLSearchParams | "") {
         let fullPath = `${this.apiUrl}${apiPath}`;
         if (params && typeof params === "object" && params.toString())
             fullPath += '?' + params.toString();
-
+		console.log(`Making ${method} request to: ${fullPath}`);
         const response = await fetch(fullPath, {
             method: method,
             headers: {
@@ -41,7 +36,7 @@ class Api {
             },
             body: body
         });
-        this.errorCheck(response);
+        await this.errorCheck(response);
         return (response.json());
     }
 
@@ -49,13 +44,12 @@ class Api {
         const body = JSON.stringify({ username, password });
         const response = await this.makeRequest("user/login", "POST", body);
         this.token = response.message;
-        console.log(jwtDecode(this.token!));
         localStorage.setItem("authToken", this.token!);
-        return (response);
+        return response;
     }
 
-    static async register(username: string, nickname: string, password: string) {
-        const body = JSON.stringify({ username, nickname, password });
+    static async register(username: string, password: string) {
+        const body = JSON.stringify({ username, password });
         const response = await this.makeRequest("user/register", "POST", body);
         this.token = response.message;
         localStorage.setItem("authToken", this.token!);
@@ -63,30 +57,13 @@ class Api {
     }
 
     static async getProfile(id: string | number | null): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}profile/${id}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`user/profile/${id}`, "GET");
+		return data.message;
     }
 
     static async getMatchHistory(id: string | number, page: number = 1, pageSize: number = 10): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}match-history/${id}?page=${page}&pageSize=${pageSize}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
+        const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+		const data = await this.makeRequest(`user/match-history/${id}`, "GET", undefined, params);
         return data.message;
     }
 
@@ -99,190 +76,73 @@ class Api {
             },
             body: form
         });
-        this.errorCheck(response);
+        await this.errorCheck(response);
         const data = await response.json();
         return data.message;
     }
 
     static async friendRequest(friendId: number, status: 'pending' | 'accepted' | 'rejected' | 'removed' | 'no friendship'): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}friend-request/${friendId}`, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ status })
-        });
-        this.errorCheck(response);
-        const data = await response.json();
+        const body = JSON.stringify({ status });
+		const data = await this.makeRequest(`user/friend-request/${friendId}`, "POST", body);
         return data.message;
     }
 
     static async getFriendRequest(friendId: number | string | null): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}friend-request/${friendId}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
+		const data = await this.makeRequest(`user/friend-request/${friendId}`, "GET");
         return data.message;
     }
 
     static async getAllFriendRequests(friendId: number | string | null): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}all-friend-requests/${friendId}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`user/all-friend-requests/${friendId}`, "GET");
+		return data.message;
     }
 
     static async findUsers(userId: number | string | null): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}not-friends-list/${userId}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`user/not-friends-list/${userId}`, "GET");
+		return data.message;
     }
 
     static async getAllFriends(userId: number | string | null): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.userApiUrl}friends-list/${userId}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`user/friends-list/${userId}`, "GET");
+		return data.message;
     }
 
-    static async getAllTournaments(page: number = 1, pageSize: number = 5): Promise<{
-        tournaments: {
-            id: number,
-            name: string,
-            startDate: string,
-            winnerId: number,
-            ownerId: number,
-            ownerName: string,
-            maxPlayers: number,
-            status: string,
-            winnerName: string | null
-        }[],
-        total: number
-    }> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/all?page=${page}&pageSize=${pageSize}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+    static async getAllTournaments(page: number = 1, pageSize: number = 5): Promise<any> {
+        const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+		const data = await this.makeRequest(`tournament/all`, "GET", undefined, params);
+		return data.message;
     }
 
     static async createTournament(name: string, maxPlayers: number, displayName: string): Promise<{ tournamentId: number }> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/create`, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ name, maxPlayers, displayName })
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+        const body = JSON.stringify({ name, maxPlayers, displayName });
+		const data = await this.makeRequest(`tournament/create`, "POST", body);
+		return data.message;
     }
 
     static async getTournament(tournamentId: number): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/${tournamentId}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`tournament/${tournamentId}`, "GET");
+		return data.message;
     }
 
     static async cancelTournament(tournamentId: number): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/cancel/${tournamentId}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`tournament/cancel/${tournamentId}`, "POST");
+		return data.message;
     }
 
     static async joinTournament(tournamentId: number, displayName: string): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/join/${tournamentId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ displayName })
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+        const body = JSON.stringify({ displayName });
+		const data = await this.makeRequest(`tournament/join/${tournamentId}`, "POST", body);
+		return data.message;
     }
 
     static async unsubscribeTournament(tournamentId: number): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/unsubscribe/${tournamentId}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`tournament/unsubscribe/${tournamentId}`, "POST");
+		return data.message;
     }
 
     static async startTournament(tournamentId: number): Promise<any> {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${this.apiUrl}tournament/start/${tournamentId}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        this.errorCheck(response);
-        const data = await response.json();
-        return data.message;
+		const data = await this.makeRequest(`tournament/start/${tournamentId}`, "POST");
+		return data.message;
     }
 
     static async logout(): Promise<void> {
@@ -293,34 +153,7 @@ class Api {
             return;
         }
         localStorage.removeItem("authToken");
-        console.log('Logged out successfully');
     }
 }
 
 export default Api;
-
-
-	// static async postRequest(apiPath: string, body: string) {
-	// 	const response = await fetch(`${this.apiUrl}/${apiPath}`, {
-	// 		method: "POST",
-	// 		headers: {
-	// 			"Content-Type": "application/json",
-	// 			"Authorization": `Bearer ${this.token || localStorage.getItem("authToken")}`
-	// 		},
-	// 		body: body,
-	// 	});
-	// 	this.errorCheck(response);
-	// 	return (response.json());
-	// }
-
-	// static async getRequest(apiPath: string, params: URLSearchParams | "") {
-	// 	const response = await fetch(`${this.apiUrl}/${apiPath}?${params.toString()}`, {
-	// 		method: "GET",
-	// 		headers: {
-	// 			"Content-Type": "application/json",
-	// 			"Authorization": `Bearer ${this.token || localStorage.getItem("authToken")}`
-	// 		},
-	// 	});
-	// 	this.errorCheck(response);
-	// 	return (response.json());
-	// }

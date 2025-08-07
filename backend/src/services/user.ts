@@ -10,8 +10,8 @@ export default class UserService {
 		this.db = new UserDatabase(db);
 	}
 
-	async register(username: string, nickname: string, password: string): Promise<IResponse> {
-		return (await this.db.register(username, nickname, password));
+	async register(username: string, password: string): Promise<IResponse> {
+		return (await this.db.register(username, password));
 	}
 
 	async login(username: string, password: string): Promise<IResponse> {
@@ -21,10 +21,9 @@ export default class UserService {
 	async updateProfile(
 		userId: number,
 		username: string | undefined,
-		nickname: string | undefined,
 		fileName: string | undefined
 	): Promise<IResponse> {	
-		return (await this.db.updateProfile(userId, username, nickname, fileName));
+		return (await this.db.updateProfile(userId, username, fileName));
 	}
 
 	async profile(id: number): Promise<IResponse> {

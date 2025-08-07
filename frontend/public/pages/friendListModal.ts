@@ -38,7 +38,8 @@ class FriendListModal extends BaseComponent {
     async fetchUsersAndRequests() {
         try {
             this.allNotFriends = await Api.findUsers(this.userId);
-            this.allFriends = await Api.getAllFriends(this.userId);
+			// const { message: allFriends } = await Api.getAllFriends(this.userId);
+            this.allFriends = await Api.getAllFriends(this.userId);;
 		
             const token = AppControl.getValidDecodedToken() as { id: number | string } | null;
             const loggedUserId = token?.id;
