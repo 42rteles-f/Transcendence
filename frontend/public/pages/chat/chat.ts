@@ -152,11 +152,15 @@ class Chat extends BaseComponent {
 			listItem.appendChild(this.createNotification());
 			listItem.appendChild(this.createButton("Invite", () => { console.log("Invite clicked for", client.name); }));
 			listItem.appendChild(this.createButton("⃠", () => {
-				Socket.emit("block-client", { clientId: client.id });
+				Socket.emit("block-client", { targetId: client.id });
 				this.removeClient(client);
 			}));
 		});
 	};
+
+	sendInvite() {
+
+	}
 
     removeClient = (client: IClient) => {
         this.clientList.querySelectorAll("li").forEach((item) => {

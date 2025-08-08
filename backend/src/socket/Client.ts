@@ -26,7 +26,12 @@ class Client {
 	  this.id = info.id?.toString() || '';
 	  console.log(`Client created: ${info}`);
 	}
-  
+
+	setInformation(info: IUserProfile) {
+		this.username = info.username;
+		this.id = info.id?.toString() || '';
+	}
+
 	inviteToGame(opponentId: string) {
 	}
   
@@ -41,15 +46,6 @@ class Client {
 	onSubscribeChatMessage() {
 		this.subscriptions.push('chat-message');
 	}
-
-	// onChatMessage(payload: {target: string, message: string}) {
-	// 	console.log(`target ${payload.target}, message ${payload.message}`)
-	// 	this.socket.to(payload.target).emit('chat-message', {
-	// 		fromId: this.id,
-	// 		fromName: this.username,
-	// 		message: payload.message,
-	// 	});
-	// }
 
 	eventCaller(event: string, ...args: any[]) {
 		event = `-${event}`;

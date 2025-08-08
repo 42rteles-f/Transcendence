@@ -8,15 +8,15 @@ const INTERVAL_MATCHMAKING = 3000;
 interface IInvite {
 	guest: Client;
 	room: string;
-	status: 'pending' | 'accepted';
+	status: 'pending' | 'accepted' | 'started';
 }
 
 class Matchmaker {
 	private	queue:		Client[] = [];
 	private	invites:	Map<Client, IInvite> = new Map();
-	private games:		Array<{id: string, game: Pong}> = new Array();
+	private games:		Array<{id: string, pong: Pong}> = new Array();
 	private watcher:	NodeJS.Timeout | null = null;
-	private server: Server;
+	private server:		Server;
 
 	public constructor(server: Server) {
 		this.server = server;
@@ -29,7 +29,7 @@ class Matchmaker {
 
 		const newInvite: IInvite = {
 			guest,
-			room: `invite-${host.id}-${guest.id}-${new Date().toISOString().replace(/[-:.TZ]/g, "")}`,
+			room: this.createGameId('invite', [host, guest]),
 			status: 'pending',
 		}
 		this.invites.set(host, newInvite);
@@ -63,6 +63,10 @@ class Matchmaker {
 		this.invites.delete(host);
 	}
 
+	createGameId(prefix:string, players: Client[]): string {
+		return `${prefix}-${players[0].id}-${players[1].id}-${new Date().toISOString().replace(/[-:.TZ]/g, "")}`;
+	}
+
 	public	addToQueue(client: Client): void {
 		if (!this.queue.some(c => c.socket.id === client.socket.id)) {
 			this.queue.push(client);
@@ -84,7 +88,7 @@ class Matchmaker {
 	public stopMatchmaking(): void {
 		clearInterval(this.watcher!);
 		this.watcher = null;
-		this.games.forEach(game => game.game.destructor());
+		this.games.forEach(game => game.pong.destructor());
 		this.games = [];
 		this.queue = [];
 		this.invites.clear();
@@ -92,25 +96,26 @@ class Matchmaker {
 
 	private startQueueGames(): void {
 		while (this.queue.length >= 2) {
-			const players = this.queue.splice(0, 2).map(c => c.socket);
-			this.games.push({ id: "Teste", game: new Pong(players) });
+			const players = this.queue.splice(0, 2);
+			this.games.push({ id: this.createGameId("pong", players), pong: new Pong(players.map(c => c.socket)) });
 		}
 	}
 
 	private startInviteGames(): void {
 		this.invites.forEach((invite, host) => {
-			const guest = invite.guest;
 			if (invite.status === 'accepted') {
-				this.games.push({ id: invite.room, game: new Pong([host.socket, guest.socket]) });
+				this.games.push({ id: invite.room, pong: new Pong([host.socket, invite.guest.socket]) });
 				this.server.to(invite!.room).emit('start-game-invite', { room: invite!.room });
+				this.invites.delete(host);
 			}
 		});
 	}
+
 	private checkGames(): void {
 		this.games = this.games.filter(game => {
-			const { gameStatus } = game.game.getState();
+			const { gameStatus } = game.pong.getState();
 			if (gameStatus === 'finished' || gameStatus === 'error') {
-				game.game.destructor();
+				game.pong.destructor();
 				return false;
 			}
 			return true;

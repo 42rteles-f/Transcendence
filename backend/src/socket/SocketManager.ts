@@ -11,20 +11,20 @@ import { dbLite } from "../index";
 import UserDatabase from "../database/user";
 
 interface IUserProfile {
-    id?: string;
-    username: string;
-    nickname: string;
-    gamesPlayed: number;
-    gamesWon: number;
-    gamesLost: number;
+    id?: 			string;
+    username:		string;
+    nickname:		string;
+    gamesPlayed:	number;
+    gamesWon:		number;
+    gamesLost: 		number;
 }
 
 class SocketManager {
-    private clients: Map<string, Client> = new Map();
-    private io: Server;
-    private matchmaker: Matchmaker | null = null;
-    private tournamentCounter: Socket[] = [];
-    private userDatabase?: UserDatabase;
+    private clients:			Map<string, Client> = new Map();
+    private io:					Server;
+    private matchmaker:			Matchmaker | null = null;
+    private tournamentCounter:	Socket[] = [];
+    private userDatabase?:		UserDatabase;
 
     constructor(httpServer: any) {
         this.io = new Server(httpServer, {

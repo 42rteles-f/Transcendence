@@ -51,7 +51,6 @@ class Pong extends GameSocket {
 		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2 - BALL_SIZE / 2);
 		this.status = 'playing';
 		this.updateState();
-		// if (!this.players.some(player => !player.online))
 		this.startGameLoop();
 	}
 
