@@ -110,16 +110,25 @@ class SocketManager {
 		return (client);
 	}
 
-	onInviteToPlay(host: Client, { guest }: { guest: string }) {
-		if (!this.authorizeContact(host, this.clients.get(guest)!)) {
-			console.error(`Unauthorized invite from ${host.id} to ${guest}`);
+	onInvitePong(host: Client, { target }: { target: string }) {
+		const targetClient = this.getClientById(target)!;
+		if (!this.authorizeContact(host, targetClient)) {
+			console.error(`Unauthorized invite from ${host.id} to ${target}`);
 			return;
 		}
-		this.matchmaker!.createInvite(host, this.clients.get(guest)!);
+		this.matchmaker!.createInvite(host, targetClient);
 	}
 
-	onAcceptInvite(guest: Client, { host }: { host: string }) {
-		this.matchmaker!.joinInvite(this.clients.get(host)!, guest);
+	onInviteCancel(host: Client, { target }: { target: string }) {
+		if (!this.authorizeContact(host, this.clients.get(target)!)) {
+			console.error(`Unauthorized invite from ${host.id} to ${target}`);
+			return;
+		}
+		this.matchmaker!.removeInvite(host);
+	}
+
+	onInvitePongAccept(guest: Client, { host }: { host: string }) {
+		this.matchmaker!.joinInvite(this.getClientById(host)!, guest);
 	}
 
 	onBlockClient(client: Client, { targetId }: { targetId: string }) {
@@ -157,6 +166,7 @@ class SocketManager {
 			target.blockedList.includes(client.id) ||
 			client.blockedList.includes(target.id)
 		) {
+			console.log(`auth false: ${client?.id}, ${target?.id}`)
 			return (false);
 		}
 		return (true);
@@ -179,6 +189,7 @@ class SocketManager {
 		})
 		.filter(Boolean);
 		console.log(`Online clients: ${onlineClients}`);
+		onlineClients.push({ id: "-1", socketId: "-1", name: "server"});
 
 		client.socket.emit("client-arrival", onlineClients);
     }

@@ -25,7 +25,7 @@ class Matchmaker {
 
 	public createInvite(host: Client, guest: Client): void {
 		const invite = this.invites.get(host);
-		if (invite) this.removeInvite(host, invite);
+		if (invite) this.removeInvite(host);
 
 		const newInvite: IInvite = {
 			guest,
@@ -36,10 +36,15 @@ class Matchmaker {
 
 		host.socket.join(newInvite!.room);
 		guest.socket.join(newInvite!.room);
-		this.server.to(newInvite!.room).emit('invite-created', {
+		this.server.to(newInvite!.room).emit('pong-invite-created', {
 			from: host.id,
 			to: guest.id,
 			room: newInvite!.room,
+		});
+		this.server.to(newInvite!.room).emit("chat-message", {
+			fromId: "-1",
+			fromName: "server",
+			message: `${host.username} invited ${guest.username} to play Pong!`
 		});
 	}
 
@@ -52,7 +57,10 @@ class Matchmaker {
 		invite!.status = 'accepted';
 	}
 
-	public removeInvite(host: Client, invite: IInvite): void {
+	public removeInvite(host: Client): void {
+		const invite = this.invites.get(host);
+		if (!invite) return ;
+
 		const guest = invite.guest;
 		this.server.to(invite.room).emit(
 			'invite-cancelled',
@@ -107,6 +115,7 @@ class Matchmaker {
 				this.games.push({ id: invite.room, pong: new Pong([host.socket, invite.guest.socket]) });
 				this.server.to(invite!.room).emit('start-game-invite', { room: invite!.room });
 				this.invites.delete(host);
+				this.server.to(invite.room).emit("ws");
 			}
 		});
 	}

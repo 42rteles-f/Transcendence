@@ -11,13 +11,14 @@ interface IClient {
 }
 
 class Chat extends BaseComponent {
-    private chatMessages!: HTMLDivElement;
-    private chatInput!: HTMLInputElement;
-    private sendButton!: HTMLButtonElement;
-    private clientList!: HTMLUListElement;
-    private chatName!: HTMLDivElement;
-
+    private chatMessages!:	HTMLDivElement;
+    private chatInput!:		HTMLInputElement;
+    private sendButton!:	HTMLButtonElement;
+    private clientList!:	HTMLUListElement;
+    private chatName!:		HTMLDivElement;
+	
     private chatHistory: Map<string, HTMLDivElement[]> = new Map();
+	private inviteButtons:	Map<string, HTMLButtonElement> = new Map();
 
     public messageLimit: number = 5;
 
@@ -36,6 +37,8 @@ class Chat extends BaseComponent {
         Socket.addEventListener("client-arrival", this.addClients);
         Socket.addEventListener("client-departure", this.removeClient);
         Socket.addEventListener("disconnect", this.disconnect);
+		Socket.addEventListener("pong-invite-created", this.inviteReceive);
+		Socket.addEventListener("pong-game-start", () => routes.navigate("/pong"));
     }
 
     sendMessage() {
@@ -119,8 +122,9 @@ class Chat extends BaseComponent {
 		return (statusBall);
 	}
 	
-	createButton(text: string, callback: () => void): HTMLButtonElement {
+	createButton(client: IClient, text: string, callback: any): HTMLButtonElement {
 		const button = document.createElement("button");
+		button.id = client.id;
 		button.textContent = text;
 		button.onclick = callback;
 		return (button);
@@ -150,16 +154,53 @@ class Chat extends BaseComponent {
 
 			this.setClientChatElement(listItem, client);
 
+			const inviteButton = this.createButton(client, "Invite", (event: MouseEvent) => this.sendInvite(event, client));
+			this.inviteButtons.set(client.id, inviteButton);
 			listItem.appendChild(this.createNotification());
-			listItem.appendChild(this.createButton("Invite", () => { console.log("Invite clicked for", client.name); }));
-			listItem.appendChild(this.createButton("⃠", () => {
+			listItem.appendChild(inviteButton);
+			listItem.appendChild(this.createButton(client, "⃠", () => {
 				Socket.emit("block-client", { targetId: client.id });
 				this.removeClient(client);
 			}));
 		});
 	};
 
-	sendInvite() {
+	sendInvite = (event: MouseEvent, client: IClient) => {
+		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
+
+		Socket.emit("invite-pong", { target: `${client.id}`});
+		button.textContent = "Cancel";
+		button.onclick = (event) => this.cancelInvite(event, client);
+	}
+
+	cancelInvite = (event: MouseEvent, client: IClient) => {
+		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
+		
+		Socket.emit("invite-cancel", {target : `${client.id}`});
+		button.textContent = "Invite";
+		button.onclick = (event) => this.sendInvite(event, client);
+	}
+
+	inviteReceive = ({from, to, room }: {
+			from: string,
+			to: string,
+			room: string,
+		}) => {
+		const button = this.inviteButtons.get(from);
+		if (!button) {
+			Socket.emit("Client not found.");
+			return ;
+		}
+		button.textContent = "Accept";
+		button.onclick = () => {
+			Socket.emit("invite-pong-accept", { host: from });
+			// routes.navigate("/pong");
+		}
+	}
+
+	acceptInvite = (event: MouseEvent) => {
+		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
+		
 
 	}
 
