@@ -75,6 +75,7 @@ class SocketManager {
 			const client = await this.createClient(socket);
 			if (!client) return ;
 
+			this.authorizedBroadcast(client, "client-arrival", [client.basicInfo()]);
             socket.onAny((event: string, ...args: any[]) => {
                 if (
                     !client.eventCaller(event, ...args) &&
@@ -106,7 +107,6 @@ class SocketManager {
 
 		const client = new Client(this, socket, clientData!);
 		this.clients.set(socket.id, client);
-		this.authorizedBroadcast(client, "client-arrival", [client.basicInfo()]);
 		return (client);
 	}
 
@@ -139,24 +139,6 @@ class SocketManager {
         this.matchmaker!.removeFromQueue(client);
     }
 
-    onUnsubscribeSearchGame(client: Client) {
-        console.log(
-            `Player ${client.socket.data.user.username} removed from matchmaking queue`
-        );
-        GameManagerInstance.removePlayerFromQueue(client.socket.data.user.id);
-    }
-
-    onSubscribeSearchGame(client: Client) {
-        console.log(
-            `Player ${client.socket.data.user.username} added to matchmaking queue`
-        );
-        client.subscriptions.push("search-game");
-        GameManagerInstance.addPlayerToQueue({
-            id: client.socket.data.user.id,
-            socketId: client.socket.id,
-        });
-    }
-
 	onChatMessage(client: Client, payload: { target: string, message: string }) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
 		if (!this.authorizeContact(client, this.clients.get(payload.target)!)) {
@@ -174,8 +156,9 @@ class SocketManager {
 		if (!client || !target || client.id == target.id ||
 			target.blockedList.includes(client.id) ||
 			client.blockedList.includes(target.id)
-		)
+		) {
 			return (false);
+		}
 		return (true);
 	}
 
@@ -223,14 +206,6 @@ class SocketManager {
 	public getClientById(id: string) {
 		return (Array.from(this.clients.values()).find(client => client.id === id));
 	}
-
-    public getAllClients() {
-        return Array.from(this.clients.values());
-    }
-
-    public getIo(): Server {
-        return this.io;
-    }
 
     public onTournamentJoin(client: Client) {
         this.tournamentCounter.push(client.socket);

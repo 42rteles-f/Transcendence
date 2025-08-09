@@ -19,15 +19,16 @@ class PongBall implements Collidable {
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-        this.vx = (Math.random() < 0.5 ? 1 : -1);
-        this.vy = (Math.random() < 0.5 ? 1 : -1);    }
+        this.vx = Math.random() < 0.5 ? 1 : -1;
+        this.vy = Math.random() < 0.5 ? 1 : -1;
+    }
 
     public onCollision(target: Collidable): boolean {
         if (
-            this.x + this.width >= target.x &&
             this.x < target.x + target.width &&
-            this.y + this.height > target.y &&
-            this.y < target.y + target.height
+            this.x + this.width > target.x &&
+            this.y < target.y + target.height &&
+            this.y + this.height > target.y
         ) {
             const targetCenter = target.y + target.height / 2;
             const ballCenter = this.y + this.height / 2;
@@ -43,8 +44,8 @@ class PongBall implements Collidable {
     public reset(position: Position, speed: number): void {
         this.x = position.x;
         this.y = position.y;
-        this.vx = (Math.random() < 0.5 ? 1 : -1);
-        this.vy = (Math.random() < 0.5 ? 1 : -1);
+        this.vx = Math.random() < 0.5 ? 1 : -1;
+        this.vy = Math.random() < 0.5 ? 1 : -1;
         this.speed = speed;
     }
 
@@ -76,7 +77,7 @@ class PongBall implements Collidable {
 
     public isPoint(): Number {
         if (this.x < 0) return 1;
-        else if (this.x > GAME_WIDTH) return 2;
+        else if (this.x + this.width > GAME_WIDTH) return 2;
         return 0;
     }
 }

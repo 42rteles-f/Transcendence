@@ -1,4 +1,5 @@
 import { BaseComponent } from "../../../src/BaseComponent";
+import { routes } from "../../../src/routes";
 import Socket from "../../../src/Socket";
 
 console.log("executing home.ts");
@@ -176,8 +177,11 @@ class Chat extends BaseComponent {
         this.chatName.textContent = `${client.name}`;
         this.chatName.dataset.id = client.id;
         this.chatName.dataset.socketId = client.socketId;
+		this.chatName.style.cursor = "pointer";
+		this.chatName.onclick = () => routes.navigate(`/profile/${client.id}`);
         this.chatMessages.innerHTML = "";
         this.chatInput.value = "";
+
         this.chatHistory.get(client.id)?.forEach((msg) => {
             this.chatMessages.appendChild(msg);
         });
