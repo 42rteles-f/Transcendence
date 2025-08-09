@@ -52,6 +52,7 @@ class Matchmaker {
 		const invite = this.invites.get(host);
 		if (invite && invite.guest.id !== guest.id) {
 			guest.socket.emit('invite-error', { message: 'Invite expired.' });
+			console.log(`${invite.guest.id} !== ${guest.id}`)
 			return;
 		}
 		invite!.status = 'accepted';
@@ -113,9 +114,8 @@ class Matchmaker {
 		this.invites.forEach((invite, host) => {
 			if (invite.status === 'accepted') {
 				this.games.push({ id: invite.room, pong: new Pong([host.socket, invite.guest.socket]) });
-				this.server.to(invite!.room).emit('start-game-invite', { room: invite!.room });
+				this.server.to(invite!.room).emit('pong-game-start', { room: invite!.room });
 				this.invites.delete(host);
-				this.server.to(invite.room).emit("ws");
 			}
 		});
 	}

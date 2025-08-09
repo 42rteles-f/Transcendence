@@ -188,7 +188,7 @@ class Chat extends BaseComponent {
 		}) => {
 		const button = this.inviteButtons.get(from);
 		if (!button) {
-			Socket.emit("Client not found.");
+			Socket.emit(`Client ${from} not found.`);
 			return ;
 		}
 		button.textContent = "Accept";
