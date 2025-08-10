@@ -21,7 +21,7 @@ interface IUserProfile {
 
 class SocketManager {
     private clients:			Map<string, Client> = new Map();
-    private io:					Server;
+    public io:					Server;
     private matchmaker:			Matchmaker | null = null;
     private tournamentCounter:	Socket[] = [];
     private userDatabase?:		UserDatabase;
@@ -35,7 +35,7 @@ class SocketManager {
         });
         this.userDatabase = new UserDatabase(dbLite);
         console.log(`db connected: ${dbLite}`);
-        this.matchmaker = new Matchmaker(this.io);
+        this.matchmaker = new Matchmaker(this);
         this.setupConnection();
     }
 
@@ -120,7 +120,7 @@ class SocketManager {
 	}
 
 	onInviteCancel(host: Client, { target }: { target: string }) {
-		if (!this.authorizeContact(host, this.clients.get(target)!)) {
+		if (!this.authorizeContact(host, this.getClientById(target)!)) {
 			console.error(`Unauthorized invite from ${host.id} to ${target}`);
 			return;
 		}
@@ -189,7 +189,7 @@ class SocketManager {
 		})
 		.filter(Boolean);
 		console.log(`Online clients: ${onlineClients}`);
-		onlineClients.push({ id: "-1", socketId: "-1", name: "server"});
+		onlineClients.unshift({ id: "system", socketId: "-1", name: "server"});
 
 		client.socket.emit("client-arrival", onlineClients);
     }
@@ -223,6 +223,14 @@ class SocketManager {
         if (this.tournamentCounter.length > 3)
             new Tournament(this.tournamentCounter);
     }
+
+	serverChat(target: string, payload: any) {
+		this.io.to(target).emit("chat-message", {
+			fromId: "system",
+			fromName: "server",
+			message: payload
+		})
+	}
 }
 
 export default SocketManager;

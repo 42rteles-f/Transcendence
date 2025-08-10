@@ -1,6 +1,8 @@
+import { Socket } from 'dgram';
 import Pong from '../services/Games/PongGame/Pong';
 import Client from './Client';
 import { Server } from "socket.io";
+import SocketManager from './SocketManager';
 
 
 const INTERVAL_MATCHMAKING = 3000;
@@ -16,9 +18,9 @@ class Matchmaker {
 	private	invites:	Map<Client, IInvite> = new Map();
 	private games:		Array<{id: string, pong: Pong}> = new Array();
 	private watcher:	NodeJS.Timeout | null = null;
-	private server:		Server;
+	private server:		SocketManager;
 
-	public constructor(server: Server) {
+	public constructor(server: SocketManager) {
 		this.server = server;
 		this.startMatchmaking();
 	}
@@ -36,23 +38,19 @@ class Matchmaker {
 
 		host.socket.join(newInvite!.room);
 		guest.socket.join(newInvite!.room);
-		this.server.to(newInvite!.room).emit('pong-invite-created', {
-			from: host.id,
-			to: guest.id,
-			room: newInvite!.room,
-		});
-		this.server.to(newInvite!.room).emit("chat-message", {
-			fromId: "-1",
-			fromName: "server",
-			message: `${host.username} invited ${guest.username} to play Pong!`
+
+		this.server.serverChat(newInvite!.room, {
+			invite: host.id,
+			guest: guest.id,
+			message: `${host.username} invited ${guest.username}`
 		});
 	}
 
 	public joinInvite(host: Client, guest: Client): void {
 		const invite = this.invites.get(host);
-		if (invite && invite.guest.id !== guest.id) {
-			guest.socket.emit('invite-error', { message: 'Invite expired.' });
-			console.log(`${invite.guest.id} !== ${guest.id}`)
+		if (!invite || (invite && invite.guest.id !== guest.id)) {
+			this.server.serverChat(guest.socket.id, { error: `Invite ${host.username}-${guest.username} expired` })
+			console.log(`${invite?.guest.id} !== ${guest.id}`)
 			return;
 		}
 		invite!.status = 'accepted';
@@ -63,10 +61,7 @@ class Matchmaker {
 		if (!invite) return ;
 
 		const guest = invite.guest;
-		this.server.to(invite.room).emit(
-			'invite-cancelled',
-			{ message: 'Invite Cancelled.', host: host.id, guest: guest.id }
-		);
+		this.server.serverChat(invite.room, { error: `Invite ${host.username}-${guest.username} expired` })
 		host.socket.leave(invite!.room);
 		guest.socket.leave(invite!.room);
 		this.invites.delete(host);
@@ -114,7 +109,9 @@ class Matchmaker {
 		this.invites.forEach((invite, host) => {
 			if (invite.status === 'accepted') {
 				this.games.push({ id: invite.room, pong: new Pong([host.socket, invite.guest.socket]) });
-				this.server.to(invite!.room).emit('pong-game-start', { room: invite!.room });
+				this.server.serverChat(invite!.room, {
+					room: invite!.room
+				});
 				this.invites.delete(host);
 			}
 		});

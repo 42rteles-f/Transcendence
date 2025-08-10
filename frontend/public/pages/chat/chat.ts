@@ -10,6 +10,20 @@ interface IClient {
 	name: string;
 }
 
+interface IServerInvite {
+	invite:		string,
+	guest:		string,
+	message:	string,
+}
+
+interface IServerRoom {
+	room: string
+}
+
+interface IServerError {
+	error: string
+}
+
 class Chat extends BaseComponent {
     private chatMessages!:	HTMLDivElement;
     private chatInput!:		HTMLInputElement;
@@ -19,6 +33,8 @@ class Chat extends BaseComponent {
 	
     private chatHistory: Map<string, HTMLDivElement[]> = new Map();
 	private inviteButtons:	Map<string, HTMLButtonElement> = new Map();
+
+	private systemMessages: string[] = ["invite", "room", "error"];
 
     public messageLimit: number = 5;
 
@@ -33,17 +49,15 @@ class Chat extends BaseComponent {
             if (e.key === "Enter") this.sendMessage();
         };
         Socket.init();
+        Socket.notifyEventListener("client-arrival", this.addClients);
         Socket.addEventListener("chat-message", this.addMessage);
-        Socket.addEventListener("client-arrival", this.addClients);
         Socket.addEventListener("client-departure", this.removeClient);
         Socket.addEventListener("disconnect", this.disconnect);
-		Socket.addEventListener("pong-invite-created", this.inviteReceive);
-		Socket.addEventListener("pong-game-start", () => routes.navigate("/pong"));
     }
 
     sendMessage() {
         const message = this.chatInput.value.trim();
-        if (!message || !this.chatName.textContent) {
+        if (!message || !this.chatName.textContent || this.chatName.textContent === "server") {
 			this.chatInput.value = "";
 			return;
 		}
@@ -71,9 +85,13 @@ class Chat extends BaseComponent {
 		data.fromId = data.fromId.toString();
         if (type !== "outgoing") type = "incoming";
 
+		console.log(`message ${data.fromId}`)
         const messageElement = document.createElement("div");
         messageElement.className = `chat-message-${type}`;
-        messageElement.textContent = data.message;
+		if (data.fromId === "system")
+			this.addSystemMessage(messageElement, (data.message as any));
+		else
+			messageElement.textContent = data.message;
 
         if (!this.chatHistory.has(data.fromId))
             this.chatHistory.set(data.fromId, []);
@@ -165,6 +183,43 @@ class Chat extends BaseComponent {
 		});
 	};
 
+	onSystemInvite(element: HTMLDivElement, response: IServerInvite) {
+		element.textContent = response.message;
+		element.appendChild(this.createButton(
+			{id: "server"} as IClient,
+			"Accept",
+			() => Socket.emit("invite-pong-accept", { host: response.invite })
+		));
+	}
+
+	onSystemError(element: HTMLDivElement, response: IServerError) {
+		element.textContent = response.error;
+		console.log(`response.error ${response.error}`);
+	}
+
+	onSystemRoom(element: HTMLDivElement, response: IServerRoom) {
+		if (response.room) {
+			element.appendChild(this.createButton(
+				{id: "server"} as IClient,
+				"Join Room",
+				() => routes.navigate("/pong")
+			));
+		}
+	}
+
+	addSystemMessage(element: HTMLDivElement, message: any) {
+		const fieldName = this.systemMessages.find(f => f in message);
+		console.log(`addSystemMessage fieldName ${fieldName}`)
+		if (!fieldName) return false;
+
+		const methodName = `onSystem${fieldName.charAt(0).toUpperCase()}${fieldName.slice(1)}`;
+
+		if (typeof (this as any)[methodName] === "function") {
+			(this as any)[methodName](element, message);
+			return true;
+		}
+	}
+
 	sendInvite = (event: MouseEvent, client: IClient) => {
 		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
 
@@ -176,32 +231,9 @@ class Chat extends BaseComponent {
 	cancelInvite = (event: MouseEvent, client: IClient) => {
 		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
 		
-		Socket.emit("invite-cancel", {target : `${client.id}`});
+		Socket.emit("invite-cancel", { target : `${client.id}` });
 		button.textContent = "Invite";
 		button.onclick = (event) => this.sendInvite(event, client);
-	}
-
-	inviteReceive = ({from, to, room }: {
-			from: string,
-			to: string,
-			room: string,
-		}) => {
-		const button = this.inviteButtons.get(from);
-		if (!button) {
-			Socket.emit(`Client ${from} not found.`);
-			return ;
-		}
-		button.textContent = "Accept";
-		button.onclick = () => {
-			Socket.emit("invite-pong-accept", { host: from });
-			// routes.navigate("/pong");
-		}
-	}
-
-	acceptInvite = (event: MouseEvent) => {
-		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
-		
-
 	}
 
     removeClient = (client: IClient) => {

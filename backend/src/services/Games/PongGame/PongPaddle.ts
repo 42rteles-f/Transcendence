@@ -26,7 +26,6 @@ class PongPaddle implements Collidable {
 
     public changeDirection(direction: number) {
         if (direction < -1 || direction > 1) direction = 0;
-        console.log(`Paddle direction changed to ${direction}`);
         this.direction = direction;
     }
 
