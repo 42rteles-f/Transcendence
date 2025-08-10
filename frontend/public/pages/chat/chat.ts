@@ -177,8 +177,10 @@ class Chat extends BaseComponent {
 			listItem.appendChild(this.createNotification());
 			listItem.appendChild(inviteButton);
 			listItem.appendChild(this.createButton(client, "⃠", () => {
-				Socket.emit("block-client", { targetId: client.id });
-				this.removeClient(client);
+				if (client.id !== "system") {
+					Socket.emit("block-client", { targetId: client.id });
+					this.removeClient(client);
+				}
 			}));
 		});
 	};

@@ -112,7 +112,7 @@ class SocketManager {
 
 	onInvitePong(host: Client, { target }: { target: string }) {
 		const targetClient = this.getClientById(target)!;
-		if (!this.authorizeContact(host, targetClient)) {
+		if (!this.authorizeContact(host, targetClient, true)) {
 			console.error(`Unauthorized invite from ${host.id} to ${target}`);
 			return;
 		}
@@ -120,7 +120,7 @@ class SocketManager {
 	}
 
 	onInviteCancel(host: Client, { target }: { target: string }) {
-		if (!this.authorizeContact(host, this.getClientById(target)!)) {
+		if (!this.authorizeContact(host, this.getClientById(target)!, true)) {
 			console.error(`Unauthorized invite from ${host.id} to ${target}`);
 			return;
 		}
@@ -128,10 +128,18 @@ class SocketManager {
 	}
 
 	onInvitePongAccept(guest: Client, { host }: { host: string }) {
-		this.matchmaker!.joinInvite(this.getClientById(host)!, guest);
+		const serverHost = this.getClientById(host)!;
+		if (!this.authorizeContact(guest, serverHost, true)) {
+			return;
+		}
+		this.matchmaker!.joinInvite(serverHost, guest);
 	}
 
 	onBlockClient(client: Client, { targetId }: { targetId: string }) {
+		const targetClient = this.getClientById(targetId)!;
+		if (!this.authorizeContact(client, targetClient, true))
+			return;
+
 		client.blockedList.push(targetId);
 		console.log(`Client ${client.id} blocked ${targetId}`);
 	}
@@ -150,7 +158,7 @@ class SocketManager {
 
 	onChatMessage(client: Client, payload: { target: string, message: string }) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
-		if (!this.authorizeContact(client, this.clients.get(payload.target)!)) {
+		if (!this.authorizeContact(client, this.clients.get(payload.target)!, true)) {
 			console.error(`Unauthorized chat message from ${client.id} to ${payload.target}`);
 			return;
 		}
@@ -161,11 +169,13 @@ class SocketManager {
 		});
 	}
 
-	authorizeContact(client: Client, target: Client): boolean {
+	authorizeContact(client: Client, target: Client, message?: boolean): boolean {
 		if (!client || !target || client.id == target.id ||
 			target.blockedList.includes(client.id) ||
 			client.blockedList.includes(target.id)
 		) {
+			if (message)
+				this.serverChat(client.socket.id, { error: "Cant Interact with user." })
 			console.log(`auth false: ${client?.id}, ${target?.id}`)
 			return (false);
 		}
