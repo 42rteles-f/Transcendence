@@ -187,6 +187,8 @@ class Chat extends BaseComponent {
 
 	onSystemInvite(element: HTMLDivElement, response: IServerInvite) {
 		element.textContent = response.message;
+		if (!this.inviteButtons.get(response.invite))
+			return ;
 		element.appendChild(this.createButton(
 			{id: "server"} as IClient,
 			"Accept",
@@ -225,6 +227,10 @@ class Chat extends BaseComponent {
 	sendInvite = (event: MouseEvent, client: IClient) => {
 		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
 
+		if (button.id === "system") {
+			routes.navigate("/pong/local-play");
+			return ;
+		}
 		Socket.emit("invite-pong", { target: `${client.id}`});
 		button.textContent = "Cancel";
 		button.onclick = (event) => this.cancelInvite(event, client);

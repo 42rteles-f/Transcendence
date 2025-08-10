@@ -137,8 +137,7 @@ class SocketManager {
 
 	onBlockClient(client: Client, { targetId }: { targetId: string }) {
 		const targetClient = this.getClientById(targetId)!;
-		if (!this.authorizeContact(client, targetClient, true))
-			return;
+		if (!targetClient) return ;
 
 		client.blockedList.push(targetId);
 		console.log(`Client ${client.id} blocked ${targetId}`);
@@ -158,7 +157,7 @@ class SocketManager {
 
 	onChatMessage(client: Client, payload: { target: string, message: string }) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
-		if (!this.authorizeContact(client, this.clients.get(payload.target)!, true)) {
+		if (!this.authorizeContact(client, this.getClientBySocket(payload.target)!, true)) {
 			console.error(`Unauthorized chat message from ${client.id} to ${payload.target}`);
 			return;
 		}
@@ -175,7 +174,7 @@ class SocketManager {
 			client.blockedList.includes(target.id)
 		) {
 			if (message)
-				this.serverChat(client.socket.id, { error: "Cant Interact with user." })
+				this.serverChat(client.socket.id, { error: `Cant Interact with user: ${target?.username}` })
 			console.log(`auth false: ${client?.id}, ${target?.id}`)
 			return (false);
 		}

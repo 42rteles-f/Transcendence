@@ -1,9 +1,6 @@
-import { Socket } from 'dgram';
 import Pong from '../services/Games/PongGame/Pong';
 import Client from './Client';
-import { Server } from "socket.io";
 import SocketManager from './SocketManager';
-
 
 const INTERVAL_MATCHMAKING = 3000;
 
@@ -50,7 +47,7 @@ class Matchmaker {
 		const invite = this.invites.get(host);
 		if (!invite || (invite && invite.guest.id !== guest.id)) {
 			this.server.serverChat(guest.socket.id, { error: `Invite ${host.username}-${guest.username} expired` })
-			console.log(`${invite?.guest.id} !== ${guest.id}`)
+			console.log(`joinInvite ${invite?.guest.id} !== ${guest.id}`)
 			return;
 		}
 		invite!.status = 'accepted';
@@ -61,7 +58,7 @@ class Matchmaker {
 		if (!invite) return ;
 
 		const guest = invite.guest;
-		this.server.serverChat(invite.room, { error: `Invite ${host.username}-${guest.username} expired` })
+		this.server.serverChat(host.socket.id, { error: `Invite ${host.username}-${guest.username} expired` })
 		host.socket.leave(invite!.room);
 		guest.socket.leave(invite!.room);
 		this.invites.delete(host);
