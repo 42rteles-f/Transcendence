@@ -44,37 +44,34 @@ class PongGame extends BaseComponent {
 
     onInit() {
         this.setupSocket();
-		this.setKeyEvents();
+
+		this.setControlKeys("w", "s", "paddle-update");
+		if (this.localPlay) {
+			this.setControlKeys("ArrowUp", "ArrowDown", "second-paddle-update");
+			Socket.emit("pong-local-play");
+		}
+		else {
+			Socket.emit("pong-find-match");
+		}
 		this.canvas.tabIndex = 0;
 		this.canvas.focus();
 		this.canvas.style.outline = "none";
     }
 
-	private setKeyEvents() {
+	setControlKeys(upKey: string, downKey: string, emitName: string) {
 		this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
-			if (event.key === "w" || event.key === "s") {
-				Socket.emit("paddle-update", { direction: (event.key === "w") ? -1 : 1 });
+			if (event.key === upKey || event.key === downKey) {
+				event.preventDefault();
+				event.stopPropagation();
+				Socket.emit(emitName, { direction: (event.key === upKey) ? -1 : 1 });
 			}
 		});
 		this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
-			if (event.key === "w" || event.key === "s")
-				Socket.emit("paddle-update", { direction: 0 });
-		});
-
-		if (!this.localPlay) {
-			Socket.emit("pong-match-find");
-			return;
-		}
-
-		Socket.emit("pong-local-play");
-		this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
-			if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-				Socket.emit("second-paddle-update", { direction: (event.key === "ArrowUp") ? -1 : 1 });
+			if (event.key === upKey || event.key === downKey) {
+				event.preventDefault();
+				event.stopPropagation();
+				Socket.emit(emitName, { direction: 0 });
 			}
-		});
-		this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
-			if (event.key === "ArrowUp" || event.key === "ArrowDown")
-				Socket.emit("second-paddle-update", { direction: 0 });
 		});
 	}
 
@@ -117,3 +114,32 @@ class PongGame extends BaseComponent {
 customElements.define("pong-game", PongGame);
 
 export { PongGame };
+
+
+	// private setKeyEvents() {
+	// 	this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
+	// 		if (event.key === "w" || event.key === "s") {
+	// 			Socket.emit("paddle-update", { direction: (event.key === "w") ? -1 : 1 });
+	// 		}
+	// 	});
+	// 	this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
+	// 		if (event.key === "w" || event.key === "s")
+	// 			Socket.emit("paddle-update", { direction: 0 });
+	// 	});
+
+	// 	if (!this.localPlay) {
+	// 		Socket.emit("pong-match-find");
+	// 		return;
+	// 	}
+
+	// 	Socket.emit("pong-local-play");
+	// 	this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
+	// 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+	// 			Socket.emit("second-paddle-update", { direction: (event.key === "ArrowUp") ? -1 : 1 });
+	// 		}
+	// 	});
+	// 	this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
+	// 		if (event.key === "ArrowUp" || event.key === "ArrowDown")
+	// 			Socket.emit("second-paddle-update", { direction: 0 });
+	// 	});
+	// }

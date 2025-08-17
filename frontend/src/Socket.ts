@@ -40,6 +40,15 @@ class Socket {
 			console.error("Socket not initialized");
 			return;
 		}
+		// this.socket.emit(`subscribe-${event}`);
+		this.socket.on(event, callback);
+	}
+
+	static notifyEventListener(event: string, callback: (...args: any[]) => void): void {
+		if (!this.socket) {
+			console.error("Socket not initialized");
+			return;
+		}
 		this.socket.emit(`subscribe-${event}`);
 		this.socket.on(event, callback);
 	}

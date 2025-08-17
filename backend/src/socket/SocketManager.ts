@@ -11,20 +11,20 @@ import { dbLite } from "../index";
 import UserDatabase from "../database/user";
 
 interface IUserProfile {
-    id?: string;
-    username: string;
-    nickname: string;
-    gamesPlayed: number;
-    gamesWon: number;
-    gamesLost: number;
+    id?: 			string;
+    username:		string;
+    nickname:		string;
+    gamesPlayed:	number;
+    gamesWon:		number;
+    gamesLost: 		number;
 }
 
 class SocketManager {
-    private clients: Map<string, Client> = new Map();
-    private io: Server;
-    private matchmaker: Matchmaker | null = null;
-    private tournamentCounter: Socket[] = [];
-    private userDatabase?: UserDatabase;
+    private clients:			Map<string, Client> = new Map();
+    public io:					Server;
+    private matchmaker:			Matchmaker | null = null;
+    private tournamentCounter:	Socket[] = [];
+    private userDatabase?:		UserDatabase;
 
     constructor(httpServer: any) {
         this.io = new Server(httpServer, {
@@ -35,7 +35,7 @@ class SocketManager {
         });
         this.userDatabase = new UserDatabase(dbLite);
         console.log(`db connected: ${dbLite}`);
-        this.matchmaker = new Matchmaker(this.io);
+        this.matchmaker = new Matchmaker(this);
         this.setupConnection();
     }
 
@@ -75,20 +75,21 @@ class SocketManager {
 			const client = await this.createClient(socket);
 			if (!client) return ;
 
+			this.authorizedBroadcast(client, "client-arrival", [client.basicInfo()]);
             socket.onAny((event: string, ...args: any[]) => {
                 if (
                     !client.eventCaller(event, ...args) &&
-                    !this.eventCaller(event, client, ...args)
-                ) {
+                    !this.eventCaller(event, client, ...args))
+				{
                     console.warn(`Unhandled event: ${event}`);
-                }
-				else
-					console.log(`Event ${event} handled: ${client.id}`);
+                } else {
+					console.log(`Event ${event} handled: ${client.id}`);	
+				}
             });
 
             socket.on("disconnect", () => {
                 console.log("Client disconnected:", socket.id);
-                this.io.emit("client-departure", client.basicInfo());
+				this.authorizedBroadcast(client, "client-derparture", [client.basicInfo()]);
                 this.clients.delete(socket.id);
             });
         });
@@ -106,21 +107,40 @@ class SocketManager {
 
 		const client = new Client(this, socket, clientData!);
 		this.clients.set(socket.id, client);
-		this.emitConnection(client);
 		return (client);
 	}
-	
-	onInviteToPlay(host: Client, { guest }: { guest: string }) {
-		this.matchmaker!.createInvite(host, this.clients.get(guest)!);
+
+	onInvitePong(host: Client, { target }: { target: string }) {
+		const targetClient = this.getClientById(target)!;
+		if (!this.authorizeContact(host, targetClient, true)) {
+			console.error(`Unauthorized invite from ${host.id} to ${target}`);
+			return;
+		}
+		this.matchmaker!.createInvite(host, targetClient);
 	}
 
-	onAcceptInvite(guest: Client, { host }: { host: string }) {
-		this.matchmaker!.joinInvite(this.clients.get(host)!, guest);
+	onInviteCancel(host: Client, { target }: { target: string }) {
+		if (!this.authorizeContact(host, this.getClientById(target)!, true)) {
+			console.error(`Unauthorized invite from ${host.id} to ${target}`);
+			return;
+		}
+		this.matchmaker!.removeInvite(host);
 	}
 
-	onBlockClient(client: Client, { clientId }: { clientId: string }) {
-		client.blockedList.push(clientId);
-		console.log(`Client ${client.id} blocked ${clientId}`);
+	onInvitePongAccept(guest: Client, { host }: { host: string }) {
+		const serverHost = this.getClientById(host)!;
+		if (!this.authorizeContact(guest, serverHost, true)) {
+			return;
+		}
+		this.matchmaker!.joinInvite(serverHost, guest);
+	}
+
+	onBlockClient(client: Client, { targetId }: { targetId: string }) {
+		const targetClient = this.getClientById(targetId)!;
+		if (!targetClient) return ;
+
+		client.blockedList.push(targetId);
+		console.log(`Client ${client.id} blocked ${targetId}`);
 	}
 
     onPongLocalPlay(client: Client) {
@@ -135,31 +155,12 @@ class SocketManager {
         this.matchmaker!.removeFromQueue(client);
     }
 
-    onUnsubscribeSearchGame(client: Client) {
-        console.log(
-            `Player ${client.socket.data.user.username} removed from matchmaking queue`
-        );
-        GameManagerInstance.removePlayerFromQueue(client.socket.data.user.id);
-    }
-
-    onSubscribeSearchGame(client: Client) {
-        console.log(
-            `Player ${client.socket.data.user.username} added to matchmaking queue`
-        );
-        client.subscriptions.push("search-game");
-        GameManagerInstance.addPlayerToQueue({
-            id: client.socket.data.user.id,
-            socketId: client.socket.id,
-        });
-    }
-
-	onChatMessage(client: Client, payload: {target: string, message: string}) {
+	onChatMessage(client: Client, payload: { target: string, message: string }) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
-		const targetClient = this.clients.get(payload.target);
-		if (!targetClient || targetClient.blockedList.includes(client.id) ||
-			client.blockedList.includes(targetClient.id)
-		)
-			return ;
+		if (!this.authorizeContact(client, this.getClientBySocket(payload.target)!, true)) {
+			console.error(`Unauthorized chat message from ${client.id} to ${payload.target}`);
+			return;
+		}
 		client.socket.to(payload.target).emit('chat-message', {
 			fromId: client.id,
 			fromName: client.username,
@@ -167,25 +168,37 @@ class SocketManager {
 		});
 	}
 
-	emitConnection(client: Client) {
+	authorizeContact(client: Client, target: Client, message?: boolean): boolean {
+		if (!client || !target || client.id == target.id ||
+			target.blockedList.includes(client.id) ||
+			client.blockedList.includes(target.id)
+		) {
+			if (message)
+				this.serverChat(client.socket.id, { error: `Cant Interact with user: ${target?.username}` })
+			console.log(`auth false: ${client?.id}, ${target?.id}`)
+			return (false);
+		}
+		return (true);
+	}
+
+	authorizedBroadcast(client: Client, event: string, payload: any) {
 		this.clients.forEach((target) => {
-			if (target.id === client.id || target.blockedList.includes(client.id)
-				|| client.blockedList.includes(target.id))
+			if (!this.authorizeContact(client, target))
 				return;
-			target.socket.emit("client-arrival", [client.basicInfo()]);
+			target.socket.emit(event, payload);
 		});
 	}
 
     onSubscribeClientArrival(client: Client) {
         client.subscriptions.push("client-arrival");
         let onlineClients = Array.from(this.clients.values()).map((target) => {
-			if (target.id === client.id || target.blockedList.includes(client.id)
-				|| client.blockedList.includes(target.id))
-				return null;
+			if (!this.authorizeContact(client, target))
+				return ;
 			return target.basicInfo();
 		})
 		.filter(Boolean);
 		console.log(`Online clients: ${onlineClients}`);
+		onlineClients.unshift({ id: "system", socketId: "-1", name: "server"});
 
 		client.socket.emit("client-arrival", onlineClients);
     }
@@ -202,46 +215,31 @@ class SocketManager {
         return false;
     }
 
-    public sendChatMessage(from: string, target: string, message: string) {
-        this.io.to(target).emit("chat-message", {
-            from,
-            message,
-        });
-    }
-
-    public addClient(client: Client) {
-        this.clients.set(client.id, client);
-    }
-
     public removeClient(id: string) {
         this.clients.delete(id);
     }
 
-    public getClient(id: string) {
-        return this.clients.get(id);
+    public getClientBySocket(socketId: string) {
+        return (this.clients.get(socketId));
     }
 
-    public getAllClients() {
-        return Array.from(this.clients.values());
-    }
-
-    public getIo(): Server {
-        return this.io;
-    }
+	public getClientById(id: string) {
+		return (Array.from(this.clients.values()).find(client => client.id === id));
+	}
 
     public onTournamentJoin(client: Client) {
         this.tournamentCounter.push(client.socket);
         if (this.tournamentCounter.length > 3)
             new Tournament(this.tournamentCounter);
     }
+
+	serverChat(target: string, payload: any) {
+		this.io.to(target).emit("chat-message", {
+			fromId: "system",
+			fromName: "server",
+			message: payload
+		})
+	}
 }
 
 export default SocketManager;
-
-// socket.on("online-clients", () => {
-// 	const onlineClients = Array.from(this.clients.values()).map(client => ({
-// 		id: client.socket.id,
-// 		name: client.socket.data.user.username,
-// 	}));
-// 	socket.emit("online-clients", onlineClients);
-// });

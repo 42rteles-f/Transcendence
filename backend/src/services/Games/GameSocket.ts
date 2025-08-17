@@ -95,7 +95,7 @@ abstract class GameSocket {
     }
 
     protected broadcastState() {
-        this.io.to(this.room!).emit("pong-state", this.state);
+        this.io.to(this.room!).volatile.emit("pong-state", this.state);
     }
 
     protected sendTo(socketId: string, event: string, payload: any) {
