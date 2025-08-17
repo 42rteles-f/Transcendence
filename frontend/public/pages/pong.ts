@@ -29,6 +29,10 @@ interface PongState {
 class PongGame extends BaseComponent {
     private canvas!: HTMLCanvasElement;
 	private	localPlay: boolean = false;
+	private player1Name!: HTMLSpanElement;
+	private player1Score!: HTMLSpanElement;
+	private player2Name!: HTMLSpanElement;
+	private player2Score!: HTMLSpanElement;
 
     constructor(args: string) {
         super("/pages/pong.html");
@@ -40,7 +44,6 @@ class PongGame extends BaseComponent {
 
     onInit() {
         this.setupSocket();
-
 		this.setKeyEvents();
 		this.canvas.tabIndex = 0;
 		this.canvas.focus();
@@ -78,11 +81,11 @@ class PongGame extends BaseComponent {
     private setupSocket() {
         Socket.init();
         Socket.addEventListener("pong-state", (state: PongState) => {
-            this.drawGame(state);
+            this.updateGame(state);
         });
     }
 
-    private drawGame(state: PongState) {
+    private updateGame(state: PongState) {
 		console.log("Drawing Pong Game", state);
 		const ctx = this.canvas.getContext("2d")!;
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -100,6 +103,10 @@ class PongGame extends BaseComponent {
 		ctx.fillStyle = "white";
 		ctx.fill();
 		ctx.closePath();
+		this.player1Name.innerText = state.playersState[0].name;
+		this.player1Score.innerText = state.playersState[0].score.toString();
+		this.player2Name.innerText = state.playersState[1].name;
+		this.player2Score.innerText = state.playersState[1].score.toString();
 	}
 
     onDestroy() {

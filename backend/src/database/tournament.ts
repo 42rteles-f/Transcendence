@@ -47,8 +47,9 @@ export default class TournamentDatabase {
 					`INSERT INTO tournament_players (tournament_id, player_id, display_name) VALUES (?, ?, ?)`,
 					[tournamentId.id, userId, displayName]
 				);
+				return { status: 200, reply: { id: tournamentId.id } };
 			}
-            return { status: 200, reply: "Tournament created" };
+			return { status: 400, reply: { id: null } };
         } catch (error) {
             if (error instanceof Error)
                 return { status: 400, reply: error.message };
@@ -391,7 +392,7 @@ export default class TournamentDatabase {
 	async closeInProgressEntities(): Promise<void> {
 		try {
 			const deletedTournaments = await this.runAsync(
-				`DELETE FROM tournaments WHERE status = 'in progress'`
+				`DELETE FROM tournaments WHERE status = 'in progress' OR status = 'waiting'`
 			);
 			if (deletedTournaments.changes > 0) {
 				console.log(`Deleted ${deletedTournaments.changes} tournaments in progress`);
