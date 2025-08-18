@@ -70,6 +70,10 @@ class Socket {
 		this.socket.emit(event, ...args);
 	}
 
+	static	request(event: string, ...args: any[]) {
+		return (this.socket?.emitWithAck(event, ...args));
+	}
+
 	static	disconnect(): void {
 		if (!this.socket) {
 			console.error("Socket not initialized");

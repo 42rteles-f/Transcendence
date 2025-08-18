@@ -54,7 +54,7 @@ class Chat extends BaseComponent {
         Socket.addEventListener("client-departure", this.removeClient);
         Socket.addEventListener("disconnect", this.disconnect);
     }
-
+ 
     sendMessage() {
         const message = this.chatInput.value.trim();
         if (!message || !this.chatName.textContent || this.chatName.textContent === "server") {
@@ -189,11 +189,13 @@ class Chat extends BaseComponent {
 		element.textContent = response.message;
 		if (!this.inviteButtons.get(response.invite))
 			return ;
-		element.appendChild(this.createButton(
-			{id: "server"} as IClient,
+
+		const button = this.createButton(
+			{id: `${response.invite}-${response.guest}`} as IClient,
 			"Accept",
 			() => Socket.emit("invite-pong-accept", { host: response.invite })
-		));
+		);
+		element.appendChild(button);
 	}
 
 	onSystemError(element: HTMLDivElement, response: IServerError) {
@@ -203,11 +205,12 @@ class Chat extends BaseComponent {
 
 	onSystemRoom(element: HTMLDivElement, response: IServerRoom) {
 		if (response.room) {
-			element.appendChild(this.createButton(
+			const button = this.createButton(
 				{id: "server"} as IClient,
 				"Join Room",
 				() => routes.navigate("/pong")
-			));
+			);
+			element.appendChild(button);
 		}
 	}
 
@@ -238,7 +241,7 @@ class Chat extends BaseComponent {
 
 	cancelInvite = (event: MouseEvent, client: IClient) => {
 		const button: HTMLButtonElement = event.currentTarget as HTMLButtonElement;
-		
+	
 		Socket.emit("invite-cancel", { target : `${client.id}` });
 		button.textContent = "Invite";
 		button.onclick = (event) => this.sendInvite(event, client);
@@ -255,6 +258,8 @@ class Chat extends BaseComponent {
     };
 
     openChat(client: IClient) {
+		if (this.chatName.dataset.id === client.id) return ;
+
         this.chatName.textContent = `${client.name}`;
         this.chatName.dataset.id = client.id;
         this.chatName.dataset.socketId = client.socketId;
@@ -263,7 +268,7 @@ class Chat extends BaseComponent {
         this.chatMessages.innerHTML = "";
         this.chatInput.value = "";
 
-        this.chatHistory.get(client.id)?.forEach((msg) => {
+		this.chatHistory.get(client.id)?.forEach((msg) => {
             this.chatMessages.appendChild(msg);
         });
 		this.hideNotification(client.id);

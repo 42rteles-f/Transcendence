@@ -55,6 +55,7 @@ class Matchmaker {
 
 	public removeInvite(host: Client): void {
 		const invite = this.invites.get(host);
+		console.log(`invite being removed ${invite?.guest}`)
 		if (!invite) return ;
 
 		const guest = invite.guest;
