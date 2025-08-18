@@ -61,7 +61,7 @@ class TournamentsModal extends BaseComponent {
 						winnerId: number,
 						ownerId: number,
 						ownerName: string,
-						maxPlayers: number,
+						numberOfPlayers: number,
 						status: string,
 						winnerName: string | null
 					}[],

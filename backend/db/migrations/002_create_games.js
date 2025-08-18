@@ -8,6 +8,7 @@ export function up(db, cb) {
 	  player2_score INTEGER DEFAULT 0,
 	  winner_id INTEGER,
 	  status TEXT DEFAULT 'waiting', -- 'waiting', 'in_progress', 'finished'
+	  round INTEGER,
 	  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	  FOREIGN KEY(player1_id) REFERENCES users(id),

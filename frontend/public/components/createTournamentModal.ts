@@ -9,7 +9,7 @@ class CreateTournamentModal extends BaseComponent {
     private cancelBtn!: HTMLButtonElement;
     private nameInput!: HTMLInputElement;
 	private displayNameInput!: HTMLInputElement;
-    private maxPlayersInput!: HTMLInputElement;
+    private numberOfPlayersInput!: HTMLInputElement;
     private form!: HTMLFormElement;
 
     constructor() {
@@ -37,21 +37,24 @@ class CreateTournamentModal extends BaseComponent {
 			showToast("Please provide a valid tournament name and display name", 3000, "error");
 			return;
 		}
-        const maxPlayers = parseInt(this.maxPlayersInput.value);
+        const numberOfPlayers = parseInt(this.numberOfPlayersInput.value);
 
-        if (!name || isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 16) {
-            showToast("Please provide a valid name and max players (2-16)", 3000, "error");
+        if (!name || isNaN(numberOfPlayers) || (numberOfPlayers != 4 && numberOfPlayers != 8 && numberOfPlayers != 16)) {
+            showToast("Please provide a valid name and number of players (4 or 8 or 16)", 3000, "error");
             return;
         }
 
         try {
-            const res = await Api.createTournament(name, maxPlayers, displayName);
+            const res = await Api.createTournament(name, numberOfPlayers, displayName);
             showToast("Tournament created!", 2000, "success");
             this.remove();
-            if (res && res.tournamentId)
-				routes.navigate(`/tournament/${res.tournamentId}`);
+            if (res && res.id)
+			{
+				console.log(`Tournament created with ID: ${res.id}`);
+				routes.navigate(`/tournament/${res.id}`);
+			}
         } catch (err: any) {
-            showToast("Failed to create tournament", 3000, "error");
+            showToast(err.message || "Failed to create tournament", 3000, "error");
         }
     }
 }

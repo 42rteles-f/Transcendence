@@ -35,11 +35,11 @@ export default class TournamentDatabase {
         });
     }
 
-    async createTournament(name: string, userId: number, displayName: string, maxPlayers?: number): Promise<IResponse> {
+    async createTournament(name: string, userId: number, displayName: string, numberOfPlayers: number): Promise<IResponse> {
         try {
             const res = await this.runAsync(
-                `INSERT INTO tournaments (name, start_date, max_players, owner_id) VALUES (?, ?, ?, ?)`,
-                [name, new Date().toISOString(), maxPlayers || 16, userId]
+                `INSERT INTO tournaments (name, start_date, number_of_players, owner_id, number_of_rounds) VALUES (?, ?, ?, ?, ?)`,
+                [name, new Date().toISOString(), numberOfPlayers, userId, Math.log2(numberOfPlayers)]
             );
 			if (res.changes !== 0) {
 				const tournamentId = await this.getAsync(`SELECT last_insert_rowid() AS id`);
@@ -72,7 +72,7 @@ export default class TournamentDatabase {
 					t.winner as winnerId,
 					t.owner_id AS ownerId,
                     owner.username AS ownerName,
-					t.max_players AS maxPlayers,
+					t.number_of_players AS numberOfPlayers,
 					t.status,
                     winner.username AS winnerName
 				FROM tournaments t
@@ -92,19 +92,19 @@ export default class TournamentDatabase {
 
     async joinTournament(tournamentId: number, userId: number, displayName: string): Promise<IResponse> {
         try {
-			const subscribedUsers = await this.allAsync(
-				`SELECT player_id, display_name FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
-			);
-			if (subscribedUsers.some(u => u.player_id === userId))
-				return { status: 400, reply: "Already subscribed to this tournament" };
 			const tournament = await this.getAsync(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
 			if (!tournament)
 				return { status: 404, reply: "Tournament not found" };
-			if (tournament.status !== 'waiting')
-				return { status: 400, reply: "Tournament already started or finished" };
+			const subscribedUsers = await this.allAsync(
+				`SELECT player_id, display_name FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
+			);
 			if (tournament.owner_id === userId)
 				return { status: 400, reply: "You cannot join your own tournament" };
-			if (tournament.max_players && tournament.max_players <= subscribedUsers.length)
+			if (subscribedUsers.some(u => u.player_id === userId))
+				return { status: 400, reply: "Already subscribed to this tournament" };
+			if (tournament.status !== 'waiting')
+				return { status: 400, reply: "Tournament already started or finished" };
+			if (tournament.number_of_players && tournament.number_of_players <= subscribedUsers.length)
 				return { status: 400, reply: "Tournament is full" };
 			if (subscribedUsers.some(u => u.display_name === displayName))
 				return { status: 400, reply: "Display name already taken in this tournament" };
@@ -158,7 +158,7 @@ export default class TournamentDatabase {
 				`SELECT player_id FROM tournament_players WHERE tournament_id = ?`, [tournamentId]
 			);
 
-			if (!players || players.length < 2)
+			if (!players || players.length != tournament.number_of_players)
 				return { status: 400, reply: "Not enough players to start the tournament" };
 
 			const shuffled = players
@@ -173,33 +173,19 @@ export default class TournamentDatabase {
 			}
 
 			for (const [p1, p2] of games) {
-				if (p2 === null)  {
-					const result = await this.runAsync(
-						`INSERT INTO games (player1_id, player2_id, status) VALUES (?, ?, ?)`,
-						[p1, p2, 'pending']
-					);
-					const gameId = (await this.getAsync(`SELECT last_insert_rowid() AS id`)).id;
-					await this.runAsync(
-						`INSERT INTO tournament_games (tournament_id, game_id) VALUES (?, ?)`,
-						[tournamentId, gameId]
-					);
-					continue;
-				}
-				const result = await this.runAsync(
-					`INSERT INTO games (player1_id, player2_id, status) VALUES (?, ?, ?)`,
-					[p1, p2, 'pending']
+				await this.runAsync(
+					`INSERT INTO games (player1_id, player2_id, status) VALUES (?, ?, ?, ?)`,
+					[p1, p2, 'pending', tournament.number_of_rounds + 1]
 				);
-
 				const gameId = (await this.getAsync(`SELECT last_insert_rowid() AS id`)).id;
-
 				await this.runAsync(
 					`INSERT INTO tournament_games (tournament_id, game_id) VALUES (?, ?)`,
 					[tournamentId, gameId]
 				);
 			}
             await this.runAsync(
-                `UPDATE tournaments SET status = 'in progress', start_date = ? WHERE id = ?`,
-                [new Date().toISOString(), tournamentId]
+                `UPDATE tournaments SET status = 'in progress', start_date = ?, current_round = current_round + 1 WHERE id = ?`,
+                [new Date().toISOString(), tournamentId],
             );
             return { status: 200, reply: "Tournament started" };
         } catch (error) {
@@ -209,9 +195,18 @@ export default class TournamentDatabase {
         }
     }
 
-
 	async createNextRoundGames(tournamentId: number): Promise<IResponse> {
 		try {
+			const tournament = await this.getAsync(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
+			if (!tournament)
+				return { status: 404, reply: "Tournament not found" };
+			if (tournament.status !== 'in progress')
+				return { status: 400, reply: "Tournament is not in progress" };
+			if (tournament.current_round > tournament.number_of_rounds)
+			{
+				// Stop if tournament is already finished
+				return { status: 400, reply: "Tournament already finished" };
+			}
 			const winners: { winner_id: number }[] = await this.allAsync(
 				`SELECT g.winner_id
 				FROM tournament_games tg
@@ -220,35 +215,22 @@ export default class TournamentDatabase {
 				[tournamentId]
 			);
 
-			const byes: { player1_id: number }[] = await this.allAsync(
-				`SELECT g.player1_id
-				FROM tournament_games tg
-				JOIN games g ON tg.game_id = g.id
-				WHERE tg.tournament_id = ? AND g.player2_id IS NULL AND (g.status = 'bye' OR g.status = 'pending')`,
-				[tournamentId]
-			);
-
 			const qualified = [
-				...winners.map(w => w.winner_id),
-				...byes.map(b => b.player1_id)
+				...winners.map(w => w.winner_id)
 			];
-
-			if (qualified.length < 2)
-				return { status: 400, reply: "Not enough players for next round" };
 
 			const shuffled = qualified.sort(() => Math.random() - 0.5);
 			const games: [number, number | null][] = [];
 			for (let i = 0; i < shuffled.length; i += 2) {
 				const p1 = shuffled[i];
-				const p2 = shuffled[i + 1] ?? null;
+				const p2 = shuffled[i + 1];
 				games.push([p1, p2]);
 			}
 
 			for (const [p1, p2] of games) {
-				const status = p2 === null ? 'bye' : 'pending';
 				await this.runAsync(
-					`INSERT INTO games (player1_id, player2_id, status) VALUES (?, ?, ?)`,
-					[p1, p2, status]
+					`INSERT INTO games (player1_id, player2_id, status) VALUES (?, ?, ?, ?)`,
+					[p1, p2, 'pending', tournament.current_round + 1]
 				);
 				const gameId = (await this.getAsync(`SELECT last_insert_rowid() AS id`)).id;
 				await this.runAsync(
@@ -256,6 +238,10 @@ export default class TournamentDatabase {
 					[tournamentId, gameId]
 				);
 			}
+			await this.runAsync(
+				`UPDATE tournaments SET current_round = current_round + 1 WHERE id = ?`,
+				[tournamentId]
+			);
 			return { status: 200, reply: "Next round games created" };
 		} catch (error) {
 			if (error instanceof Error)
@@ -273,7 +259,7 @@ export default class TournamentDatabase {
 					t.winner as winnerId,
 					t.owner_id AS ownerId,
                     owner.username AS ownerName,
-					t.max_players AS maxPlayers,
+					t.number_of_players AS numberOfPlayers,
 					t.status,
                     winner.username AS winnerName
 				FROM tournaments t

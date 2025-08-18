@@ -67,7 +67,7 @@ class TournamentHubPage extends BaseComponent {
             else
                 this.status.classList.add("bg-gray-200", "text-gray-800");
 
-            this.playersCount.textContent = `${this.tournament.participants.length}/${this.tournament.maxPlayers}`;
+            this.playersCount.textContent = `${this.tournament.participants.length}/${this.tournament.numberOfPlayers}`;
 
             if (!this.ownerName) {
                 this.ownerName = document.createElement("div");
@@ -126,7 +126,7 @@ class TournamentHubPage extends BaseComponent {
         const isCreator = this.userId === this.tournament.ownerId;
         const isSubscribed = this.tournament.participants.some((p: any) => p.id === this.userId);
         const isActive = this.tournament.status === "waiting" || this.tournament.status === "active";
-		const isFull = this.tournament.participants.length >= this.tournament.maxPlayers;
+		const isFull = this.tournament.participants.length >= this.tournament.numberOfPlayers;
 		const isInProgressOrFinished = this.tournament.status === "in progress" || this.tournament.status === "finished";
 
         this.startBtn.classList.toggle("hidden", !(isCreator && isActive));

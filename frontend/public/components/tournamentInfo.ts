@@ -5,7 +5,7 @@ type Tournament = {
     name: string;
     status: string;
     startDate: string;
-    maxPlayers: number;
+    numberOfPlayers: number;
     ownerId: number;
 	winnerId?: number | null;
 	ownerName: string;
@@ -38,7 +38,7 @@ class TournamentInfo extends BaseComponent {
 		else
 			this.status.classList.add("!text-gray-600");
 		this.startDate.innerText = new Date(this.tournament.startDate).toLocaleString();
-		this.playersNum.innerText = this.tournament.maxPlayers.toString();
+		this.playersNum.innerText = this.tournament.numberOfPlayers.toString();
 		this.ownerName.innerText = this.tournament.ownerName;
 		if (this.tournament.winnerName)
 			this.winnerName.innerText = this.tournament.winnerName;

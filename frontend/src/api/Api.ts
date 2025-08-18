@@ -113,8 +113,8 @@ class Api {
 		return data.message;
     }
 
-    static async createTournament(name: string, maxPlayers: number, displayName: string): Promise<{ tournamentId: number }> {
-        const body = JSON.stringify({ name, maxPlayers, displayName });
+    static async createTournament(name: string, numberOfPlayers: number, displayName: string): Promise<{ id: number }> {
+        const body = JSON.stringify({ name, numberOfPlayers, displayName });
 		const data = await this.makeRequest(`tournament/create`, "POST", body);
 		return data.message;
     }
@@ -141,7 +141,8 @@ class Api {
     }
 
     static async startTournament(tournamentId: number): Promise<any> {
-		const data = await this.makeRequest(`tournament/start/${tournamentId}`, "POST");
+		const body = JSON.stringify({ start: true });
+		const data = await this.makeRequest(`tournament/start/${tournamentId}`, "POST", body);
 		return data.message;
     }
 
