@@ -10,6 +10,11 @@ import { Tournament } from "../services/Tournament/Tournament";
 import { dbLite } from "../index";
 import UserDatabase from "../database/user";
 
+
+function isIntegerString(str: string): boolean {
+	return (/^[0-9]+$/.test(str));
+}
+
 interface IUserProfile {
     id?: 			string;
     username:		string;
@@ -19,11 +24,16 @@ interface IUserProfile {
     gamesLost: 		number;
 }
 
+interface ITournamentCreation {
+	name:				string;
+	numberOfPlayers:	number;
+	displayName:		string;
+};
+
 class SocketManager {
     private clients:			Map<string, Client> = new Map();
     public io:					Server;
-    private matchmaker:			Matchmaker | null = null;
-    private tournamentCounter:	Socket[] = [];
+    private matchmaker:			Matchmaker;
     private userDatabase?:		UserDatabase;
 
     constructor(httpServer: any) {
@@ -227,11 +237,43 @@ class SocketManager {
 		return (Array.from(this.clients.values()).find(client => client.id === id));
 	}
 
-    public onTournamentJoin(client: Client) {
-        this.tournamentCounter.push(client.socket);
-        if (this.tournamentCounter.length > 3)
-            new Tournament(this.tournamentCounter);
-    }
+	public onCreateTournament(client: Client, { name, displayName, numberOfPlayers }: ITournamentCreation, callback: Function) {
+		if (!displayName || typeof displayName !== 'string' || displayName.trim() === "" || !/^[A-Za-z0-9_]+$/.test(displayName))
+			return (callback({ ok: false, message: "Invalid display name, only letter, underscore, and digits are allowed" }));
+		if (!name || typeof name !== 'string' || name.trim() === "" || !/^[A-Za-z0-9_ ]+$/.test(name))
+			return (callback({ ok: false, message: "Invalid tournament name only letters and digits are allowed" }));
+		if (numberOfPlayers && (typeof numberOfPlayers !== 'number' || (numberOfPlayers != 4 && numberOfPlayers != 8 &&  numberOfPlayers != 16)))
+			return (callback({ ok: false, message: "Invalid number of players" }));
+		const res = this.matchmaker.createTournament(client, name, displayName, numberOfPlayers);
+		if (res)
+			callback({ ok: true, message: res });
+		else
+			callback({ ok: false, message: "Could not Create Tournament." });
+	}
+
+    public onTournamentJoin(client: Client, { displayName, tournamentId }: { displayName: string, tournamentId: string }, callback: Function) {
+		// To be checked with Rubens
+		if (!displayName || typeof displayName !== 'string' || displayName.trim() === "" || !/^[A-Za-z0-9_]+$/.test(displayName))
+			return (callback({ ok: false, message: "Invalid display name, only letter, underscore, and digits are allowed" }));
+		const res = this.matchmaker.joinTournament(client, displayName, tournamentId);
+		callback({ ok: res });
+	}
+    
+	public async onGetTournament(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		const res = await this.matchmaker.getTournament(tournamentId);
+		if (res)
+			callback({ ok: true, message: res });
+		else
+			callback({ ok: false, message: null });
+	}
+
+	public async onGetAllTournaments(client: Client, { pageNum, pageSizeNum }: {pageNum: string, pageSizeNum: string}, callback: Function) {
+		if (!isIntegerString(pageNum) || !isIntegerString(pageSizeNum)) {
+			// return a custom message telling that the parameters are wrong
+		}
+		const res = await this.matchmaker.getAllTournaments(Number(pageNum), Number(pageSizeNum));
+		callback({ ok: res ? true : false, message: res });
+	}
 
 	serverChat(target: string, payload: any) {
 		this.io.to(target).emit("chat-message", {

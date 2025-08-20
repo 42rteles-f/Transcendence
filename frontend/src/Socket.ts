@@ -70,8 +70,12 @@ class Socket {
 		this.socket.emit(event, ...args);
 	}
 
-	static	request(event: string, ...args: any[]) {
-		return (this.socket?.emitWithAck(event, ...args));
+	static	async request(event: string, ...args: any[]) {
+		if (!this.socket) {
+			console.log("Socket not initialized");
+			return ;
+		}
+		return (await this.socket.emitWithAck(event, ...args));
 	}
 
 	static	disconnect(): void {

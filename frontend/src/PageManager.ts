@@ -1,5 +1,6 @@
 import { BaseComponent } from "./BaseComponent";
 import { AppControl } from "./AppControl";
+import { createLogger } from 'vite';
 
 type AnyBaseComponent = new (...args: any[]) => BaseComponent;
 
@@ -65,6 +66,7 @@ export class PageManager {
         }
 
 		const newComponent = new (this.pageMap.get(name) as any)(...(param ?? []));
+		console.log(`param: ${param}`);
 		this.currentPage.push(newComponent);
 		document.body.appendChild(newComponent as Node);
 		return (true);

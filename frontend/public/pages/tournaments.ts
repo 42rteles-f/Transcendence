@@ -1,7 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { TournamentsModal } from "../components/tournamentsModal";
 import { CreateTournamentModal } from "../components/createTournamentModal";
-
 class TournamentsPage extends BaseComponent {
 	private createTournamentButton!: HTMLButtonElement;
 	private allTournamentsButton!: HTMLButtonElement;

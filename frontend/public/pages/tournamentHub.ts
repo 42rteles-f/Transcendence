@@ -4,9 +4,10 @@ import { showToast } from "./toastNotification";
 import { routes } from '../../src/routes';
 import { JoinTournamentModal } from "../components/joinTournamentModal";
 import Api from '../../src/api/Api';
+import Socket from '../../src/Socket';
 
 class TournamentHubPage extends BaseComponent {
-    private tournamentId!: number | null;
+    private tournamentId!: string | null;
     private tournament: any;
     private userId!: number | string;
 
@@ -18,13 +19,12 @@ class TournamentHubPage extends BaseComponent {
     private joinBtn!: HTMLButtonElement;
     private unsubscribeBtn!: HTMLButtonElement;
     private cancelBtn!: HTMLButtonElement;
-	private reportResultBtn!: HTMLButtonElement;
 
     private ownerName?: HTMLElement;
     private winnerName?: HTMLElement;
     private startDate?: HTMLElement;
 
-    constructor(tournamentId: number | null) {
+    constructor(tournamentId: string | null) {
         super("/pages/tournamentHub.html");
         this.tournamentId = tournamentId;
     }
@@ -43,16 +43,18 @@ class TournamentHubPage extends BaseComponent {
         this.joinBtn.addEventListener("click", () => this.joinTournament());
         this.unsubscribeBtn.addEventListener("click", () => this.unsubscribeTournament());
         this.cancelBtn.addEventListener("click", () => this.cancelTournament());
-		this.reportResultBtn.addEventListener("click", () => this.reportResult());
     }
 
     async loadTournament() {
         try {
             if (!this.tournamentId)
                 return;
-            const res = await Api.getTournament(this.tournamentId);
-			console.log("Loaded tournament:", res);
-            this.tournament = res.message ?? res;
+			const res = await Socket.request("get-tournament", { tournamentId: this.tournamentId });
+			if (res.ok !== true) {
+				showToast(res.message, 2000, "error");
+				return ;
+			}
+            this.tournament = res.message;
 
             this.tournamentName.textContent = this.tournament.name;
 
@@ -127,7 +129,6 @@ class TournamentHubPage extends BaseComponent {
         const isSubscribed = this.tournament.participants.some((p: any) => p.id === this.userId);
         const isActive = this.tournament.status === "waiting" || this.tournament.status === "active";
 		const isFull = this.tournament.participants.length >= this.tournament.numberOfPlayers;
-		const isInProgressOrFinished = this.tournament.status === "in progress" || this.tournament.status === "finished";
 
         this.startBtn.classList.toggle("hidden", !(isCreator && isActive));
         this.cancelBtn.classList.toggle("hidden", !(isCreator && isActive));
@@ -136,7 +137,6 @@ class TournamentHubPage extends BaseComponent {
 		this.joinBtn.style.cursor = isFull ? "not-allowed" : "";
 		this.joinBtn.style.opacity = isFull ? "0.5" : "";
         this.unsubscribeBtn.classList.toggle("hidden", isCreator || !isSubscribed || !isActive);
-		this.reportResultBtn.classList.toggle("hidden", !isInProgressOrFinished);
     }
 
     async startTournament() {
@@ -187,15 +187,6 @@ class TournamentHubPage extends BaseComponent {
 			showToast(e.message || "Failed to cancel tournament", 3000, "error");
 		}
     }
-
-	async reportResult() {
-		if (!this.tournamentId) return;
-		try {
-			routes.navigate(`/tournament-dashboard/${this.tournamentId}`);
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to report result", 3000, "error");
-		}
-	}
 }
 
 customElements.define("tournament-hub-page", TournamentHubPage);

@@ -1,3 +1,4 @@
+import Socket from '../../src/Socket';
 import { BaseComponent } from "../../src/BaseComponent";
 import Api from "../../src/api/Api";
 import { routes } from "../../src/routes";
@@ -55,6 +56,7 @@ class LoginPage extends BaseComponent {
 		)
 		.then(() => {
 			showToast("Login successful!", 2000, "success");
+			Socket.init();
 			routes.navigate("/home");
 		})
 		.catch((error) => {

@@ -76,7 +76,7 @@ class PongGame extends BaseComponent {
 	}
 
     private setupSocket() {
-        Socket.init();
+        
         Socket.addEventListener("pong-state", (state: PongState) => {
             this.updateGame(state);
         });

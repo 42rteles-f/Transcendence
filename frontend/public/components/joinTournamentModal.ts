@@ -7,9 +7,9 @@ class JoinTournamentModal extends BaseComponent {
     private cancelBtn!: HTMLButtonElement;
     private confirmBtn!: HTMLButtonElement;
     private displayNameInput!: HTMLInputElement;
-    private tournamentId: number;
+    private tournamentId: string;
 
-    constructor(tournamentId: number) {
+    constructor(tournamentId: string) {
         super("/components/joinTournamentModal.html");
         this.tournamentId = tournamentId;
         this.tabIndex = -1;

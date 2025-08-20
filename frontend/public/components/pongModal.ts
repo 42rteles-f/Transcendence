@@ -44,7 +44,7 @@ class PongModal extends BaseComponent {
         this.addEventListener("keydown", (e) => {
             if (e.key === "Escape") this.handleCancel();
         });
-		Socket.init();
+		
     }
 	
     handleSearch = () => {

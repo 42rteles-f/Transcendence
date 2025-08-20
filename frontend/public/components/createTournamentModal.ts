@@ -2,6 +2,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "../pages/toastNotification";
 import { routes } from '../../src/routes';
 import Api from '../../src/api/Api';
+import Socket from '../../src/Socket';
 
 class CreateTournamentModal extends BaseComponent {
     private closeBtn!: HTMLButtonElement;
@@ -45,14 +46,15 @@ class CreateTournamentModal extends BaseComponent {
         }
 
         try {
-            const res = await Api.createTournament(name, numberOfPlayers, displayName);
+			const { ok, message } = await Socket.request("create-tournament", { name, displayName, numberOfPlayers });
+			if (!ok) {
+				showToast(message, 2000, "error");
+				return ;
+			}
+			console.log(`res: { ok: ${ok}, message: ${message} }`);
             showToast("Tournament created!", 2000, "success");
             this.remove();
-            if (res && res.id)
-			{
-				console.log(`Tournament created with ID: ${res.id}`);
-				routes.navigate(`/tournament/${res.id}`);
-			}
+			routes.navigate(`/tournament/${message}`);
         } catch (err: any) {
             showToast(err.message || "Failed to create tournament", 3000, "error");
         }

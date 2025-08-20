@@ -2,6 +2,8 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { TournamentInfo } from './tournamentInfo';
 import { routes } from '../../src/routes';
 import Api from '../../src/api/Api';
+import Socket from '../../src/Socket';
+import { showToast } from '../pages/toastNotification';
 
 class TournamentsModal extends BaseComponent {
 	private closeBtn!: HTMLButtonElement;
@@ -50,27 +52,23 @@ class TournamentsModal extends BaseComponent {
         const pageInfo = this.pageInfo as HTMLElement;
 
         try {
+			console.log(`Loading tournaments`);
             list.classList.add("hidden");
             pagination.classList.add("hidden");
 
-			const response = await Api.getAllTournaments(this.page, this.pageSize) as {
-					tournaments: {
-						id: number,
-						name: string,
-						startDate: string,
-						winnerId: number,
-						ownerId: number,
-						ownerName: string,
-						numberOfPlayers: number,
-						status: string,
-						winnerName: string | null
-					}[],
-					total: number
-			};
+			const { ok, message } = await Socket.request("get-all-tournaments", { pageNum: this.page, pageSizeNum: this.pageSize});
+			if (!ok) {
+				showToast(message, 2000, "error");
+				return ;
+			}
+			const { tournaments, total } = message;
 
-
-			const { tournaments, total } = response;
 			this.totalPages = Math.ceil(total / this.pageSize);
+			// console.log(`After calling getAllTournaments`);
+
+
+			console.log(`tournaments: ${JSON.stringify(tournaments)}`);
+			// console.log(`total: ${JSON.stringify(total)}`);
 
 			if (!Array.isArray(tournaments) || tournaments.length === 0) {
 				list.innerHTML = "<p class='text-center text-gray-500'>No tournaments found.</p>";
@@ -85,7 +83,8 @@ class TournamentsModal extends BaseComponent {
 				tournamentInfo.classList.add("cursor-pointer", "hover:bg-blue-50", "transition");
 				tournamentInfo.addEventListener("click", () => {
 					this.remove();
-					routes.navigate(`/tournament/${t.id}`);
+					console.log(`listing tournament with uuid: ${t.uuid}`);
+					routes.navigate(`/tournament/${t.uuid}`);
 				});
 				list.appendChild(tournamentInfo);
 			}

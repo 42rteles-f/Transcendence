@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
 
 type Tournament = {
-    id: number;
+    id: string;
     name: string;
     status: string;
     startDate: string;

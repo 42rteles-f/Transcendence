@@ -57,32 +57,29 @@ export default class TournamentDatabase {
         }
     }
 
-	async getAllTournaments(pageNum: number, PageSizeNum: number): Promise<IResponse> {
+	async getAllTournaments(): Promise<IResponse> {
 		try {
-			const offset = (pageNum - 1) * PageSizeNum;
-
 			const totalRow = await this.getAsync(
 				`SELECT COUNT(*) AS total FROM tournaments`
 			);
 			const total = totalRow.total || 0;
 			const tournaments = await this.allAsync(
-				`SELECT t.id,
-					t.name,
-					t.start_date AS startDate,
-					t.winner as winnerId,
-					t.owner_id AS ownerId,
-                    owner.username AS ownerName,
-					t.number_of_players AS numberOfPlayers,
-					t.status,
-                    winner.username AS winnerName
+				`SELECT	t.id,
+						t.uuid,
+						t.name,
+						t.start_date AS startDate,
+						t.winner as winnerId,
+						t.owner_id AS ownerId,
+                    	owner.username AS ownerName,
+						t.number_of_players AS numberOfPlayers,
+						t.status,
+                    	winner.username AS winnerName
 				FROM tournaments t
 				LEFT JOIN users winner ON t.winner = winner.id
 				LEFT JOIN users owner ON t.owner_id = owner.id
-				ORDER BY t.id DESC
-				LIMIT ? OFFSET ?`,
-				[PageSizeNum, offset]
+				ORDER BY t.id DESC`,
 			);
-			return { status: 200, reply: { tournaments, total } };
+			return { status: 200, reply: { tournaments: tournaments, total } };
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };
@@ -250,67 +247,62 @@ export default class TournamentDatabase {
 		}
 	}
 
-    async getTournament(tournamentId: number): Promise<IResponse> {
+    async getTournament(tournamentId: string): Promise<IResponse> {
         try {
             const tournament = await this.getAsync(`
-				SELECT t.id,
-					t.name,
-					t.start_date AS startDate,
-					t.winner as winnerId,
-					t.owner_id AS ownerId,
-                    owner.username AS ownerName,
-					t.number_of_players AS numberOfPlayers,
-					t.status,
-                    winner.username AS winnerName
+				SELECT	t.id,
+						t.uuid,
+						t.name,
+						t.start_date AS startDate,
+						t.winner as winnerId,
+						t.owner_id AS ownerId,
+                    	owner.username AS ownerName,
+						t.number_of_players AS numberOfPlayers,
+						t.status,
+                    	winner.username AS winnerName
 				FROM tournaments t
 				LEFT JOIN users winner ON t.winner = winner.id
 				LEFT JOIN users owner ON t.owner_id = owner.id
-				WHERE t.id = ?
-				ORDER BY t.id DESC`, [tournamentId]);
+				WHERE t.uuid = ?
+				ORDER BY t.uuid DESC`, [tournamentId]);
             if (!tournament)
                 return { status: 404, reply: "Tournament not found" };
 			const participants = await this.allAsync(
-				`SELECT u.id, u.username, tp.display_name AS displayName
+				`SELECT	u.id,
+						u.username,
+						tp.display_name AS displayName
 				FROM tournament_players tp
 				LEFT JOIN users u ON tp.player_id = u.id
-				WHERE tp.tournament_id = ?`,
+				WHERE tp.tournament_uuid = ?`,
 				[tournamentId]
 			);
 			tournament.participants = participants;
 			const games = await this.allAsync(`
 				SELECT
 					g.id,
-					g.player1_id,
-					p1.username AS player1_username,
-					tp1.display_name AS player1_display_name,
-					g.player2_id,
-					p2.username AS player2_username,
-					tp2.display_name AS player2_display_name,
+					g.player1_id AS player1Id,
+					p1.username AS player1Username,
+					tp1.display_name AS player1DisplayName,
+					g.player1_score AS player1Score,
+					g.player2_id as player2Id,
+					p2.username AS player2Username,
+					tp2.display_name AS player2DisplayName,
+					g.player2_score AS player2Score,
 					g.status,
-					g.winner_id,
-					w.username AS winner_username,
-					g.player1_score AS score1,
-					g.player2_score AS score2
+					g.winner_id AS winnerId,
+					w.username AS winnerName,
+					g.round
 				FROM tournament_games tg
 				JOIN games g ON tg.game_id = g.id
 				LEFT JOIN users p1 ON g.player1_id = p1.id
 				LEFT JOIN users p2 ON g.player2_id = p2.id
 				LEFT JOIN users w ON g.winner_id = w.id
-				LEFT JOIN tournament_players tp1 ON tp1.tournament_id = tg.tournament_id AND tp1.player_id = g.player1_id
-    			LEFT JOIN tournament_players tp2 ON tp2.tournament_id = tg.tournament_id AND tp2.player_id = g.player2_id
-				WHERE tg.tournament_id = ?
+				LEFT JOIN tournament_players tp1 ON tp1.tournament_uuid = tg.tournament_uuid AND tp1.player_id = g.player1_id
+    			LEFT JOIN tournament_players tp2 ON tp2.tournament_uuid = tg.tournament_uuid AND tp2.player_id = g.player2_id
+				WHERE tg.tournament_uuid = ?
 				ORDER BY g.id ASC
 			`, [tournamentId]);
-
-			tournament.games = games.map(game => ({
-				id: game.id,
-				player1: game.player1_id ? { id: game.player1_id, username: game.player1_username, displayName: game.player1_display_name } : null,
-				player2: game.player2_id ? { id: game.player2_id, username: game.player2_username, displayName: game.player2_display_name } : null,
-				score1: game.score1,
-				score2: game.score2,
-				winnerId: game.winner_id,
-				winnerName: game.winner_username
-			}));
+			tournament.games = games;
             return { status: 200, reply: tournament };
         } catch (error) {
             if (error instanceof Error)

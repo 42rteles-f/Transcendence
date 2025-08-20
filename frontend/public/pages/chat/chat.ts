@@ -48,7 +48,7 @@ class Chat extends BaseComponent {
         this.chatInput.onkeydown = (e: KeyboardEvent) => {
             if (e.key === "Enter") this.sendMessage();
         };
-        Socket.init();
+        
         Socket.notifyEventListener("client-arrival", this.addClients);
         Socket.addEventListener("chat-message", this.addMessage);
         Socket.addEventListener("client-departure", this.removeClient);

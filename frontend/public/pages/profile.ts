@@ -87,7 +87,7 @@ class ProfilePage extends BaseComponent {
 		} catch (error) {
 			routes.navigate("/404");
 		}
-		Socket.init();
+		
 		Socket.notifyEventListener("client-arrival", (clients: { id: string, name: string }[]) => {
 			if (clients.find(client => client.name === this.username.textContent)) {
 				this.onlineStatus!.style.backgroundColor = "green";

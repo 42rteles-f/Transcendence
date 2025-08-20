@@ -39,11 +39,7 @@ class TournamentController {
     const database = new TournamentDatabase(db);
 
 	try {
-		const { page = 1, pageSize = 5 } = (req.query || {}) as { page?: number, pageSize?: number };
-		const pageNum = Math.max(1, Number(page));
-		const pageSizeNum = Math.max(1, Math.min(100, Number(pageSize)));
-
-		const { status, reply } = await database.getAllTournaments(pageNum, pageSizeNum);
+		const { status, reply } = await database.getAllTournaments();
 		return { status, reply };
 	} catch (error: Error | any) {
 		console.error(`Error getting tournaments: ${error.message}`);
@@ -115,7 +111,7 @@ class TournamentController {
     const database = new TournamentDatabase(db);
 
 	try {
-		const tournamentId = Number((req.params as { id: string }).id);
+		const tournamentId = String((req.params as { id: string }).id);
 		if (!tournamentId)
 		  return { status: 400, reply: "Invalid tournament ID" };
 	
