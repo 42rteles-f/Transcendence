@@ -1,50 +1,48 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import Socket from "../../src/Socket";
+import { PongRenderer3D } from "./babylonJS/render3Dpong";
 
 console.log("executing PongGame");
 
 interface Position {
-    x: number;
-    y: number;
+	x: number;
+	y: number;
 }
 
 interface PongPlayerState {
-    id: string;
-    name: string;
-    paddle: Position;
+	id: string;
+	name: string;
+	paddle: Position;
 	paddleDimensions: {
 		width: number;
 		height: number;
 	};
-    score: number;
+	score: number;
 }
 
 interface PongState {
-    playersState: PongPlayerState[];
-    ball: Position;
+	playersState: PongPlayerState[];
+	ball: Position;
 	ballSize: number;
-    gameStatus: string;
+	gameStatus: string;
 }
 
 class PongGame extends BaseComponent {
-    private canvas!: HTMLCanvasElement;
+	private canvas!: HTMLCanvasElement;
 	private	localPlay: boolean = false;
-	private player1Name!: HTMLSpanElement;
-	private player1Score!: HTMLSpanElement;
-	private player2Name!: HTMLSpanElement;
-	private player2Score!: HTMLSpanElement;
+	private renderer3D!: PongRenderer3D;
 
-    constructor(args: string) {
-        super("/pages/pong.html");
+	constructor(args: string) {
+		super("/pages/pong.html");
 		this.localPlay = args === "local-play";
 		if (args === "tournament") {
 			Socket.emit("tournament-join");
 		}
-    }
+	}
 
-    onInit() {
-        this.setupSocket();
-
+	onInit() {
+		this.setupCanvas();
+		this.setupSocket();
 		this.setControlKeys("w", "s", "paddle-update");
 		if (this.localPlay) {
 			this.setControlKeys("ArrowUp", "ArrowDown", "second-paddle-update");
@@ -56,7 +54,18 @@ class PongGame extends BaseComponent {
 		this.canvas.tabIndex = 0;
 		this.canvas.focus();
 		this.canvas.style.outline = "none";
-    }
+	}
+
+	private setupCanvas() {
+		if (!this.canvas.id) {
+			this.canvas.id = "pongCanvas";
+		}
+
+		const canvasWidth = this.canvas.width || 800;
+		const canvasHeight = this.canvas.height || 600;
+		
+		this.renderer3D = new PongRenderer3D(this.canvas.id, canvasWidth, canvasHeight);
+	}
 
 	setControlKeys(upKey: string, downKey: string, emitName: string) {
 		this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -75,14 +84,19 @@ class PongGame extends BaseComponent {
 		});
 	}
 
-    private setupSocket() {
-        
-        Socket.addEventListener("pong-state", (state: PongState) => {
-            this.updateGame(state);
-        });
-    }
+	private setupSocket() {
+		Socket.init();
+		Socket.addEventListener("pong-state", (state: PongState) => {
+			this.drawGame(state);
+		});
+	}
 
-    private updateGame(state: PongState) {
+	private drawGame(state: PongState) {
+		console.log("Drawing Pong Game in 3D", state);
+		this.renderer3D.drawGame(state);
+	}
+
+	/*private drawGame(state: PongState) {
 		console.log("Drawing Pong Game", state);
 		const ctx = this.canvas.getContext("2d")!;
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -100,15 +114,16 @@ class PongGame extends BaseComponent {
 		ctx.fillStyle = "white";
 		ctx.fill();
 		ctx.closePath();
-		this.player1Name.innerText = state.playersState[0].name;
-		this.player1Score.innerText = state.playersState[0].score.toString();
-		this.player2Name.innerText = state.playersState[1].name;
-		this.player2Score.innerText = state.playersState[1].score.toString();
-	}
+	}*/
 
-    onDestroy() {
-        Socket.emit("pong-match-leave");
-    }
+
+
+
+	onDestroy() {
+		Socket.emit("pong-match-leave");
+		if (this.renderer3D)
+			this.renderer3D.dispose();
+	}
 }
 
 customElements.define("pong-game", PongGame);
