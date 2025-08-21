@@ -100,6 +100,8 @@ export class PongRenderer3D {
         if (this.engine)
         {
             this.engine.stopRenderLoop();
+            if (this.scene)
+                this.scene.dispose();
             this.engine.dispose();
         }
         this.initialized = false;
