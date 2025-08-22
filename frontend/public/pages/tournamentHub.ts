@@ -14,7 +14,7 @@ class TournamentHubPage extends BaseComponent {
     private tournamentName!: HTMLElement;
     private status!: HTMLElement;
     private playersCount!: HTMLElement;
-    private participantsList!: HTMLElement;
+    // private participantsList!: HTMLElement;
     // private startBtn!: HTMLButtonElement;
     private joinBtn!: HTMLButtonElement;
     private unsubscribeBtn!: HTMLButtonElement;
@@ -105,19 +105,19 @@ class TournamentHubPage extends BaseComponent {
 				${this.tournament.startDate ? new Date(this.tournament.startDate).toLocaleString() : "not started yet"}
 			</span>`;
 
-            this.participantsList.innerHTML = "";
-            for (const p of this.tournament.participants) {
-                const div = document.createElement("div");
-                div.className = "flex items-center gap-2 bg-gray-100 hover:bg-blue-100 rounded-lg px-3 py-2 cursor-pointer shadow-sm transition";
-                div.innerHTML = `
-								<span class="font-semibold text-gray-700">${p.username}</span>
-								<span class="text-sm text-gray-500">${p.displayName}</span>
-								`;
-                div.addEventListener("click", () => {
-                    routes.navigate(`/profile/${p.id}`);
-                });
-                this.participantsList.appendChild(div);
-            }
+            // this.participantsList.innerHTML = "";
+            // for (const p of this.tournament.participants) {
+            //     const div = document.createElement("div");
+            //     div.className = "flex items-center gap-2 bg-gray-100 hover:bg-blue-100 rounded-lg px-3 py-2 cursor-pointer shadow-sm transition";
+            //     div.innerHTML = `
+			// 					<span class="font-semibold text-gray-700">${p.username}</span>
+			// 					<span class="text-sm text-gray-500">${p.displayName}</span>
+			// 					`;
+            //     div.addEventListener("click", () => {
+            //         routes.navigate(`/profile/${p.id}`);
+            //     });
+            //     this.participantsList.appendChild(div);
+            // }
 
             this.updateButtons();
         } catch (e) {
