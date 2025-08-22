@@ -256,7 +256,17 @@ class SocketManager {
 		if (!displayName || typeof displayName !== 'string' || displayName.trim() === "" || !/^[A-Za-z0-9_]+$/.test(displayName))
 			return (callback({ ok: false, message: "Invalid display name, only letter, underscore, and digits are allowed" }));
 		const res = this.matchmaker.joinTournament(client, displayName, tournamentId);
-		callback({ ok: res });
+		callback({ ok: res === "ok", message: res });
+	}
+
+	public onTournamentUnsubscribe(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		const res = this.matchmaker.unsubscribeTournament(client, tournamentId);
+		callback({ ok: res === "ok", message: res });
+	}
+	
+	public onTournamentCancel(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		const res = this.matchmaker.cancelTournament(client, tournamentId);
+		callback({ ok: res === "ok", message: res });
 	}
     
 	public async onGetTournament(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {

@@ -93,6 +93,11 @@ export class Tournament {
 		}
 	}
 
+	public unsubscribeTournament(client: Client) {
+		this.players = this.players.filter(p => p.client.id !== client.id);
+		this.qualified = this.qualified.filter(p => p.client.id !== client.id);
+	}
+
 	private endTournament() {
 		if (this.watcher) {
 			clearInterval(this.watcher);

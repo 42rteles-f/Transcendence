@@ -37,7 +37,7 @@ class TournamentInfo extends BaseComponent {
 			this.status.classList.add("!text-red-600");
 		else
 			this.status.classList.add("!text-gray-600");
-		this.startDate.innerText = new Date(this.tournament.startDate).toLocaleString();
+		this.startDate.innerText = this.tournament.startDate ? new Date(this.tournament.startDate).toLocaleString() : "not started yet" ;
 		this.playersNum.innerText = this.tournament.numberOfPlayers.toString();
 		this.ownerName.innerText = this.tournament.ownerName;
 		if (this.tournament.winnerName)

@@ -143,13 +143,45 @@ class Matchmaker {
 
 	public joinTournament(client: Client, displayName: string, tournamentId: string) {
 		// To be checked with Rubens
-		if (this.tournaments.some((t) => t.players.some((p) => p.client.id === client.id)))
-			return (false);
 		const targetTournament = this.tournaments.filter((t) => t.id == tournamentId)[0];
 		if (!targetTournament)
-			return (false);
+			return ("Tournament not found");
+		if (this.tournaments.some((t) => t.players.some((p) => p.client.id === client.id)))
+			return ("Already subscribed to another tournament");
+		if (targetTournament.players.some(p => p.displayName === displayName))
+			return ("Display name already taken");
+		if (targetTournament.players.length === targetTournament.numberOfPlayers)
+			return ("Tournament already full");
+		if (targetTournament.start_date)
+			return ("Tournament already started or finished");
 		targetTournament.joinTournament(client, displayName);
-		return (true);
+		return ("ok");
+	}
+
+	public unsubscribeTournament(client: Client, tournamentId: string) {
+		const targetTournament = this.tournaments.filter(t => t.id === tournamentId)[0];
+		if (!targetTournament)
+			return ("Tournament not found");
+		if (!(targetTournament.players.filter(p => p.client.id === client.id)[0]))
+			return ("Not subscribed to this tournament");
+		if (targetTournament.start_date)
+			return ("Tournament already started or finished");
+		targetTournament.unsubscribeTournament(client);
+		return ("ok");
+	}
+
+	public cancelTournament(client: Client, tournamentId: string) {
+		const targetTournament = this.tournaments.filter(t => t.id === tournamentId)[0];
+		if (!targetTournament)
+			return ("Tournament not found");
+		if (!(targetTournament.players.filter(p => p.client.id === client.id)[0]))
+			return ("Not subscribed to this tournament");
+		if (targetTournament.owner.client.id !== client.id)
+			return ("Only the tournament owner can cancel it")
+		if (targetTournament.start_date)
+			return ("Tournament already started or finished");
+		this.tournaments = this.tournaments.filter(t => t.id !== tournamentId);
+		return ("ok");
 	}
 
 	public async getTournament(tournamentId: string) {
@@ -175,6 +207,7 @@ class Matchmaker {
 					startDate: obj.startDate,
 					winnerId: obj.winnerId,
 					ownerId: obj.ownerId,
+					ownerName: obj.ownerName,
 					numberOfPlayers: obj.numberOfPlayers,
 					status: obj.status,
 					winnerName: obj.winnerName

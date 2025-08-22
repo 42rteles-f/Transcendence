@@ -15,7 +15,7 @@ class TournamentHubPage extends BaseComponent {
     private status!: HTMLElement;
     private playersCount!: HTMLElement;
     private participantsList!: HTMLElement;
-    private startBtn!: HTMLButtonElement;
+    // private startBtn!: HTMLButtonElement;
     private joinBtn!: HTMLButtonElement;
     private unsubscribeBtn!: HTMLButtonElement;
     private cancelBtn!: HTMLButtonElement;
@@ -39,7 +39,7 @@ class TournamentHubPage extends BaseComponent {
 
         await this.loadTournament();
 
-        this.startBtn.addEventListener("click", () => this.startTournament());
+        // this.startBtn.addEventListener("click", () => this.startTournament());
         this.joinBtn.addEventListener("click", () => this.joinTournament());
         this.unsubscribeBtn.addEventListener("click", () => this.unsubscribeTournament());
         this.cancelBtn.addEventListener("click", () => this.cancelTournament());
@@ -51,7 +51,8 @@ class TournamentHubPage extends BaseComponent {
                 return;
 			const res = await Socket.request("get-tournament", { tournamentId: this.tournamentId });
 			if (res.ok !== true) {
-				showToast(res.message, 2000, "error");
+				showToast("could not load tournament", 2000, "error");
+				routes.navigate("/404");
 				return ;
 			}
             this.tournament = res.message;
@@ -100,7 +101,9 @@ class TournamentHubPage extends BaseComponent {
                 this.startDate.className = "mb-2";
                 this.ownerName.insertAdjacentElement("afterend", this.startDate);
             }
-            this.startDate.innerHTML = `<span class="font-semibold">Start Date:</span> <span>${new Date(this.tournament.startDate).toLocaleString()}</span>`;
+            this.startDate.innerHTML = `<span class="font-semibold">Start Date:</span> <span>
+				${this.tournament.startDate ? new Date(this.tournament.startDate).toLocaleString() : "not started yet"}
+			</span>`;
 
             this.participantsList.innerHTML = "";
             for (const p of this.tournament.participants) {
@@ -125,12 +128,14 @@ class TournamentHubPage extends BaseComponent {
     }
 
     updateButtons() {
-        const isCreator = this.userId === this.tournament.ownerId;
-        const isSubscribed = this.tournament.participants.some((p: any) => p.id === this.userId);
+        const isCreator = this.userId === Number(this.tournament.ownerId);
+		// console.log(`is Creator: ${this.userId === this.tournament.ownerId} | userId: ${this.userId} and typeof: ${typeof(this.userId)} |
+		// ownerId: ${this.tournament.ownerId} and type: ${typeof(this.tournament.ownerId)}`);
+        const isSubscribed = this.tournament.participants.some((p: any) => (Number(p.id) === this.userId));
         const isActive = this.tournament.status === "waiting" || this.tournament.status === "active";
 		const isFull = this.tournament.participants.length >= this.tournament.numberOfPlayers;
 
-        this.startBtn.classList.toggle("hidden", !(isCreator && isActive));
+        // this.startBtn.classList.toggle("hidden", !(isCreator && isActive));
         this.cancelBtn.classList.toggle("hidden", !(isCreator && isActive));
         this.joinBtn.classList.toggle("hidden", isCreator || isSubscribed || !isActive);
 		this.joinBtn.disabled = isFull;
@@ -139,16 +144,16 @@ class TournamentHubPage extends BaseComponent {
         this.unsubscribeBtn.classList.toggle("hidden", isCreator || !isSubscribed || !isActive);
     }
 
-    async startTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const res = await Api.startTournament(this.tournamentId);
-			showToast(res || "Tournament started successfully", 3000, "success");
-			this.loadTournament();
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to start tournament", 3000, "error");
-		}
-    }
+    // async startTournament() {
+	// 	if (!this.tournamentId) return;
+	// 	try {
+	// 		const res = await Api.startTournament(this.tournamentId);
+	// 		showToast(res || "Tournament started successfully", 3000, "success");
+	// 		this.loadTournament();
+	// 	} catch (e: Error | any) {
+	// 		showToast(e.message || "Failed to start tournament", 3000, "error");
+	// 	}
+    // }
 
     async joinTournament() {
 		if (!this.tournamentId) return;
@@ -169,8 +174,12 @@ class TournamentHubPage extends BaseComponent {
     async unsubscribeTournament() {
 		if (!this.tournamentId) return;
 		try {
-			const res = await Api.unsubscribeTournament(this.tournamentId);
-			showToast(res || "Unsubscribed from tournament successfully", 3000, "success");
+			const res = await Socket.request("tournament-unsubscribe", { tournamentId: this.tournamentId});
+			if (!res.ok) {
+				showToast(res.message || "Failed to unsubscribe from tournament", 3000, "error");
+				return ;
+			}
+			showToast("Unsubscribed from tournament successfully", 3000, "success");
 			this.loadTournament();
 		} catch (e: Error | any) {
 			showToast(e.message || "Failed to unsubscribe from tournament", 3000, "error");
@@ -180,8 +189,12 @@ class TournamentHubPage extends BaseComponent {
     async cancelTournament() {
 		if (!this.tournamentId) return;
 		try {
-			const res = await Api.cancelTournament(this.tournamentId);
-			showToast(res || "Tournament cancelled successfully", 3000, "success");
+			const res = await Socket.request("tournament-cancel", { tournamentId: this.tournamentId });
+			if (!res.ok) {
+				showToast(res.message || "Failed to cancel tournament", 3000, "error");
+				return ;
+			}
+			showToast("Tournament cancelled successfully", 3000, "success");
 			routes.navigate("/tournaments");
 		} catch (e: Error | any) {
 			showToast(e.message || "Failed to cancel tournament", 3000, "error");

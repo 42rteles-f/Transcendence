@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "../pages/toastNotification";
-import Api from '../../src/api/Api';
+import Socket from '../../src/Socket';
 
 class JoinTournamentModal extends BaseComponent {
     private closeBtn!: HTMLButtonElement;
@@ -34,11 +34,15 @@ class JoinTournamentModal extends BaseComponent {
             return;
         }
         try {
-            await Api.joinTournament(this.tournamentId, displayName);
+            const res = await Socket.request("tournament-join", { displayName, tournamentId: this.tournamentId });
+			if (!res.ok) {
+	            showToast(res.message || "Failed to join tournament", 3000, "error");
+				return ;
+			}
             showToast("Successfully joined the tournament!", 3000, "success");
             this.close();
         } catch (e: any) {
-            showToast(e.message || "Failed to join tournament.", 3000, "error");
+            showToast(e.message || "Failed to join tournament", 3000, "error");
         }
     }
 
