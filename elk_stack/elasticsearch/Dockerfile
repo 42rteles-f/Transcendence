@@ -1,13 +1,13 @@
 FROM docker.elastic.co/elasticsearch/elasticsearch:8.11.1
 
-ENV discovery.type=single-node \
-	xpack.security.enabled=false \
-	xpack.security.enrollment.enabled=false \
-	xpack.ml.enabled=false \
-	ES_JAVA_OPTS="-Xms512m -Xmx512m" \
-	cluster.name=transcendence-cluster \
-	node.name=transcendence-node
+ARG ELASTIC_PASSWORD
+ARG ES_JAVA_OPTS
 
-RUN echo "Starting Elasticsearch..."
+ENV discovery.type=single-node \
+	xpack.security.enabled=true \
+	xpack.security.http.ssl.enabled=false \
+	xpack.security.transport.ssl.enabled=false \
+	ELASTIC_PASSWORD=${ELASTIC_PASSWORD} \
+	ES_JAVA_OPTS=${ES_JAVA_OPTS}
 
 EXPOSE 9200 9300

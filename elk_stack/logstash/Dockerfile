@@ -1,17 +1,18 @@
 FROM docker.elastic.co/logstash/logstash:8.11.1
 
-ENV LS_JAVA_OPTS="-Xms256m -Xmx256m" \
-    ELASTICSEARCH_HOST=elasticsearch \
-    ELASTICSEARCH_PORT=9200
+ARG ELK_USERNAME
+ARG ELK_PASSWORD
+ARG LS_JAVA_OPTS
 
-USER root
-COPY logstash.conf /usr/share/logstash/pipeline/logstash.conf
-COPY es_check.sh /usr/local/bin/es_check.sh
-COPY start-logstash.sh /usr/local/bin/start-logstash.sh
+ENV ELK_USERNAME=$ELK_USERNAME \
+    ELK_PASSWORD=$ELK_PASSWORD \
+    LS_JAVA_OPTS=$LS_JAVA_OPTS \
+    xpack.monitoring.enabled=true \
+    xpack.monitoring.elasticsearch.username=$ELK_USERNAME \
+    xpack.monitoring.elasticsearch.password=$ELK_PASSWORD \
+    xpack.monitoring.elasticsearch.hosts=["http://elasticsearch:9200"]
 
-USER logstash
+COPY --chown=logstash:logstash logstash.conf /usr/share/logstash/pipeline/logstash.conf
 
-ENTRYPOINT ["/usr/local/bin/start-logstash.sh"]
-
-EXPOSE 5000 5001 9600 
+EXPOSE 5000 5001 9600
 #5044 
