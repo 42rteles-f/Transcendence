@@ -9,6 +9,7 @@ import Pong from "../services/Games/PongGame/Pong";
 import { Tournament } from "../services/Tournament/Tournament";
 import { dbLite } from "../index";
 import UserDatabase from "../database/user";
+import { json } from 'node:stream/consumers';
 
 
 function isIntegerString(str: string): boolean {
@@ -34,7 +35,7 @@ class SocketManager {
     private clients:			Map<string, Client> = new Map();
     public io:					Server;
     private matchmaker:			Matchmaker;
-    private userDatabase?:		UserDatabase;
+    private userDatabase:		UserDatabase;
 
     constructor(httpServer: any) {
         this.io = new Server(httpServer, {
@@ -166,7 +167,7 @@ class SocketManager {
         this.matchmaker!.removeFromQueue(client);
     }
 
-	onChatMessage(client: Client, payload: { target: string, message: string }) {
+	async onChatMessage(client: Client, payload: { target: string, message: string }) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
 		if (!this.authorizeContact(client, this.getClientBySocket(payload.target)!, true)) {
 			console.error(`Unauthorized chat message from ${client.id} to ${payload.target}`);
@@ -177,6 +178,11 @@ class SocketManager {
 			fromName: client.username,
 			message: payload.message,
 		});
+		// console.log(`payload: ${JSON.stringify(payload)}`);
+		const target = this.clients.get(payload.target);
+		// console.log(`targetId: ${target?.id}`);
+		if (target)
+			await this.userDatabase.registerMessage(Number(client.id), Number(target?.id), payload.message);
 	}
 
 	authorizeContact(client: Client, target: Client, message?: boolean): boolean {
@@ -292,6 +298,11 @@ class SocketManager {
 			fromName: "server",
 			message: payload
 		})
+	}
+
+	public async onGetChatHistory(client: Client, { targetId }: { targetId: string }, callback: Function) {
+		const res = await this.userDatabase.getMessages(Number(client.id), Number(targetId));
+		callback({ ok: res.status === 200, message: res.status === 200 ? res.reply : "Could not load chat history"});
 	}
 }
 

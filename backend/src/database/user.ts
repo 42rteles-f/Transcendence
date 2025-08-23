@@ -378,4 +378,43 @@ export default class UserDatabase {
 			return { status: 500, reply: "Unknown error" };
 		}
 	}
+
+	async registerMessage(senderId: number, receiverId: number, message: string) {
+		try {
+			await this.runAsync(`INSERT INTO chat (
+													sender_id,
+													receiver_id,
+													message)
+											VALUES (
+													?,
+													?,
+													?
+												)`, [senderId, receiverId, message]);
+			return ({ status: 200, reply: "ok" });
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async getMessages(senderId: number, receiverId: number) {
+		try {
+			const messages = await this.allAsync(`SELECT
+													sender_id AS senderId,
+													receiver_id AS receiverId,
+													message,
+													created_at AS sentAt
+													FROM chat
+				WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
+				ORDER BY sentAt ASC`,
+			[senderId, receiverId, receiverId, senderId]);
+			return ({ status: 200, reply: messages });
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+
+	}
 }

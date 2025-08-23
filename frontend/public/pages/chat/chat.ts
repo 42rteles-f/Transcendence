@@ -1,3 +1,4 @@
+import { AppControl } from '../../../src/AppControl';
 import { BaseComponent } from "../../../src/BaseComponent";
 import { routes } from "../../../src/routes";
 import Socket from "../../../src/Socket";
@@ -42,7 +43,7 @@ class Chat extends BaseComponent {
         super("/pages/chat/chat.html");
     }
 
-    override onInit(): void {
+    override async onInit() {
         console.log("Chat component initialized");
         this.sendButton.onclick = () => this.sendMessage();
         this.chatInput.onkeydown = (e: KeyboardEvent) => {
@@ -257,7 +258,7 @@ class Chat extends BaseComponent {
         console.log("Clients removed");
     };
 
-    openChat(client: IClient) {
+    async openChat(client: IClient) {
 		if (this.chatName.dataset.id === client.id) return ;
 
         this.chatName.textContent = `${client.name}`;
@@ -265,14 +266,31 @@ class Chat extends BaseComponent {
         this.chatName.dataset.socketId = client.socketId;
 		this.chatName.style.cursor = "pointer";
 		this.chatName.onclick = () => routes.navigate(`/profile/${client.id}`);
-        this.chatMessages.innerHTML = "";
-        this.chatInput.value = "";
+		this.chatMessages.innerHTML =  '';
+	
+		const { id: myId } = AppControl.getValidDecodedToken() as { id: string | number };
 
+		const res = await Socket.request('get-chat-history', { targetId: client.id});
+		if (!res.ok)
+			this.chatMessages.innerHTML =  `<h3>${res.message}</h3>`;
+		else {
+			console.log(`chat history from db: ${JSON.stringify(res.message)}`);
+			res.message.forEach((m: any) => {
+				this.addMessage({
+					fromId: m.senderId,
+					fromName: m.senderName ?? client.name,
+					message: m.message
+				}, m.senderId === myId ? "incoming" : "outgoing");
+			});
+		}
+		
 		this.chatHistory.get(client.id)?.forEach((msg) => {
-            this.chatMessages.appendChild(msg);
+			this.chatMessages.appendChild(msg);
         });
+
 		this.hideNotification(client.id);
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+		this.chatInput.value = "";
         console.log("Chat opened");
     }
 
