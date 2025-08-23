@@ -1,5 +1,7 @@
 import * as BABYLON from 'babylonjs';
 
+
+
 export function createBall(scene: BABYLON.Scene): BABYLON.Mesh {
     const ball = BABYLON.MeshBuilder.CreateSphere('ball', { diameter: 1, segments: 16 }, scene);
     const ballMat = new BABYLON.StandardMaterial('ballMat', scene);

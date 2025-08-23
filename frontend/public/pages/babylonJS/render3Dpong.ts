@@ -89,10 +89,7 @@ export class PongRenderer3D {
 
     public drawGame(state: PongState): void {
         if (!this.initialized || !this.ball || !this.scene)
-        {
-            console.warn("3D renderer not fully initialized yet");
             return;
-        }
         drawGame(state, this.ball, this.paddles, this.canvasWidth, this.canvasHeight);
     }
 
@@ -100,6 +97,8 @@ export class PongRenderer3D {
         if (this.engine)
         {
             this.engine.stopRenderLoop();
+            if (this.scene)
+                this.scene.dispose();
             this.engine.dispose();
         }
         this.initialized = false;

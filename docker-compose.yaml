@@ -28,8 +28,58 @@ services:
       - ./frontend/.env
     depends_on:
       - backend
+
+  elasticsearch:
+    build:
+      context: ./elk_stack/elasticsearch
+      args:
+        - ELK_USERNAME=${ELK_USERNAME}
+        - ELK_PASSWORD=${ELK_PASSWORD}
+        - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+        - ES_JAVA_OPTS=${ES_JAVA_OPTS}
+    container_name: transcendence-elasticsearch
+    ports: ["9200:9200", "9300:9300"]
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  logstash:
+    build:
+      context: ./elk_stack/logstash
+      args:
+        - ELK_USERNAME=${ELK_USERNAME}
+        - ELK_PASSWORD=${ELK_PASSWORD}
+        - LS_JAVA_OPTS=${LS_JAVA_OPTS}
+    container_name: transcendence-logstash
+    ports: ["5000:5000", "5001:5001", "9600:9600"]
+    volumes:
+      - logstash-data:/usr/share/logstash/data
+    depends_on:
+      - elasticsearch
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  kibana:
+    build:
+      context: ./elk_stack/kibana
+      args:
+        - ELK_USERNAME=${ELK_USERNAME}
+        - ELK_PASSWORD=${ELK_PASSWORD}
+    container_name: transcendence-kibana
+    ports: ["5601:5601"]
+    depends_on:
+      - elasticsearch
+    networks:
+      - transcendence_net
+    restart: unless-stopped
     
 networks:
   transcendence_net:
     driver: bridge
-    
+  
+volumes:
+  elasticsearch-data:
+  logstash-data:
