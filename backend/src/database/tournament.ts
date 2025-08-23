@@ -259,6 +259,8 @@ export default class TournamentDatabase {
                     	owner.username AS ownerName,
 						t.number_of_players AS numberOfPlayers,
 						t.status,
+						t.current_round AS currentRound,
+						t.number_of_rounds AS maxRound,
                     	winner.username AS winnerName
 				FROM tournaments t
 				LEFT JOIN users winner ON t.winner = winner.id

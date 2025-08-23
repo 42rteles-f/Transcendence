@@ -104,9 +104,6 @@ export class Tournament {
 			this.watcher = null;
 			this.end_date = new Date().toISOString();
 		}
-		// const winner = this.players[0];
-		// if (winner)
-		// 	winner.emit('tournament-end', { winner: winner.data.user.username });
 	}
 
 	private registerGame(game: Pong) {
@@ -150,6 +147,8 @@ export class Tournament {
 			winnerId: this.winner ? this.winner.client.id : null,
 			winnerName: this.winner ? this.winner.client.username : null,
 			participants,
+			currentRound: this.currentRound,
+			maxRound: this.maxRound,
 			games
 		});
 	}

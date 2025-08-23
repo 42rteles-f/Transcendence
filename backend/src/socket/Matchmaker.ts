@@ -156,6 +156,7 @@ class Matchmaker {
 			return ("Tournament already started or finished");
 		targetTournament.joinTournament(client, displayName);
 		return ("ok");
+		// Emit an event to all listening sockets
 	}
 
 	public unsubscribeTournament(client: Client, tournamentId: string) {
@@ -168,6 +169,7 @@ class Matchmaker {
 			return ("Tournament already started or finished");
 		targetTournament.unsubscribeTournament(client);
 		return ("ok");
+		// Emit an event to all listening sockets
 	}
 
 	public cancelTournament(client: Client, tournamentId: string) {
@@ -182,6 +184,7 @@ class Matchmaker {
 			return ("Tournament already started or finished");
 		this.tournaments = this.tournaments.filter(t => t.id !== tournamentId);
 		return ("ok");
+		// Emit an event to all listening sockets
 	}
 
 	public async getTournament(tournamentId: string) {

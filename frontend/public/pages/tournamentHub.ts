@@ -2,27 +2,15 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { showToast } from "./toastNotification";
 import { routes } from '../../src/routes';
-import { JoinTournamentModal } from "../components/joinTournamentModal";
-import Api from '../../src/api/Api';
+import { TournamentGameCell } from '../components/tournamentGameCell';
+import { TournamentMenu } from '../components/tournamentMenu';
 import Socket from '../../src/Socket';
 
 class TournamentHubPage extends BaseComponent {
-    private tournamentId!: string | null;
-    private tournament: any;
-    private userId!: number | string;
-
-    private tournamentName!: HTMLElement;
-    private status!: HTMLElement;
-    private playersCount!: HTMLElement;
-    // private participantsList!: HTMLElement;
-    // private startBtn!: HTMLButtonElement;
-    private joinBtn!: HTMLButtonElement;
-    private unsubscribeBtn!: HTMLButtonElement;
-    private cancelBtn!: HTMLButtonElement;
-
-    private ownerName?: HTMLElement;
-    private winnerName?: HTMLElement;
-    private startDate?: HTMLElement;
+    private tournamentId!: 		string | null;
+    private tournament: 		any;
+	private tournamentMenu!:	HTMLButtonElement;
+    private gamesBrackets!: 	HTMLElement;
 
     constructor(tournamentId: string | null) {
         super("/pages/tournamentHub.html");
@@ -34,15 +22,11 @@ class TournamentHubPage extends BaseComponent {
             routes.navigate("/404");
             return;
         }
-        const { id } = AppControl.getValidDecodedToken() as { id: number | string };
-        this.userId = Number(id);
 
         await this.loadTournament();
-
-        // this.startBtn.addEventListener("click", () => this.startTournament());
-        this.joinBtn.addEventListener("click", () => this.joinTournament());
-        this.unsubscribeBtn.addEventListener("click", () => this.unsubscribeTournament());
-        this.cancelBtn.addEventListener("click", () => this.cancelTournament());
+		this.tournamentMenu.addEventListener('click', () => {
+			this.appendChild(new TournamentMenu(this.tournament));
+		})
     }
 
     async loadTournament() {
@@ -57,69 +41,7 @@ class TournamentHubPage extends BaseComponent {
 			}
             this.tournament = res.message;
 
-            this.tournamentName.textContent = this.tournament.name;
-
-            this.status.textContent = this.tournament.status;
-            this.status.className = "font-bold px-3 py-1 rounded transition";
-            if (this.tournament.status === "waiting")
-                this.status.classList.add("bg-yellow-200", "text-yellow-800");
-            else if (this.tournament.status === "finished")
-                this.status.classList.add("bg-green-200", "text-green-800");
-            else if (this.tournament.status === "in progress" || this.tournament.status === "active")
-                this.status.classList.add("bg-blue-200", "text-blue-800");
-            else
-                this.status.classList.add("bg-gray-200", "text-gray-800");
-
-            this.playersCount.textContent = `${this.tournament.participants.length}/${this.tournament.numberOfPlayers}`;
-
-            if (!this.ownerName) {
-                this.ownerName = document.createElement("div");
-                this.ownerName.className = "mb-2";
-                this.status.parentElement?.parentElement?.insertAdjacentElement("afterend", this.ownerName);
-            }
-            this.ownerName.innerHTML = `<span class="font-semibold">Owner:</span> <span class="text-blue-700 font-bold cursor-pointer hover:underline" style="cursor:pointer">${this.tournament.ownerName}</span>`;
-            this.ownerName.querySelector("span.text-blue-700")?.addEventListener("click", () => {
-                routes.navigate(`/profile/${this.tournament.ownerId}`);
-            });
-
-            if (this.tournament.status === "finished" && this.tournament.winnerName) {
-                if (!this.winnerName) {
-                    this.winnerName = document.createElement("div");
-                    this.winnerName.className = "mb-2";
-                    this.ownerName.insertAdjacentElement("afterend", this.winnerName);
-                }
-                this.winnerName.innerHTML = `<span class="font-semibold">Winner:</span> <span class="text-green-700 font-bold cursor-pointer hover:underline" style="cursor:pointer">${this.tournament.winnerName}</span>`;
-                this.winnerName.querySelector("span.text-green-700")?.addEventListener("click", () => {
-                    routes.navigate(`/profile/${this.tournament.winnerId}`);
-                });
-            } else if (this.winnerName) {
-                this.winnerName.remove();
-            }
-
-            if (!this.startDate) {
-                this.startDate = document.createElement("div");
-                this.startDate.className = "mb-2";
-                this.ownerName.insertAdjacentElement("afterend", this.startDate);
-            }
-            this.startDate.innerHTML = `<span class="font-semibold">Start Date:</span> <span>
-				${this.tournament.startDate ? new Date(this.tournament.startDate).toLocaleString() : "not started yet"}
-			</span>`;
-
-            // this.participantsList.innerHTML = "";
-            // for (const p of this.tournament.participants) {
-            //     const div = document.createElement("div");
-            //     div.className = "flex items-center gap-2 bg-gray-100 hover:bg-blue-100 rounded-lg px-3 py-2 cursor-pointer shadow-sm transition";
-            //     div.innerHTML = `
-			// 					<span class="font-semibold text-gray-700">${p.username}</span>
-			// 					<span class="text-sm text-gray-500">${p.displayName}</span>
-			// 					`;
-            //     div.addEventListener("click", () => {
-            //         routes.navigate(`/profile/${p.id}`);
-            //     });
-            //     this.participantsList.appendChild(div);
-            // }
-
-            this.updateButtons();
+			this.renderBracket();
         } catch (e) {
 			console.log("Error loading tournament:", e);
             showToast("Failed to load tournament", 3000, "error");
@@ -127,79 +49,23 @@ class TournamentHubPage extends BaseComponent {
         }
     }
 
-    updateButtons() {
-        const isCreator = this.userId === Number(this.tournament.ownerId);
-		// console.log(`is Creator: ${this.userId === this.tournament.ownerId} | userId: ${this.userId} and typeof: ${typeof(this.userId)} |
-		// ownerId: ${this.tournament.ownerId} and type: ${typeof(this.tournament.ownerId)}`);
-        const isSubscribed = this.tournament.participants.some((p: any) => (Number(p.id) === this.userId));
-        const isActive = this.tournament.status === "waiting" || this.tournament.status === "active";
-		const isFull = this.tournament.participants.length >= this.tournament.numberOfPlayers;
-
-        // this.startBtn.classList.toggle("hidden", !(isCreator && isActive));
-        this.cancelBtn.classList.toggle("hidden", !(isCreator && isActive));
-        this.joinBtn.classList.toggle("hidden", isCreator || isSubscribed || !isActive);
-		this.joinBtn.disabled = isFull;
-		this.joinBtn.style.cursor = isFull ? "not-allowed" : "";
-		this.joinBtn.style.opacity = isFull ? "0.5" : "";
-        this.unsubscribeBtn.classList.toggle("hidden", isCreator || !isSubscribed || !isActive);
-    }
-
-    // async startTournament() {
-	// 	if (!this.tournamentId) return;
-	// 	try {
-	// 		const res = await Api.startTournament(this.tournamentId);
-	// 		showToast(res || "Tournament started successfully", 3000, "success");
-	// 		this.loadTournament();
-	// 	} catch (e: Error | any) {
-	// 		showToast(e.message || "Failed to start tournament", 3000, "error");
-	// 	}
-    // }
-
-    async joinTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const modal = new JoinTournamentModal(this.tournamentId);
-			this.appendChild(modal);
-
-			const onModalClosed = () => {
-				this.loadTournament();
-				this.removeEventListener("modal-closed", onModalClosed);
-			};
-			modal.addEventListener("modal-closed", onModalClosed);
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to join tournament", 3000, "error");
-		}
-    }
-
-    async unsubscribeTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const res = await Socket.request("tournament-unsubscribe", { tournamentId: this.tournamentId});
-			if (!res.ok) {
-				showToast(res.message || "Failed to unsubscribe from tournament", 3000, "error");
-				return ;
+	renderBracket() {
+		let totalGames = Number(this.tournament.numberOfPlayers);
+		let gamesPerRound = totalGames / 2; 
+		const lenghtOfFirstRow = Number(this.tournament.numberOfPlayers) / 2;
+		for (let i = 1; i <= Number(this.tournament.maxRound); i++) {
+			const gamesOfRound = this.tournament.games.filter((g: any) => Number(g.round) === i);
+			const round = document.createElement("div");
+			round.classList.add("round", "w-[45rem]", "max-w-[1000px]", "h-[10rem]", "max-h-[500px]", "round-[0.5rem]", "flex", "justify-center", "items-center", "gap-[0.5rem]");
+			for (let j = 0; j < gamesPerRound; j++) {
+				const gameCell = new TournamentGameCell(gamesOfRound[j])
+				gameCell.style.flex = `0 1 ${lenghtOfFirstRow}%`;
+				round.appendChild(gameCell);
 			}
-			showToast("Unsubscribed from tournament successfully", 3000, "success");
-			this.loadTournament();
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to unsubscribe from tournament", 3000, "error");
+			gamesPerRound /= 2;
+			this.gamesBrackets.insertAdjacentElement('afterend', round);
 		}
-    }
-
-    async cancelTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const res = await Socket.request("tournament-cancel", { tournamentId: this.tournamentId });
-			if (!res.ok) {
-				showToast(res.message || "Failed to cancel tournament", 3000, "error");
-				return ;
-			}
-			showToast("Tournament cancelled successfully", 3000, "success");
-			routes.navigate("/tournaments");
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to cancel tournament", 3000, "error");
-		}
-    }
+	}
 }
 
 customElements.define("tournament-hub-page", TournamentHubPage);

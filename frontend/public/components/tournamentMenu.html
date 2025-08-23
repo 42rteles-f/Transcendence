@@ -1,0 +1,43 @@
+<div class='absolute w-[100vw] h-[100vh] top-0 left-0 flex justify-center items-center' style='background-color: rgba(0, 0, 0, 0.6);'>
+	<div class="!bg-white rounded-2xl shadow-2xl p-8 w-full flex flex-col items-center max-w-[500px] relative">
+		<button data-ref="closeBtn" class='border-red-500 border-solid border text-red-500 absolute top-2.5 right-2.5 outline-none'>
+			close
+		</button>
+		<h2 class="text-3xl font-bold text-center !text-gray-800 mb-4" data-ref="tournamentName"></h2>
+		<div class="mb-4 mt-4">
+			<div class='mb-2'>
+				<span class="font-semibold">Owner:</span>
+				<span data-ref="ownerName" class="!text-blue-700 !font-bold cursor-pointer hover:underline" style="cursor:pointer"></span>
+			</div>
+			<div class='mb-2'>
+				<span class="font-semibold">Winner:</span>
+				<span data-ref="winnerName" class="!text-green-700 !font-bold cursor-pointer hover:underline" style="cursor:pointer"></span>
+			</div>
+		<div>
+			<span class="font-semibold">Status:</span>
+			<span data-ref="status" class="font-bold px-3 py-1 rounded transition">
+			</span>
+		</div>
+		<div>
+			<span class="font-semibold">start date:</span>
+			<span data-ref="startDate" class="font-bold px-3 py-1 rounded transition"></span>
+		</div>
+		<div>
+			<span class="font-semibold">Players:</span>
+			<span data-ref="playersCount"></span>
+		</div>
+		<div>
+			<span class="font-semibold">Round:</span>
+			<span data-ref="roundsCount"></span>
+		</div>
+		</div>
+		<div class="flex flex-col gap-3 w-full max-w-xs">
+		<button data-ref="joinBtn" class="hidden !bg-green-600 !hover:bg-green-700 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Join Tournament</button>
+		<button data-ref="unsubscribeBtn" class="hidden !bg-yellow-500 !hover:bg-yellow-600 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Unsubscribe</button>
+		<button data-ref="cancelBtn" class="hidden !bg-red-600 !hover:bg-red-700 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Cancel Tournament</button>
+		</div>
+		<div data-ref="participantsList" class='mt-6 flex flex-nowrap flex-col gap-2 ! w-[100%]'>
+			<span class='font-semibold'>Participants:</span>
+		</div>
+	</div>
+</div>

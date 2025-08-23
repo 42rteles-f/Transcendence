@@ -5,7 +5,7 @@ import { routes } from './routes';
 class Socket {
 	private	static socket:			Pointer<SocketIo> = null;
 
-	static init(): boolean {
+	static init() {
 		if (this.socket) {
 			console.warn("Socket already created");
 			return true;
