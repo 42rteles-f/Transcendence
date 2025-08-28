@@ -24,8 +24,9 @@ class Pong extends GameSocket {
 	private status: 	"waiting" | "playing" | "finished" | "error";
 	public	winner:		Pointer<PongPlayer> = null;
 
-	constructor(clients: Socket[]) {
-		super(clients);
+	// Added optional room name
+	constructor(clients: Socket[], roomName?: string) {
+		super(clients, roomName);
 		if (clients.length !== 2) {
 			this.status = 'error';
 			console.error("Pong game requires exactly 2 players.");
@@ -33,7 +34,7 @@ class Pong extends GameSocket {
 		}
 		clients.forEach((client, index) => {
 			this.players.push({
-				id: client.id,
+				id: client.data.user.id.toString(),  // Use database user ID //	client.id,
 				name: client.data.user.username,
 				paddle: new Paddle(
 					index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH,

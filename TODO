@@ -1,0 +1,20 @@
+Google client (mine at least) never has the socket initialized when I try to acces tournaments, have to refresh
+
+frontend console error:
+    Socket not initialized
+    3Socket.ts:75 Socket not initialized
+
+Toast error:
+    Cannot distructure propperty 'ok'
+    '(intermediate vlaue)' as undefined
+
+Backend:
+    does not recive anything
+
+
+TODO:
+- Fix google sign in error
+- Fix /pong/tournament bug of having the tournamentHub above the game
+- Properly handle no ongoing tournament
+- Make db calls after torunament is created, status and finishes
+- Check for edge cases

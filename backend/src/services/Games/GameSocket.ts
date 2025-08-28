@@ -20,6 +20,7 @@ abstract class GameSocket {
 
     constructor(
         clients: Socket[],
+		roomName?: string
 	) {
 		this.tickInterval = 1000 / 60;
 		this.io = clients[0].nsp;
@@ -31,14 +32,20 @@ abstract class GameSocket {
 				this.handleDisconnect(client);
 			});
 		})
-		this.initRoom();
+		this.initRoom(roomName);
     }
 
-	private initRoom() {
-		const ids = Array.from(this.clients.keys()).join('-');
-		const date = `-${new Date().toISOString().split('T')[0]}`;
-		this.room = `pong-${ids}-${date}`;
-
+	// Rooms use Socket IDs for navigation?
+	// Players should only receive events from their own room
+	private initRoom(roomName?: string) {
+		if (roomName)
+			this.room = roomName
+		else
+		{
+			const ids = Array.from(this.clients.keys()).join('-');
+			const date = `-${new Date().toISOString().split('T')[0]}`;
+			this.room = `pong-${ids}-${date}`;
+		}
 		this.clients.forEach(client => {
 			client.join(this.room!);
 		});

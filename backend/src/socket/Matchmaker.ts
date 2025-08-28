@@ -6,6 +6,8 @@ import SocketManager from './SocketManager';
 import { randomUUID } from 'node:crypto';
 import { dbLite } from '..';
 
+
+
 const INTERVAL_MATCHMAKING = 3000;
 
 interface IInvite {
@@ -142,7 +144,8 @@ class Matchmaker {
 	}
 
 	public joinTournament(client: Client, displayName: string, tournamentId: string) {
-		// To be checked with Rubens
+		// TODO: To be checked with Rubens
+
 		const targetTournament = this.tournaments.filter((t) => t.id == tournamentId)[0];
 		if (!targetTournament)
 			return ("Tournament not found");
@@ -156,10 +159,9 @@ class Matchmaker {
 			return ("Tournament already started or finished");
 		targetTournament.joinTournament(client, displayName);
 		return ("ok");
-		// Emit an event to all listening sockets
 	}
 
-	public unsubscribeTournament(client: Client, tournamentId: string) {
+	public leaveTournament(client: Client, tournamentId: string) {
 		const targetTournament = this.tournaments.filter(t => t.id === tournamentId)[0];
 		if (!targetTournament)
 			return ("Tournament not found");
@@ -169,7 +171,6 @@ class Matchmaker {
 			return ("Tournament already started or finished");
 		targetTournament.unsubscribeTournament(client);
 		return ("ok");
-		// Emit an event to all listening sockets
 	}
 
 	public cancelTournament(client: Client, tournamentId: string) {

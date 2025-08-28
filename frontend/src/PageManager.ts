@@ -43,7 +43,7 @@ export class PageManager {
 			return ;
 		}
 
-		console.log(`new ${name}`);
+		console.log(`new page ${name}`);
 		this.currentPage.forEach((page) => {
 			page.remove();
 		});
@@ -58,7 +58,7 @@ export class PageManager {
 	}
 
 	load(name: string, param?: string[] | null): Boolean {
-		console.log(`load ${name}`);
+		console.log(`load page: ${name}`);
 
         if (!this.pageMap.has(name)) {
 			console.log(`PageManager: Component ${name} does not exist`);

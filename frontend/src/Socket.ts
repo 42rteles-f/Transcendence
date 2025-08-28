@@ -7,7 +7,7 @@ class Socket {
 
 	static init() {
 		if (this.socket) {
-			console.warn("Socket already created");
+			console.warn("Socket already created"); // TODO: Comment out
 			return true;
 		}
 
@@ -75,7 +75,7 @@ class Socket {
 			console.log("Socket not initialized");
 			return ;
 		}
-		return (await this.socket.emitWithAck(event, ...args));
+		return (await this.socket.emitWithAck(event, ...args));		
 	}
 
 	static	disconnect(): void {

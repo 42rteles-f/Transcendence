@@ -44,36 +44,101 @@ export class Tournament {
 		this.maxRound = Math.log2(numberOfPlayers);
 	}
 
-	private startRound() {
-		this.start_date = new Date().toISOString();
-		if (this.maxRound < this.currentRound) {
-			return (this.endTournament());
-		}
-		this.games = [];
-		this.currentRound++;
-		for (let i = 0; i < this.qualified.length; i += 2) {
-			const game: ITournamentGame = {
-				player1: this.qualified[i],
-				player2: this.qualified[i + 1],
-				pong: new Pong([this.qualified[i].client.socket, this.qualified[i + 1].client.socket]),
-				round: this.currentRound
-			}
-			this.games.push(game);
-		}
+	private startRound()																							// Creates and emits new round pong games to players														
+	{
+		this.initializeRound();
+		this.createRoundGames();
 	}
-	
-	public gamesCheck() {
-		if (this.games.some(game => game.pong.winner === null)) {
-			return ;
-		}
-	
-		this.qualified = this.qualified.filter(player => !this.games.some(game => game.pong.winner!.id === player.client.id));
 
-		if (this.qualified.length > 1)
-			this.startRound();
-		else
-			this.endTournament();
+	private initializeRound()																						// Inits tournament and advances round
+	{
+		if (!this.start_date)
+		{
+			this.start_date = new Date().toISOString();
+			this.status = 'active';
+		}
+		this.currentRound++;
 	}
+
+	private createRoundGames()																						// Creates new Pong games for the round
+	{
+		for (let i = 0; i < this.qualified.length; i += 2) 
+		{
+			const gameId = `tournament-${this.id}-round${this.currentRound}-game${i/2}`;
+			const game = this.createGame(this.qualified[i], this.qualified[i + 1], gameId);
+			this.games.push(game);
+			this.emitGameStartEvents(game, gameId);
+		}
+	}
+
+	private createGame(player1: ITournamentPlayer, player2: ITournamentPlayer, gameId: string): ITournamentGame		// Creates Game with qualified players
+	{
+		const game: ITournamentGame =
+		{
+			player1,
+			player2,
+			pong: new Pong([player1.client.socket, player2.client.socket]),
+			round: this.currentRound
+		};
+		// console.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);
+		return game;
+	}
+
+	private emitGameStartEvents(game: ITournamentGame, gameId: string)												// Emits game to qualified players
+	{
+		const gameStartData = { tournamentId: this.id, round: this.currentRound, gameId: gameId };
+		game.player1.client.socket.emit("tournament-game-start", { ...gameStartData, playerId: game.player1.client.id });
+		game.player2.client.socket.emit("tournament-game-start", { ...gameStartData, playerId: game.player2.client.id });
+	}
+
+
+	public gamesCheck() {																							// Checks games state, creates and initializes new rounds and calls when tournament is finished
+		const currentRoundGames = this.checkRoundCompletion();
+		if (!currentRoundGames)
+			return;
+		this.processRoundResults(currentRoundGames);
+		this.handleTournamentProgression();
+	}
+
+	private checkRoundCompletion(): ITournamentGame[] | null														// Check if all games in the round are finished
+	{
+		const currentRoundGames = this.games.filter(game => game.round === this.currentRound);
+		if (currentRoundGames.some(game => game.pong.winner === null))		//  console.log(`Tournament ${this.id}: Round ${this.currentRound} - waiting for games to finish`);
+			return null;
+		// console.log(`Tournament ${this.id}: Round ${this.currentRound} complete - processing winners`);
+		return currentRoundGames;
+	}
+
+	private processRoundResults(currentRoundGames: ITournamentGame[])												// Processes games results aftrer all rounds are finished
+	{
+		const roundWinners: ITournamentPlayer[] = [];
+		for (let i = 0; i < currentRoundGames.length; i++) {
+			const game = currentRoundGames[i];
+			if (game.pong.winner) {
+				const winnerPlayer = [game.player1, game.player2].find(player => player.client.id === game.pong.winner!.id);
+				const loserPlayer = [game.player1, game.player2].find(player => player.client.id !== game.pong.winner!.id);
+				if (winnerPlayer)
+					roundWinners.push(winnerPlayer);
+				if (loserPlayer)
+					loserPlayer.client.socket.emit("tournament-eliminated", {tournamentId: this.id});
+			}
+		}
+		this.qualified = roundWinners;
+	}
+
+	private handleTournamentProgression()																			// Starts new round or finishes tournament
+	{
+		//	console.log(`Round ${this.currentRound} winners: ${this.qualified.map(p => p.displayName).join(', ')}`);
+		if (this.qualified.length > 1)		//	console.log(`Starting next round (number ${this.currentRound + 1})`);
+			this.startRound();
+		else if (this.qualified.length === 1)
+		{
+			console.log(`Tournament winner: ${this.qualified[0].displayName}`);
+			this.winner = this.qualified[0];
+			this.endTournament();
+		}
+	}
+
 
 	public startWatch() {
 		this.watcher = setInterval(() => {
@@ -102,8 +167,13 @@ export class Tournament {
 		if (this.watcher) {
 			clearInterval(this.watcher);
 			this.watcher = null;
-			this.end_date = new Date().toISOString();
 		}
+
+		this.winner?.client.socket.emit("tournament-completed", { tournamentId: this.id, result: "winner" });
+
+		this.end_date = new Date().toISOString();
+		this.status = "finished";
+		console.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
 	}
 
 	private registerGame(game: Pong) {

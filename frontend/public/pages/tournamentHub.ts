@@ -7,47 +7,111 @@ import { TournamentMenu } from '../components/tournamentMenu';
 import Socket from '../../src/Socket';
 
 class TournamentHubPage extends BaseComponent {
-    private tournamentId!: 		string | null;
-    private tournament: 		any;
+	private tournamentId!: 		string | null;
+	private tournament: 		any;
 	private tournamentMenu!:	HTMLButtonElement;
-    private gamesBrackets!: 	HTMLElement;
+	private gamesBrackets!: 	HTMLElement;
+	private updateHandler:		any;
+	private gameStartHandler:	any
+	private userId!:			number;
 
-    constructor(tournamentId: string | null) {
-        super("/pages/tournamentHub.html");
-        this.tournamentId = tournamentId;
-    }
+	constructor(tournamentId: string | null) {
+		super("/pages/tournamentHub.html");
+		this.tournamentId = tournamentId;
+	}
 
-    async onInit() {
-        if (!this.tournamentId) {
-            routes.navigate("/404");
-            return;
-        }
+	async onInit() {
+		const { id } = AppControl.getValidDecodedToken() as { id: number | string };
+		this.userId = Number(id);
 
-        await this.loadTournament();
+		if (!this.tournamentId) {
+			routes.navigate("/404");
+			return;
+		}
+		
+		await this.loadTournament();
+		this.subscribeToUpdates();													// Added to recive all the updates from frontend (event listeners)
 		this.tournamentMenu.addEventListener('click', () => {
 			this.appendChild(new TournamentMenu(this.tournament));
 		})
-    }
+	}
 
-    async loadTournament() {
-        try {
-            if (!this.tournamentId)
-                return;
+	subscribeToUpdates() {															// Main update handler, takes care of updating tournament view, starting and redirecting players to tournament
+		this.updateHandler = (data: any) =>
+		{
+			//  console.log("Tournament update received:", data);
+			if (data.exists === false || data.action === "cancel")
+			{
+				showToast("Tournament has been cancelled", 3000, "info");
+				routes.navigate("/tournaments");
+				return;
+			}
+			this.tournament = data;
+			this.refreshDisplay(data.action);
+		};
+
+		this.gameStartHandler = (data: any) => {
+			if (Number(data.playerId) === Number(this.userId))
+			{
+				sessionStorage.setItem('tournamentGame', JSON.stringify({
+					gameId: data.gameId,
+					tournamentId: data.tournamentId
+				}));
+				routes.navigate(`/pong/tournament`);
+			} else {														// TODO: Remove, not usefull
+				console.log("A tournament game started (spectating)");
+				showToast("You're spectating XY game", 2000, "info");
+			}
+		};
+
+		Socket.request("watch-tournament", { tournamentId: this.tournamentId });
+		Socket.addEventListener("tournament-updated", this.updateHandler);			// Recives updates from the backend to update page whenever there is a change (like a player join)
+		Socket.addEventListener("tournament-game-start", this.gameStartHandler);	// Recives updats for when a tournament has began and sent its first game-start //		(All the players should be preaviusly redirected to /pong/tournament and the event should go only there but wtv)
+	}																				
+
+	refreshDisplay(action: string)													// Updates frontend state and informative mesage
+	{
+		const rounds = this.querySelectorAll('.round');
+		rounds.forEach(round => round.remove());
+		this.renderBracket();
+		const messages: { [key: string]: string } =
+		{
+			'join': 'A new player joined the tournament!',
+			'leave': 'A player left the tournament',
+			'update': 'Tournament updated',
+			'cancel': 'Tournament cancelled'
+		};
+		showToast(messages[action] || 'Tournament updated', 2000, "info");
+	}
+
+	disconnectedCallback()															// Called onDestroy
+	{
+		if (this.updateHandler)
+		{
+			Socket.removeEventListener("tournament-updated", this.updateHandler);
+			Socket.request("stop-watching-tournament", { tournamentId: this.tournamentId });
+		}
+	}
+
+	async loadTournament() {
+		try {
+			if (!this.tournamentId)
+				return;
 			const res = await Socket.request("get-tournament", { tournamentId: this.tournamentId });
 			if (res.ok !== true) {
 				showToast("could not load tournament", 2000, "error");
 				routes.navigate("/404");
 				return ;
 			}
-            this.tournament = res.message;
+			this.tournament = res.message;
 
 			this.renderBracket();
-        } catch (e) {
+		} catch (e) {
 			console.log("Error loading tournament:", e);
-            showToast("Failed to load tournament", 3000, "error");
+			showToast("Failed to load tournament", 3000, "error");
 			routes.navigate("/404");
-        }
-    }
+		}
+	}
 
 	renderBracket() {
 		let totalGames = Number(this.tournament.numberOfPlayers);
