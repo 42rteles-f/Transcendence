@@ -1,5 +1,6 @@
 import { Socket } from "socket.io";
 import SocketManager from "./SocketManager";
+import Pong from "../services/Games/PongGame/Pong";
 
 interface IUserProfile {
 	id?: string;
@@ -17,6 +18,7 @@ class Client {
 	public subscriptions: string[] = [];
 	public currentGameRoom?: string;
 	public blockedList: string[] = [];
+	public pong?: Pong;
 	private server: SocketManager;
 
 	constructor(manager: SocketManager, socket: Socket, info: IUserProfile) {

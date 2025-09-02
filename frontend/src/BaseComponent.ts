@@ -46,21 +46,3 @@ export class BaseComponent extends HTMLElement {
 }
 
 customElements.define("base-component", BaseComponent);
-
-// type EventInfo = {
-// 	id: string;
-// 	type: string;
-// 	handler: EventListener;
-// };
-// addEvents(...events :EventInfo[]) {
-	// 	if (!events.length) return ;
-
-	// 	this.eventInfo.push(...events);
-    //     events.forEach((event) => {
-	// 		this.getElementById(event.id)?.addEventListener(event.type, event.handler)
-	// 	});
-    // }
-// let element :HTMLElement | null;
-// element = this.getElementById(event.id);
-// if (!element) return ;
-// element.addEventListener(event.type, event.handler);

@@ -34,7 +34,6 @@ class SocketManager {
             },
         });
         this.userDatabase = new UserDatabase(dbLite);
-        console.log(`db connected: ${dbLite}`);
         this.matchmaker = new Matchmaker(this);
         this.setupConnection();
     }
@@ -55,17 +54,19 @@ class SocketManager {
     }
 
     async getUserData(id: number): Promise<IUserProfile | null> {
-        return this.userDatabase!.profile(id)
-            .then((result) => {
-                if (result && result.reply) {
-                    return result.reply as IUserProfile;
-                }
-                return null;
-            })
-            .catch((err) => {
-                console.error(`Error fetching user data: ${err.message}`);
-                return null;
-            });
+        return (
+			this.userDatabase!.profile(id)
+				.then((result) => {
+					if (result && result.reply) {
+						return result.reply as IUserProfile;
+					}
+					return null;
+				})
+				.catch((err) => {
+					console.error(`Error fetching user data: ${err.message}`);
+					return null;
+				})
+		);
     }
 
     private setupConnection() {
@@ -197,7 +198,6 @@ class SocketManager {
 			return target.basicInfo();
 		})
 		.filter(Boolean);
-		console.log(`Online clients: ${onlineClients}`);
 		onlineClients.unshift({ id: "system", socketId: "-1", name: "server"});
 
 		client.socket.emit("client-arrival", onlineClients);

@@ -1,6 +1,5 @@
 import { Pointer } from './PageManager';
 import { io, Socket as SocketIo } from 'socket.io-client';
-import { routes } from './routes';
 
 class Socket {
 	private	static socket:			Pointer<SocketIo> = null;
