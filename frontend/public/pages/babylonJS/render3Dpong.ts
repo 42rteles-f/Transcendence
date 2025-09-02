@@ -39,12 +39,14 @@ export class PongRenderer3D {
     constructor(canvasId: string, canvasWidth: number, canvasHeight: number) {
         const canvasElement = document.getElementById(canvasId) as HTMLCanvasElement;
         if (!canvasElement)
-            console.error(`Canvas with id "${canvasId}" not found`);
+            return ;
+            //console.error(`Canvas with id "${canvasId}" not found`);
         this.canvas = canvasElement;
 
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
-        console.log(`Canvas dimensions set to: ${canvasWidth}x${canvasHeight}`);
+        if (canvasWidth && canvasHeight)
+            console.log(`Canvas dimensions set to: ${canvasWidth}x${canvasHeight}`);
         this.initializeBabylon();
     }
 

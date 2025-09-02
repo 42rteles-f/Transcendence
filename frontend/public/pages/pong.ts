@@ -51,16 +51,29 @@ class PongGame extends BaseComponent {
 			
 	}
 
-	isUserPlayingTournament()
+	/*isUserPlayingTournament()
 	{
 		const gameInfo = sessionStorage.getItem('tournamentGame');
-		if (gameInfo) 												// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
+		if (gameInfo) 												
 			sessionStorage.removeItem('tournamentGame');
 		else {
 			console.log("No tournament game found in session");
 			routes.navigate("/tournaments");
 			return;
 		}
+	}*/
+
+	isUserPlayingTournament() {
+		const gameInfo = sessionStorage.getItem('tournamentGame');					// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
+		if (!gameInfo) {
+			console.log("No tournament game found in session");
+			
+			setTimeout(() => {
+				routes.navigate("/tournaments");
+			}, 0);
+			return false;  
+		}
+		return true; 
 	}
 
 	onInit() {

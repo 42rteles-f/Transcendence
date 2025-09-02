@@ -7,7 +7,7 @@ import { showToast } from './toastNotification';
 console.log("executing LoginPage.ts");
 
 declare global {
-    interface Window { handleGoogleSignIn: (response: any) => void }
+	interface Window { handleGoogleSignIn: (response: any) => void }
 }
 
 class LoginPage extends BaseComponent {
@@ -28,7 +28,7 @@ class LoginPage extends BaseComponent {
 			try {
 				if (!browserWindow._googleIdInitialized) {
 					browserWindow.google.accounts.id.initialize({
-						client_id: "334758923868-9e7455i9lhaneut152ld1auenv7srtpb.apps.googleusercontent.com",
+						client_id: "543388438939-2jqn9mnmh9esecv7nljof5aps6adq3ps.apps.googleusercontent.com",
 						callback: window.handleGoogleSignIn,
 					});
 					browserWindow._googleIdInitialized = true;
@@ -41,27 +41,20 @@ class LoginPage extends BaseComponent {
 						width: 390,
 					}
 				);
-			} catch (error) {
-
-			}
-    }
+			} catch (error) {}
+		}
 	}
 
 	login(e: Event) {
 		e.preventDefault();
 
-		Api.login(
-			this.userInput.value.trim(),
-			this.passInput.value.trim()
-		)
+		Api.login( this.userInput.value.trim(), this.passInput.value.trim() )
 		.then(() => {
 			showToast("Login successful!", 2000, "success");
 			Socket.init();
 			routes.navigate("/home");
 		})
-		.catch((error) => {
-			showToast(error.message, 3000, "error");
-		});
+		.catch((error) => { showToast(error.message, 3000, "error"); });
 	}
 
 	createAccountClicked(e: Event) {
@@ -72,19 +65,21 @@ class LoginPage extends BaseComponent {
 
 window.handleGoogleSignIn = async (response: any) => {
 	try {
-	const res = await fetch(`${import.meta.env.VITE_API_URL}auth/google`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json"},
-			body: JSON.stringify({ credential: response.credential })
-		});
+		const res = await fetch(`${import.meta.env.VITE_API_URL}auth/google`, { method: "POST", headers: { "Content-Type": "application/json"}, body: JSON.stringify({ credential: response.credential })});
 		const data = await res.json();
 		if (res.ok) {
 			localStorage.setItem("authToken", data.token);
 			showToast("Login successful with Google!", 2000, "success");
+			Socket.init();
+
+			const loginPage = document.querySelector('login-page') as any;
+			if (loginPage && loginPage.cleanupErrorSuppression)
+				loginPage.cleanupErrorSuppression();
+
 			routes.navigate("/home");
-		} else {
-			showToast(data.message || "Google login failed", 3000, "error");
 		}
+		else
+			showToast(data.message || "Google login failed", 3000, "error");
 	} catch (error) {
 		showToast("An error occurred during Google login", 3000, "error");
 	}
