@@ -12,7 +12,7 @@ class Navbar extends BaseComponent {
 	private ticTacToeButton!: HTMLButtonElement;
 	private tournamentsButton!: HTMLButtonElement;
 	private localPlayButton!: HTMLButtonElement;
-	private tournamentButton!: HTMLButtonElement;
+	//private tournamentButton!: HTMLButtonElement;
 
 	constructor() {
 		super("/pages/navbar.html");
@@ -25,7 +25,7 @@ class Navbar extends BaseComponent {
 		this.tournamentsButton.onclick = () => routes.navigate("/tournaments");
 		this.pongButton.onclick = () => routes.navigate("/pong");
 		this.localPlayButton.onclick = () => routes.navigate("/pong/local-play");
-		this.tournamentButton.onclick = () => routes.navigate("/pong/tournament");
+		//this.tournamentButton.onclick = () => routes.navigate("/pong/tournament");
 	}
 }
 

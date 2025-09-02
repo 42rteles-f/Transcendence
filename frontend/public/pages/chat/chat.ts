@@ -1,3 +1,4 @@
+import { AppControl } from '../../../src/AppControl';
 import { BaseComponent } from "../../../src/BaseComponent";
 import { routes } from "../../../src/routes";
 import Socket from "../../../src/Socket";
@@ -25,89 +26,89 @@ interface IServerError {
 }
 
 class Chat extends BaseComponent {
-    private chatMessages!:	HTMLDivElement;
-    private chatInput!:		HTMLInputElement;
-    private sendButton!:	HTMLButtonElement;
-    private clientList!:	HTMLUListElement;
-    private chatName!:		HTMLDivElement;
+	private chatMessages!:	HTMLDivElement;
+	private chatInput!:		HTMLInputElement;
+	private sendButton!:	HTMLButtonElement;
+	private clientList!:	HTMLUListElement;
+	private chatName!:		HTMLDivElement;
 	
-    private chatHistory: Map<string, HTMLDivElement[]> = new Map();
+	private chatHistory: Map<string, HTMLDivElement[]> = new Map();
 	private inviteButtons:	Map<string, HTMLButtonElement> = new Map();
 
 	private systemMessages: string[] = ["invite", "room", "error"];
 
-    public messageLimit: number = 5;
+	public messageLimit: number = 5;
 
-    constructor() {
-        super("/pages/chat/chat.html");
-    }
+	constructor() {
+		super("/pages/chat/chat.html");
+	}
 
-    override onInit(): void {
-        console.log("Chat component initialized");
-        this.sendButton.onclick = () => this.sendMessage();
-        this.chatInput.onkeydown = (e: KeyboardEvent) => {
-            if (e.key === "Enter") this.sendMessage();
-        };
-        Socket.init();
-        Socket.notifyEventListener("client-arrival", this.addClients);
-        Socket.addEventListener("chat-message", this.addMessage);
-        Socket.addEventListener("client-departure", this.removeClient);
-        Socket.addEventListener("disconnect", this.disconnect);
-    }
+	override async onInit() {
+		console.log("Chat component initialized");
+		this.sendButton.onclick = () => this.sendMessage();
+		this.chatInput.onkeydown = (e: KeyboardEvent) => {
+			if (e.key === "Enter") this.sendMessage();
+		};
+		
+		Socket.notifyEventListener("client-arrival", this.addClients);
+		Socket.addEventListener("chat-message", this.addMessage);
+		Socket.addEventListener("client-departure", this.removeClient);
+		Socket.addEventListener("disconnect", this.disconnect);
+	}
  
-    sendMessage() {
-        const message = this.chatInput.value.trim();
-        if (!message || !this.chatName.textContent || this.chatName.textContent === "server") {
+	sendMessage() {
+		const message = this.chatInput.value.trim();
+		if (!message || !this.chatName.textContent || this.chatName.textContent === "server") {
 			this.chatInput.value = "";
 			return;
 		}
 
-        Socket.emit("chat-message", {
-            target: this.chatName.dataset.socketId,
-            message: message,
-        });
+		Socket.emit("chat-message", {
+			target: this.chatName.dataset.socketId,
+			message: message,
+		});
 		console.log(`Sending message: ${message} to ${this.chatName.dataset.socketId}`);
-        this.addMessage(
-            { fromId: this.chatName.dataset.id!, fromName: this.chatName.textContent!, message },
-            "outgoing"
-        );
-        this.chatInput.value = "";
-    }
+		this.addMessage(
+			{ fromId: this.chatName.dataset.id!, fromName: this.chatName.textContent!, message },
+			"outgoing"
+		);
+		this.chatInput.value = "";
+	}
 
-    disconnect = () => {
-        this.clientList.innerHTML = "";
-    };
+	disconnect = () => {
+		this.clientList.innerHTML = "";
+	};
 
-    addMessage = (
-        data: { fromId: string; fromName: string; message: string },
-        type?: "incoming" | "outgoing"
-    ): void => {
+	addMessage = (
+		data: { fromId: string; fromName: string; message: string },
+		type?: "incoming" | "outgoing"
+	): void => {
 		data.fromId = data.fromId.toString();
-        if (type !== "outgoing") type = "incoming";
+		if (type !== "outgoing") type = "incoming";
 
 		console.log(`message ${data.fromId}`)
-        const messageElement = document.createElement("div");
-        messageElement.className = `chat-message-${type}`;
+		const messageElement = document.createElement("div");
+		messageElement.className = `chat-message-${type}`;
 		if (data.fromId === "system")
 			this.addSystemMessage(messageElement, (data.message as any));
 		else
 			messageElement.textContent = data.message;
 
-        if (!this.chatHistory.has(data.fromId))
-            this.chatHistory.set(data.fromId, []);
-        this.chatHistory.get(data.fromId)!.push(messageElement);
+		if (!this.chatHistory.has(data.fromId))
+			this.chatHistory.set(data.fromId, []);
+		this.chatHistory.get(data.fromId)!.push(messageElement);
 
-        if (this.chatName.textContent != data.fromName && type != "outgoing") {
+		if (this.chatName.textContent != data.fromName && type != "outgoing") {
 			this.showNotification(data.fromId);
-            return;
+			return;
 		}
-        this.chatMessages.appendChild(messageElement);
+		this.chatMessages.appendChild(messageElement);
 
-        while (this.chatMessages.children.length > this.messageLimit)
-            this.chatMessages.removeChild(this.chatMessages.firstChild!);
+		while (this.chatMessages.children.length > this.messageLimit)
+			this.chatMessages.removeChild(this.chatMessages.firstChild!);
 
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-    };
+		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+	};
 
 	showNotification(clientId: string) {
 		const listItem = this.clientList.querySelector(
@@ -247,42 +248,59 @@ class Chat extends BaseComponent {
 		button.onclick = (event) => this.sendInvite(event, client);
 	}
 
-    removeClient = (client: IClient) => {
-        this.clientList.querySelectorAll("li").forEach((item) => {
-            const clientId = item.dataset.clientId;
-            if (client.id == clientId) {
-                item.remove();
-            }
-        });
-        console.log("Clients removed");
-    };
+	removeClient = (client: IClient) => {
+		this.clientList.querySelectorAll("li").forEach((item) => {
+			const clientId = item.dataset.clientId;
+			if (client.id == clientId) {
+				item.remove();
+			}
+		});
+		console.log("Clients removed");
+	};
 
-    openChat(client: IClient) {
+	async openChat(client: IClient) {
 		if (this.chatName.dataset.id === client.id) return ;
 
-        this.chatName.textContent = `${client.name}`;
-        this.chatName.dataset.id = client.id;
-        this.chatName.dataset.socketId = client.socketId;
+		this.chatName.textContent = `${client.name}`;
+		this.chatName.dataset.id = client.id;
+		this.chatName.dataset.socketId = client.socketId;
 		this.chatName.style.cursor = "pointer";
 		this.chatName.onclick = () => routes.navigate(`/profile/${client.id}`);
-        this.chatMessages.innerHTML = "";
-        this.chatInput.value = "";
+		this.chatMessages.innerHTML =  '';
+	
+		const { id: myId } = AppControl.getValidDecodedToken() as { id: string | number };
 
+		const res = await Socket.request('get-chat-history', { targetId: client.id});
+		if (!res.ok)
+			this.chatMessages.innerHTML =  `<h3>${res.message}</h3>`;
+		else {
+			console.log(`chat history from db: ${JSON.stringify(res.message)}`);
+			res.message.forEach((m: any) => {
+				this.addMessage({
+					fromId: m.senderId,
+					fromName: m.senderName ?? client.name,
+					message: m.message
+				}, m.senderId === myId ? "incoming" : "outgoing");
+			});
+		}
+		
 		this.chatHistory.get(client.id)?.forEach((msg) => {
-            this.chatMessages.appendChild(msg);
-        });
-		this.hideNotification(client.id);
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-        console.log("Chat opened");
-    }
+			this.chatMessages.appendChild(msg);
+		});
 
-    onDestroy(): void {
-        Socket.removeEventListener("chat-message", this.addMessage);
-        Socket.removeEventListener("client-arrival", this.addClients);
-        Socket.removeEventListener("client-departure", this.removeClient);
-        Socket.removeEventListener("disconnect", this.disconnect);
-        this.chatMessages.innerHTML = "";
-    }
+		this.hideNotification(client.id);
+		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+		this.chatInput.value = "";
+		console.log("Chat opened");
+	}
+
+	onDestroy(): void {
+		Socket.removeEventListener("chat-message", this.addMessage);
+		Socket.removeEventListener("client-arrival", this.addClients);
+		Socket.removeEventListener("client-departure", this.removeClient);
+		Socket.removeEventListener("disconnect", this.disconnect);
+		this.chatMessages.innerHTML = "";
+	}
 }
 
 customElements.define("chat-component", Chat);

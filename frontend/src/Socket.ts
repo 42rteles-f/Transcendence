@@ -4,9 +4,9 @@ import { io, Socket as SocketIo } from 'socket.io-client';
 class Socket {
 	private	static socket:			Pointer<SocketIo> = null;
 
-	static init(): boolean {
+	static init() {
 		if (this.socket) {
-			console.warn("Socket already created");
+			console.warn("Socket already created"); // TODO: Comment out
 			return true;
 		}
 
@@ -69,8 +69,12 @@ class Socket {
 		this.socket.emit(event, ...args);
 	}
 
-	static	request(event: string, ...args: any[]) {
-		return (this.socket?.emitWithAck(event, ...args));
+	static	async request(event: string, ...args: any[]) {
+		if (!this.socket) {
+			console.log("Socket not initialized");
+			return ;
+		}
+		return (await this.socket.emitWithAck(event, ...args));		
 	}
 
 	static	disconnect(): void {

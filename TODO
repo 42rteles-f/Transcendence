@@ -1,0 +1,12 @@
+TODO:
+- Make db calls after torunament is created, status and finishes
+- Game against self should not be possible
+
+Before delivery
+- Add Logger logs
+- Uncoment app.ts log overwrites
+- Check for edge cases
+
+Delivery
+- Run start_app.sh (to build ELK stack propperly)
+- Must have docker-compose, docker, curl

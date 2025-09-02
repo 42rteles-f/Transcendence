@@ -3,6 +3,7 @@ export function up(db, cb) {
 	CREATE TABLE IF NOT EXISTS tournament_games (
 	  id INTEGER PRIMARY KEY AUTOINCREMENT,
 	  tournament_id INTEGER,
+	  tournament_uuid VARCHAR(255) NOT NULL,
 	  game_id INTEGER,
 	  FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
 	  FOREIGN KEY(game_id) REFERENCES games(id)

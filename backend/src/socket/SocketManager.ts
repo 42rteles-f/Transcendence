@@ -9,49 +9,61 @@ import Pong from "../services/Games/PongGame/Pong";
 import { Tournament } from "../services/Tournament/Tournament";
 import { dbLite } from "../index";
 import UserDatabase from "../database/user";
+import { json } from 'node:stream/consumers';
 
-interface IUserProfile {
-    id?: 			string;
-    username:		string;
-    nickname:		string;
-    gamesPlayed:	number;
-    gamesWon:		number;
-    gamesLost: 		number;
+
+function isIntegerString(str: string): boolean {
+	return (/^[0-9]+$/.test(str));
 }
 
+interface IUserProfile {
+	id?: 			string;
+	username:		string;
+	nickname:		string;
+	gamesPlayed:	number;
+	gamesWon:		number;
+	gamesLost: 		number;
+}
+
+interface ITournamentCreation {
+	name:				string;
+	numberOfPlayers:	number;
+	displayName:		string;
+};
+
 class SocketManager {
-    private clients:			Map<string, Client> = new Map();
-    public io:					Server;
-    private matchmaker:			Matchmaker | null = null;
-    private tournamentCounter:	Socket[] = [];
-    private userDatabase?:		UserDatabase;
+	private clients:			Map<string, Client> = new Map();
+	public io:					Server;
+	private matchmaker:			Matchmaker;
+	private userDatabase:		UserDatabase;
 
-    constructor(httpServer: any) {
-        this.io = new Server(httpServer, {
-            cors: {
-                origin: "*",
-                methods: ["GET", "POST"],
-            },
-        });
-        this.userDatabase = new UserDatabase(dbLite);
-        this.matchmaker = new Matchmaker(this);
-        this.setupConnection();
-    }
+	constructor(httpServer: any) {
+		this.io = new Server(httpServer, {
+			cors: {
+				origin: "*",
+				methods: ["GET", "POST"],
+			},
+		});
+		this.userDatabase = new UserDatabase(dbLite);
+		console.log(`db connected: ${dbLite}`);
+		this.matchmaker = new Matchmaker(this);
+		this.setupConnection();
+	}
 
-    private socketAuthMiddleware(socket: Socket, next: (err?: Error) => void) {
-        const token = socket.handshake.auth.token;
-        if (!token) return next(new Error("Unauthorized"));
+	private socketAuthMiddleware(socket: Socket, next: (err?: Error) => void) {
+		const token = socket.handshake.auth.token;
+		if (!token) return next(new Error("Unauthorized"));
 
-        try {
-            const user = jwt.verify(token, process.env.JWT_SECRET!);
-            socket.data.user = user;
-            console.log(`connected ${user}`);
-            next();
-        } catch (err) {
-            console.log(`denied ${token}`);
-            next(new Error("Unauthorized"));
-        }
-    }
+		try {
+			const user = jwt.verify(token, process.env.JWT_SECRET!) as any;	// Lost type safety
+			socket.data.user = user;
+			console.log("Connected: ", user.id); // console.log(`Connected ${user}`);
+			next();
+		} catch (err) {
+			console.log(`denied ${token}`);
+			next(new Error("Unauthorized"));
+		}
+	}
 
     async getUserData(id: number): Promise<IUserProfile | null> {
         return (
@@ -69,39 +81,37 @@ class SocketManager {
 		);
     }
 
-    private setupConnection() {
-        this.io.use((socket, next) => this.socketAuthMiddleware(socket, next));
-
-        this.io.on("connection", async (socket) => {
+	private setupConnection() {
+		this.io.use((socket, next) => this.socketAuthMiddleware(socket, next));
+		this.io.on("connection", async (socket) => {
 			const client = await this.createClient(socket);
 			if (!client) return ;
 
 			this.authorizedBroadcast(client, "client-arrival", [client.basicInfo()]);
-            socket.onAny((event: string, ...args: any[]) => {
-                if (
-                    !client.eventCaller(event, ...args) &&
-                    !this.eventCaller(event, client, ...args))
+			socket.onAny((event: string, ...args: any[]) => {
+				// handle try
+				if (
+					!client.eventCaller(event, ...args) &&
+					!this.eventCaller(event, client, ...args))
 				{
-                    console.warn(`Unhandled event: ${event}`);
-                } else {
+					console.warn(`Unhandled event: ${event}`);
+				}else {
 					console.log(`Event ${event} handled: ${client.id}`);	
 				}
-            });
+			});
 
-            socket.on("disconnect", () => {
-                console.log("Client disconnected:", socket.id);
+			socket.on("disconnect", () => {
+				console.log(`Connected:  ${socket.data.user.id} - ${socket.id}`);	//console.log("Client disconnected: ", socket.id);
 				this.authorizedBroadcast(client, "client-derparture", [client.basicInfo()]);
-                this.clients.delete(socket.id);
-            });
-        });
-    }
+				this.clients.delete(socket.id);
+			}); 
+		});
+	}
 
 	async createClient(socket: Socket) {
 		const clientData = await this.getUserData(socket.data.user.id);
 		if (!clientData) {
-			console.error(
-				`User data not found for socket ID: ${socket.id}`
-			);
+			console.error(`User data not found for socket ID: ${socket.id}`);
 			socket.disconnect();
 			return undefined;
 		}
@@ -144,19 +154,19 @@ class SocketManager {
 		console.log(`Client ${client.id} blocked ${targetId}`);
 	}
 
-    onPongLocalPlay(client: Client) {
-        new Pong([client.socket, client.socket]);
-    }
+	onPongLocalPlay(client: Client) {
+		new Pong([client.socket, client.socket]);
+	}
 
-    onPongMatchFind(client: Client) {
-        this.matchmaker!.addToQueue(client);
-    }
+	onPongMatchFind(client: Client) {
+		this.matchmaker!.addToQueue(client);
+	}
 
-    onPongMatchLeave(client: Client) {
-        this.matchmaker!.removeFromQueue(client);
-    }
+	onPongMatchLeave(client: Client) {
+		this.matchmaker!.removeFromQueue(client);
+	}
 
-	onChatMessage(client: Client, payload: { target: string, message: string }) {
+	async onChatMessage(client: Client, payload: { target: string, message: string }) {
 		console.log(`target ${payload.target}, message ${payload.message}`)
 		if (!this.authorizeContact(client, this.getClientBySocket(payload.target)!, true)) {
 			console.error(`Unauthorized chat message from ${client.id} to ${payload.target}`);
@@ -167,6 +177,11 @@ class SocketManager {
 			fromName: client.username,
 			message: payload.message,
 		});
+		// console.log(`payload: ${JSON.stringify(payload)}`);
+		const target = this.clients.get(payload.target);
+		// console.log(`targetId: ${target?.id}`);
+		if (target)
+			await this.userDatabase.registerMessage(Number(client.id), Number(target?.id), payload.message);
 	}
 
 	authorizeContact(client: Client, target: Client, message?: boolean): boolean {
@@ -190,9 +205,9 @@ class SocketManager {
 		});
 	}
 
-    onSubscribeClientArrival(client: Client) {
-        client.subscriptions.push("client-arrival");
-        let onlineClients = Array.from(this.clients.values()).map((target) => {
+	onSubscribeClientArrival(client: Client) {
+		client.subscriptions.push("client-arrival");
+		let onlineClients = Array.from(this.clients.values()).map((target) => {
 			if (!this.authorizeContact(client, target))
 				return ;
 			return target.basicInfo();
@@ -201,37 +216,126 @@ class SocketManager {
 		onlineClients.unshift({ id: "system", socketId: "-1", name: "server"});
 
 		client.socket.emit("client-arrival", onlineClients);
-    }
+	}
 
-    eventCaller(event: string, ...args: any[]) {
-        event = `-${event}`;
-        const methodName = `on${event.replace(/-([a-z])/g, (_, char) =>
-            char.toUpperCase()
-        )}`;
-        if (typeof (this as any)[methodName] === "function") {
-            (this as any)[methodName](...args);
-            return true;
-        }
-        return false;
-    }
+	eventCaller(event: string, ...args: any[]) {
+		event = `-${event}`;
+		const methodName = `on${event.replace(/-([a-z])/g, (_, char) =>
+			char.toUpperCase()
+		)}`;
+		if (typeof (this as any)[methodName] === "function") {
+			(this as any)[methodName](...args);
+			return true;
+		}
+		return false;
+	}
 
-    public removeClient(id: string) {
-        this.clients.delete(id);
-    }
+	public removeClient(id: string) {
+		this.clients.delete(id);
+	}
 
-    public getClientBySocket(socketId: string) {
-        return (this.clients.get(socketId));
-    }
+	public getClientBySocket(socketId: string) {
+		return (this.clients.get(socketId));
+	}
 
 	public getClientById(id: string) {
 		return (Array.from(this.clients.values()).find(client => client.id === id));
 	}
 
-    public onTournamentJoin(client: Client) {
-        this.tournamentCounter.push(client.socket);
-        if (this.tournamentCounter.length > 3)
-            new Tournament(this.tournamentCounter);
-    }
+	public onCreateTournament(client: Client, { name, displayName, numberOfPlayers }: ITournamentCreation, callback: Function) {
+		if (!displayName || typeof displayName !== 'string' || displayName.trim() === "" || !/^[A-Za-z0-9_]+$/.test(displayName))
+			return callback({ ok: false, message: "Invalid display name, only letter, underscore, and digits are allowed" });
+		if (!name || typeof name !== 'string' || name.trim() === "" || !/^[A-Za-z0-9_ ]+$/.test(name))
+			return callback({ ok: false, message: "Invalid tournament name only letters and digits are allowed" });
+		if (numberOfPlayers && (typeof numberOfPlayers !== 'number' || (numberOfPlayers != 4 && numberOfPlayers != 8 &&  numberOfPlayers != 16)))
+			return callback({ ok: false, message: "Invalid number of players" });
+
+		const res = this.matchmaker.createTournament(client, name, displayName, numberOfPlayers);
+		if (res) {
+			const redirectUrl = `http://localhost:5173/tournament/${res}`;
+			console.log(`Tournament "${name}" created by "${client.username}"`);
+
+			return callback({ ok: true, message: res, redirectUrl });
+		}
+		return callback({ ok: false, message: "Could not Create Tournament." });
+	}
+
+	public onTournamentJoin(client: Client, { displayName, tournamentId }: { displayName: string, tournamentId: string }, callback: Function) {
+		if (!displayName || typeof displayName !== 'string' || displayName.trim() === "" || !/^[A-Za-z0-9_]+$/.test(displayName))
+			return callback({ ok: false, message: "Invalid display name, only letter, underscore, and digits are allowed" });
+		
+		const res = this.matchmaker.joinTournament(client, displayName, tournamentId);
+		console.log(`User ${client.id}-${client.username} joined tournament ${tournamentId} as ${displayName}`);
+		callback({ ok: res === "ok", message: res });
+		if (res === "ok")
+			this.broadcastTournamentUpdate(tournamentId, "join");
+	}
+
+	public onTournamentLeave(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		const res = this.matchmaker.leaveTournament(client, tournamentId);
+		console.log(`User ${client.id}-${client.username} left tournament ${tournamentId}`);
+		callback({ ok: res === "ok", message: res });
+		if (res === "ok")
+			this.broadcastTournamentUpdate(tournamentId, "leave");
+	}
+	
+	public onTournamentCancel(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		const res = this.matchmaker.cancelTournament(client, tournamentId);
+		callback({ ok: res === "ok", message: res });
+		if (res === "ok")
+			this.broadcastTournamentUpdate(tournamentId, "cancel");
+	}
+
+	// Broadcast to all watching clients (should not be async)
+	private broadcastTournamentUpdate(tournamentId: string, actionName: string = "update") {
+		this.matchmaker.getTournament(tournamentId).then(tournamentData => {
+			if (tournamentData) {
+				tournamentData.action = actionName;
+				this.io.to(`tournament-${tournamentId}`).emit("tournament-updated", tournamentData);
+			} else {
+				this.io.to(`tournament-${tournamentId}`).emit("tournament-updated", { 
+					id: tournamentId,
+					action: actionName,
+					exists: false
+				});
+			}
+			//console.log(`Broadcasted tournament ${actionName} for ${tournamentId}`);
+		}).catch(err => {
+			console.error(`Failed to broadcast tournament ${actionName} for ${tournamentId}: ${err}`);
+		});
+	}
+	
+	// Watch frontend tournament updates
+	public onWatchTournament(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		// Join tournament room
+		client.socket.join(`tournament-${tournamentId}`);
+		//console.log(`Client ${client.id} is now watching tournament ${tournamentId}`);
+		callback({ ok: true });
+	}
+
+	// Stop Watching frontend tournament updates
+	public onStopWatchingTournament(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		client.socket.leave(`tournament-${tournamentId}`);
+		//console.log(`Client ${client.id} stopped watching tournament ${tournamentId}`);
+		callback({ ok: true });
+	}
+
+	// onPongGameIsTournamet? // pong.ts 46 Should be handled here?
+	public async onGetTournament(client: Client, { tournamentId }: { tournamentId: string }, callback: Function) {
+		const res = await this.matchmaker.getTournament(tournamentId);
+		if (res)
+			callback({ ok: true, message: res });
+		else
+			callback({ ok: false, message: null });
+	}
+
+	public async onGetAllTournaments(client: Client, { pageNum, pageSizeNum }: {pageNum: string, pageSizeNum: string}, callback: Function) {
+		if (!isIntegerString(pageNum) || !isIntegerString(pageSizeNum)) {
+			// return a custom message telling that the parameters are wrong
+		}
+		const res = await this.matchmaker.getAllTournaments(Number(pageNum), Number(pageSizeNum));
+		callback({ ok: res ? true : false, message: res });
+	}
 
 	serverChat(target: string, payload: any) {
 		this.io.to(target).emit("chat-message", {
@@ -239,6 +343,11 @@ class SocketManager {
 			fromName: "server",
 			message: payload
 		})
+	}
+
+	public async onGetChatHistory(client: Client, { targetId }: { targetId: string }, callback: Function) {
+		const res = await this.userDatabase.getMessages(Number(client.id), Number(targetId));
+		callback({ ok: res.status === 200, message: res.status === 200 ? res.reply : "Could not load chat history"});
 	}
 }
 

@@ -113,35 +113,36 @@ class Api {
 		return data.message;
     }
 
-    static async createTournament(name: string, maxPlayers: number, displayName: string): Promise<{ tournamentId: number }> {
-        const body = JSON.stringify({ name, maxPlayers, displayName });
+    static async createTournament(name: string, numberOfPlayers: number, displayName: string): Promise<{ id: number }> {
+        const body = JSON.stringify({ name, numberOfPlayers, displayName });
 		const data = await this.makeRequest(`tournament/create`, "POST", body);
 		return data.message;
     }
 
-    static async getTournament(tournamentId: number): Promise<any> {
+    static async getTournament(tournamentId: string): Promise<any> {
 		const data = await this.makeRequest(`tournament/${tournamentId}`, "GET");
 		return data.message;
     }
 
-    static async cancelTournament(tournamentId: number): Promise<any> {
+    static async cancelTournament(tournamentId: string): Promise<any> {
 		const data = await this.makeRequest(`tournament/cancel/${tournamentId}`, "POST");
 		return data.message;
     }
 
-    static async joinTournament(tournamentId: number, displayName: string): Promise<any> {
+    static async joinTournament(tournamentId: string, displayName: string): Promise<any> {
         const body = JSON.stringify({ displayName });
 		const data = await this.makeRequest(`tournament/join/${tournamentId}`, "POST", body);
 		return data.message;
     }
 
-    static async unsubscribeTournament(tournamentId: number): Promise<any> {
+    static async unsubscribeTournament(tournamentId: string): Promise<any> {
 		const data = await this.makeRequest(`tournament/unsubscribe/${tournamentId}`, "POST");
 		return data.message;
     }
 
-    static async startTournament(tournamentId: number): Promise<any> {
-		const data = await this.makeRequest(`tournament/start/${tournamentId}`, "POST");
+    static async startTournament(tournamentId: string): Promise<any> {
+		const body = JSON.stringify({ start: true });
+		const data = await this.makeRequest(`tournament/start/${tournamentId}`, "POST", body);
 		return data.message;
     }
 

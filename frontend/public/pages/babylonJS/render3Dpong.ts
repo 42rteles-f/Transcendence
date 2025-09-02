@@ -39,12 +39,14 @@ export class PongRenderer3D {
     constructor(canvasId: string, canvasWidth: number, canvasHeight: number) {
         const canvasElement = document.getElementById(canvasId) as HTMLCanvasElement;
         if (!canvasElement)
-            console.error(`Canvas with id "${canvasId}" not found`);
+            return ;
+            //console.error(`Canvas with id "${canvasId}" not found`);
         this.canvas = canvasElement;
 
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
-        console.log(`Canvas dimensions set to: ${canvasWidth}x${canvasHeight}`);
+        if (canvasWidth && canvasHeight)
+            console.log(`Canvas dimensions set to: ${canvasWidth}x${canvasHeight}`);
         this.initializeBabylon();
     }
 
@@ -89,10 +91,7 @@ export class PongRenderer3D {
 
     public drawGame(state: PongState): void {
         if (!this.initialized || !this.ball || !this.scene)
-        {
-            console.warn("3D renderer not fully initialized yet");
             return;
-        }
         drawGame(state, this.ball, this.paddles, this.canvasWidth, this.canvasHeight);
     }
 
@@ -100,6 +99,8 @@ export class PongRenderer3D {
         if (this.engine)
         {
             this.engine.stopRenderLoop();
+            if (this.scene)
+                this.scene.dispose();
             this.engine.dispose();
         }
         this.initialized = false;

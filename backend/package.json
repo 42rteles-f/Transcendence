@@ -25,7 +25,8 @@
 		"jsonwebtoken": "^9.0.2",
 		"pg": "^8.16.0",
 		"socket.io": "^4.8.1",
-		"sqlite3": "^5.1.7"
+		"sqlite3": "^5.1.7",
+		"axios": "^1.11.0"
 	},
 	"devDependencies": {
 		"@fastify/multipart": "^9.0.3",

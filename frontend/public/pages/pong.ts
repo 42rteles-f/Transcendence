@@ -1,6 +1,8 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import Socket from "../../src/Socket";
+import { routes } from '../../src/routes';
 import { PongRenderer3D } from "./babylonJS/render3Dpong";
+import { AppControl } from "../../src/AppControl";
 
 console.log("executing PongGame");
 
@@ -27,17 +29,51 @@ interface PongState {
 	gameStatus: string;
 }
 
+// Why does file pong.ts has class PongGame?, there there is Pong.ts with Pong class ~ ~ ~
 class PongGame extends BaseComponent {
 	private canvas!: HTMLCanvasElement;
 	private	localPlay: boolean = false;
+	private tournamentPlay: boolean = false;
 	private renderer3D!: PongRenderer3D;
+
+	private player1Name!: HTMLElement;
+	private player1Score!: HTMLElement;
+	private player2Name!: HTMLElement;
+	private player2Score!: HTMLElement;
 
 	constructor(args: string) {
 		super("/pages/pong.html");
 		this.localPlay = args === "local-play";
-		if (args === "tournament") {
-			Socket.emit("tournament-join");
+		this.tournamentPlay = args === "tournament";
+
+		if (this.tournamentPlay)
+			this.isUserPlayingTournament()
+			
+	}
+
+	/*isUserPlayingTournament()
+	{
+		const gameInfo = sessionStorage.getItem('tournamentGame');
+		if (gameInfo) 												
+			sessionStorage.removeItem('tournamentGame');
+		else {
+			console.log("No tournament game found in session");
+			routes.navigate("/tournaments");
+			return;
 		}
+	}*/
+
+	isUserPlayingTournament() {
+		const gameInfo = sessionStorage.getItem('tournamentGame');					// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
+		if (!gameInfo) {
+			console.log("No tournament game found in session");
+			
+			setTimeout(() => {
+				routes.navigate("/tournaments");
+			}, 0);
+			return false;  
+		}
+		return true; 
 	}
 
 	onInit() {
@@ -48,22 +84,20 @@ class PongGame extends BaseComponent {
 			this.setControlKeys("ArrowUp", "ArrowDown", "second-paddle-update");
 			Socket.emit("pong-local-play");
 		}
-		else {
-			Socket.emit("pong-find-match");
-		}
+		else if (this.tournamentPlay)
+			console.log("Tournament mode"); // Log to frontend only
+		else
+			Socket.emit("pong-match-find");
 		this.canvas.tabIndex = 0;
 		this.canvas.focus();
 		this.canvas.style.outline = "none";
 	}
 
 	private setupCanvas() {
-		if (!this.canvas.id) {
-			this.canvas.id = "pongCanvas";
-		}
-
+		//if (!this.canvas.id)
+		this.canvas.id = "pongCanvas";
 		const canvasWidth = this.canvas.width || 800;
 		const canvasHeight = this.canvas.height || 600;
-		
 		this.renderer3D = new PongRenderer3D(this.canvas.id, canvasWidth, canvasHeight);
 	}
 
@@ -84,77 +118,68 @@ class PongGame extends BaseComponent {
 		});
 	}
 
-	private setupSocket() {
+	getUserId()
+	{
+		const token = AppControl.getValidDecodedToken() as { id: number | string };
+		return token?.id;
+	}
+
+	private setupSocket()
+	{
 		Socket.init();
-		Socket.addEventListener("pong-state", (state: PongState) => {
-			this.drawGame(state);
-		});
+		this.setupGameStateListener();
+		if (this.tournamentPlay)
+			this.setupTournamentListeners();
+	}
+
+	private setupGameStateListener() {												// Game state listener
+		Socket.addEventListener("pong-state", (state: PongState) => { this.drawGame(state); });
+	}
+
+	private setupTournamentListeners() {											// Recive tournament end, player elimination, game start
+		Socket.addEventListener("tournament-completed", (data: any) => { routes.navigate(`/tournament/${data.tournamentId}`); }); // console.log("Tournament completed! You are the winner!");
+		Socket.addEventListener("tournament-eliminated", (data: any) => { routes.navigate(`/tournament/${data.tournamentId}`); });	// console.log("You have been eliminated from the tournament");
+		Socket.addEventListener("tournament-game-start", (data: any) => { this.handleTournamentGameStart(data); });
+	}
+
+	private handleTournamentGameStart(data: any) {									// Recive tournament game start, save item to localstorage, redirect user
+		const myUserId = this.getUserId();
+		console.log(`My userId: ${myUserId}, Event playerId: ${data.playerId}`);
+		
+		if (Number(data.playerId) === Number(myUserId))
+		{
+			sessionStorage.setItem('tournamentGame', JSON.stringify({ gameId: data.gameId, tournamentId: data.tournamentId }));
+			routes.navigate(`/pong/tournament`);
+		}
 	}
 
 	private drawGame(state: PongState) {
-		console.log("Drawing Pong Game in 3D", state);
+		//console.log("Drawing Pong Game in 3D", state);
+		// eFfIciENcY 1oo%
+		if (state.playersState && state.playersState.length >= 2)
+		{
+			this.player1Name.textContent = state.playersState[0].name || "Player 1";
+			this.player1Score.textContent = state.playersState[0].score.toString();
+			this.player2Name.textContent = state.playersState[1].name || "Player 2";
+			this.player2Score.textContent = state.playersState[1].score.toString();
+		}
 		this.renderer3D.drawGame(state);
 	}
 
-	/*private drawGame(state: PongState) {
-		console.log("Drawing Pong Game", state);
-		const ctx = this.canvas.getContext("2d")!;
-		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	onDestroy()
+	{
+		if (!this.tournamentPlay)
+			Socket.emit("pong-match-leave");
 
-		state.playersState.forEach(player => {
-			ctx.fillStyle = "white";
-			ctx.fillRect(
-				player.paddle.x, player.paddle.y,
-				player.paddleDimensions.width, player.paddleDimensions.height
-			);
-		});
-
-		ctx.beginPath();
-		ctx.arc(state.ball.x, state.ball.y, state.ballSize, 0, Math.PI * 2);
-		ctx.fillStyle = "white";
-		ctx.fill();
-		ctx.closePath();
-	}*/
-
-
-
-
-	onDestroy() {
-		Socket.emit("pong-match-leave");
 		if (this.renderer3D)
 			this.renderer3D.dispose();
+
+		// TODO: Fix event listener cleanup ~~~ Browser automatically cleans up when components are removed
+		// Socket.removeEventListener("tournament-eliminated", callback);
+		// Socket.removeEventListener("tournament-game-start", callback);
 	}
 }
 
 customElements.define("pong-game", PongGame);
 
 export { PongGame };
-
-
-	// private setKeyEvents() {
-	// 	this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
-	// 		if (event.key === "w" || event.key === "s") {
-	// 			Socket.emit("paddle-update", { direction: (event.key === "w") ? -1 : 1 });
-	// 		}
-	// 	});
-	// 	this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
-	// 		if (event.key === "w" || event.key === "s")
-	// 			Socket.emit("paddle-update", { direction: 0 });
-	// 	});
-
-	// 	if (!this.localPlay) {
-	// 		Socket.emit("pong-match-find");
-	// 		return;
-	// 	}
-
-	// 	Socket.emit("pong-local-play");
-	// 	this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
-	// 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-	// 			Socket.emit("second-paddle-update", { direction: (event.key === "ArrowUp") ? -1 : 1 });
-	// 		}
-	// 	});
-	// 	this.canvas.addEventListener("keyup", (event: KeyboardEvent) => {
-	// 		if (event.key === "ArrowUp" || event.key === "ArrowDown")
-	// 			Socket.emit("second-paddle-update", { direction: 0 });
-	// 	});
-	// }

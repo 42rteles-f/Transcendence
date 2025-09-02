@@ -1,27 +1,9 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 flex flex-col items-center justify-center px-4 py-10">
+<div class="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 flex flex-col items-center justify-center px-4 py-10 relative">
+	<chat-component></chat-component>
   <custom-navbar class="fixed top-4 left-4"></custom-navbar>
-  <div class="!bg-white rounded-2xl shadow-2xl p-8 w-full max-w-xl relative flex flex-col items-center">
-    <h2 class="text-3xl font-bold !text-gray-800 mb-4" data-ref="tournamentName"></h2>
-    <div class="flex flex-wrap gap-6 justify-center mb-6">
-      <div>
-        <span class="font-semibold">Status:</span>
-        <span data-ref="status" class="font-bold px-3 py-1 rounded transition"></span>
-      </div>
-      <div>
-        <span class="font-semibold">Players:</span>
-        <span data-ref="playersCount"></span>
-      </div>
-    </div>
-    <div class="w-full mb-6">
-      <span class="font-semibold">Participants:</span>
-      <div data-ref="participantsList" class="mt-2 flex flex-col gap-2"></div>
-    </div>
-    <div class="flex flex-col gap-3 w-full max-w-xs">
-      <button data-ref="startBtn" class="hidden !bg-blue-600 !hover:bg-blue-700 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Start Tournament</button>
-      <button data-ref="joinBtn" class="hidden !bg-green-600 !hover:bg-green-700 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Join Tournament</button>
-      <button data-ref="unsubscribeBtn" class="hidden !bg-yellow-500 !hover:bg-yellow-600 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Unsubscribe</button>
-      <button data-ref="cancelBtn" class="hidden !bg-red-600 !hover:bg-red-700 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Cancel Tournament</button>
-	  <button data-ref="reportResultBtn" class="hidden !bg-purple-600 !hover:bg-purple-700 !text-white px-4 py-2 rounded-xl font-semibold shadow transition">Report Result</button>
-    </div>
+  <div data-ref="gamesBrackets">
   </div>
+  <button data-ref='tournamentMenu' class='rounded-lg border border-solid border-black font-bold absolute bottom-2.5 left-2.5'>
+	Tournament Menu
+  </button>
 </div>

@@ -2,198 +2,132 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { AppControl } from "../../src/AppControl";
 import { showToast } from "./toastNotification";
 import { routes } from '../../src/routes';
-import { JoinTournamentModal } from "../components/joinTournamentModal";
-import Api from '../../src/api/Api';
+import { TournamentGameCell } from '../components/tournamentGameCell';
+import { TournamentMenu } from '../components/tournamentMenu';
+import Socket from '../../src/Socket';
 
 class TournamentHubPage extends BaseComponent {
-    private tournamentId!: number | null;
-    private tournament: any;
-    private userId!: number | string;
+	private tournamentId!: 		string | null;
+	private tournament: 		any;
+	private tournamentMenu!:	HTMLButtonElement;
+	private gamesBrackets!: 	HTMLElement;
+	private updateHandler:		any;
+	private gameStartHandler:	any
+	private userId!:			number;
 
-    private tournamentName!: HTMLElement;
-    private status!: HTMLElement;
-    private playersCount!: HTMLElement;
-    private participantsList!: HTMLElement;
-    private startBtn!: HTMLButtonElement;
-    private joinBtn!: HTMLButtonElement;
-    private unsubscribeBtn!: HTMLButtonElement;
-    private cancelBtn!: HTMLButtonElement;
-	private reportResultBtn!: HTMLButtonElement;
+	constructor(tournamentId: string | null) {
+		super("/pages/tournamentHub.html");
+		this.tournamentId = tournamentId;
+	}
 
-    private ownerName?: HTMLElement;
-    private winnerName?: HTMLElement;
-    private startDate?: HTMLElement;
+	async onInit() {
+		const { id } = AppControl.getValidDecodedToken() as { id: number | string };
+		this.userId = Number(id);
 
-    constructor(tournamentId: number | null) {
-        super("/pages/tournamentHub.html");
-        this.tournamentId = tournamentId;
-    }
-
-    async onInit() {
-        if (!this.tournamentId) {
-            routes.navigate("/404");
-            return;
-        }
-        const { id } = AppControl.getValidDecodedToken() as { id: number | string };
-        this.userId = Number(id);
-
-        await this.loadTournament();
-
-        this.startBtn.addEventListener("click", () => this.startTournament());
-        this.joinBtn.addEventListener("click", () => this.joinTournament());
-        this.unsubscribeBtn.addEventListener("click", () => this.unsubscribeTournament());
-        this.cancelBtn.addEventListener("click", () => this.cancelTournament());
-		this.reportResultBtn.addEventListener("click", () => this.reportResult());
-    }
-
-    async loadTournament() {
-        try {
-            if (!this.tournamentId)
-                return;
-            const res = await Api.getTournament(this.tournamentId);
-			console.log("Loaded tournament:", res);
-            this.tournament = res.message ?? res;
-
-            this.tournamentName.textContent = this.tournament.name;
-
-            this.status.textContent = this.tournament.status;
-            this.status.className = "font-bold px-3 py-1 rounded transition";
-            if (this.tournament.status === "waiting")
-                this.status.classList.add("bg-yellow-200", "text-yellow-800");
-            else if (this.tournament.status === "finished")
-                this.status.classList.add("bg-green-200", "text-green-800");
-            else if (this.tournament.status === "in progress" || this.tournament.status === "active")
-                this.status.classList.add("bg-blue-200", "text-blue-800");
-            else
-                this.status.classList.add("bg-gray-200", "text-gray-800");
-
-            this.playersCount.textContent = `${this.tournament.participants.length}/${this.tournament.maxPlayers}`;
-
-            if (!this.ownerName) {
-                this.ownerName = document.createElement("div");
-                this.ownerName.className = "mb-2";
-                this.status.parentElement?.parentElement?.insertAdjacentElement("afterend", this.ownerName);
-            }
-            this.ownerName.innerHTML = `<span class="font-semibold">Owner:</span> <span class="text-blue-700 font-bold cursor-pointer hover:underline" style="cursor:pointer">${this.tournament.ownerName}</span>`;
-            this.ownerName.querySelector("span.text-blue-700")?.addEventListener("click", () => {
-                routes.navigate(`/profile/${this.tournament.ownerId}`);
-            });
-
-            if (this.tournament.status === "finished" && this.tournament.winnerName) {
-                if (!this.winnerName) {
-                    this.winnerName = document.createElement("div");
-                    this.winnerName.className = "mb-2";
-                    this.ownerName.insertAdjacentElement("afterend", this.winnerName);
-                }
-                this.winnerName.innerHTML = `<span class="font-semibold">Winner:</span> <span class="text-green-700 font-bold cursor-pointer hover:underline" style="cursor:pointer">${this.tournament.winnerName}</span>`;
-                this.winnerName.querySelector("span.text-green-700")?.addEventListener("click", () => {
-                    routes.navigate(`/profile/${this.tournament.winnerId}`);
-                });
-            } else if (this.winnerName) {
-                this.winnerName.remove();
-            }
-
-            if (!this.startDate) {
-                this.startDate = document.createElement("div");
-                this.startDate.className = "mb-2";
-                this.ownerName.insertAdjacentElement("afterend", this.startDate);
-            }
-            this.startDate.innerHTML = `<span class="font-semibold">Start Date:</span> <span>${new Date(this.tournament.startDate).toLocaleString()}</span>`;
-
-            this.participantsList.innerHTML = "";
-            for (const p of this.tournament.participants) {
-                const div = document.createElement("div");
-                div.className = "flex items-center gap-2 bg-gray-100 hover:bg-blue-100 rounded-lg px-3 py-2 cursor-pointer shadow-sm transition";
-                div.innerHTML = `
-								<span class="font-semibold text-gray-700">${p.username}</span>
-								<span class="text-sm text-gray-500">${p.displayName}</span>
-								`;
-                div.addEventListener("click", () => {
-                    routes.navigate(`/profile/${p.id}`);
-                });
-                this.participantsList.appendChild(div);
-            }
-
-            this.updateButtons();
-        } catch (e) {
-			console.log("Error loading tournament:", e);
-            showToast("Failed to load tournament", 3000, "error");
+		if (!this.tournamentId) {
 			routes.navigate("/404");
-        }
-    }
-
-    updateButtons() {
-        const isCreator = this.userId === this.tournament.ownerId;
-        const isSubscribed = this.tournament.participants.some((p: any) => p.id === this.userId);
-        const isActive = this.tournament.status === "waiting" || this.tournament.status === "active";
-		const isFull = this.tournament.participants.length >= this.tournament.maxPlayers;
-		const isInProgressOrFinished = this.tournament.status === "in progress" || this.tournament.status === "finished";
-
-        this.startBtn.classList.toggle("hidden", !(isCreator && isActive));
-        this.cancelBtn.classList.toggle("hidden", !(isCreator && isActive));
-        this.joinBtn.classList.toggle("hidden", isCreator || isSubscribed || !isActive);
-		this.joinBtn.disabled = isFull;
-		this.joinBtn.style.cursor = isFull ? "not-allowed" : "";
-		this.joinBtn.style.opacity = isFull ? "0.5" : "";
-        this.unsubscribeBtn.classList.toggle("hidden", isCreator || !isSubscribed || !isActive);
-		this.reportResultBtn.classList.toggle("hidden", !isInProgressOrFinished);
-    }
-
-    async startTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const res = await Api.startTournament(this.tournamentId);
-			showToast(res || "Tournament started successfully", 3000, "success");
-			this.loadTournament();
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to start tournament", 3000, "error");
+			return;
 		}
-    }
+		
+		await this.loadTournament();
+		this.subscribeToUpdates();													// Added to recive all the updates from frontend (event listeners)
+		this.tournamentMenu.addEventListener('click', () => {
+			this.appendChild(new TournamentMenu(this.tournament));
+		})
+	}
 
-    async joinTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const modal = new JoinTournamentModal(this.tournamentId);
-			this.appendChild(modal);
+	subscribeToUpdates() {															// Main update handler, takes care of updating tournament view, starting and redirecting players to tournament
+		this.updateHandler = (data: any) =>
+		{
+			//  console.log("Tournament update received:", data);
+			if (data.exists === false || data.action === "cancel")
+			{
+				showToast("Tournament has been cancelled", 3000, "info");
+				routes.navigate("/tournaments");
+				return;
+			}
+			this.tournament = data;
+			this.refreshDisplay(data.action);
+		};
 
-			const onModalClosed = () => {
-				this.loadTournament();
-				this.removeEventListener("modal-closed", onModalClosed);
-			};
-			modal.addEventListener("modal-closed", onModalClosed);
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to join tournament", 3000, "error");
+		this.gameStartHandler = (data: any) => {
+			if (Number(data.playerId) === Number(this.userId))
+			{
+				sessionStorage.setItem('tournamentGame', JSON.stringify({
+					gameId: data.gameId,
+					tournamentId: data.tournamentId
+				}));
+				routes.navigate(`/pong/tournament`);
+			} else {														// TODO: Remove, not usefull
+				console.log("A tournament game started (spectating)");
+				showToast("You're spectating XY game", 2000, "info");
+			}
+		};
+
+		Socket.request("watch-tournament", { tournamentId: this.tournamentId });
+		Socket.addEventListener("tournament-updated", this.updateHandler);			// Recives updates from the backend to update page whenever there is a change (like a player join)
+		Socket.addEventListener("tournament-game-start", this.gameStartHandler);	// Recives updats for when a tournament has began and sent its first game-start //		(All the players should be preaviusly redirected to /pong/tournament and the event should go only there but wtv)
+	}																				
+
+	refreshDisplay(action: string)													// Updates frontend state and informative mesage
+	{
+		const rounds = this.querySelectorAll('.round');
+		rounds.forEach(round => round.remove());
+		this.renderBracket();
+		const messages: { [key: string]: string } =
+		{
+			'join': 'A new player joined the tournament!',
+			'leave': 'A player left the tournament',
+			'update': 'Tournament updated',
+			'cancel': 'Tournament cancelled'
+		};
+		showToast(messages[action] || 'Tournament updated', 2000, "info");
+	}
+
+	disconnectedCallback()															// Called onDestroy
+	{
+		if (this.updateHandler)
+		{
+			Socket.removeEventListener("tournament-updated", this.updateHandler);
+			Socket.request("stop-watching-tournament", { tournamentId: this.tournamentId });
 		}
-    }
+	}
 
-    async unsubscribeTournament() {
-		if (!this.tournamentId) return;
+	async loadTournament() {
 		try {
-			const res = await Api.unsubscribeTournament(this.tournamentId);
-			showToast(res || "Unsubscribed from tournament successfully", 3000, "success");
-			this.loadTournament();
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to unsubscribe from tournament", 3000, "error");
+			if (!this.tournamentId)
+				return;
+			const res = await Socket.request("get-tournament", { tournamentId: this.tournamentId });
+			if (res.ok !== true) {
+				showToast("could not load tournament", 2000, "error");
+				routes.navigate("/404");
+				return ;
+			}
+			this.tournament = res.message;
+
+			this.renderBracket();
+		} catch (e) {
+			console.log("Error loading tournament:", e);
+			showToast("Failed to load tournament", 3000, "error");
+			routes.navigate("/404");
 		}
-    }
+	}
 
-    async cancelTournament() {
-		if (!this.tournamentId) return;
-		try {
-			const res = await Api.cancelTournament(this.tournamentId);
-			showToast(res || "Tournament cancelled successfully", 3000, "success");
-			routes.navigate("/tournaments");
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to cancel tournament", 3000, "error");
-		}
-    }
-
-	async reportResult() {
-		if (!this.tournamentId) return;
-		try {
-			routes.navigate(`/tournament-dashboard/${this.tournamentId}`);
-		} catch (e: Error | any) {
-			showToast(e.message || "Failed to report result", 3000, "error");
+	renderBracket() {
+		let totalGames = Number(this.tournament.numberOfPlayers);
+		let gamesPerRound = totalGames / 2; 
+		const lenghtOfFirstRow = Number(this.tournament.numberOfPlayers) / 2;
+		for (let i = 1; i <= Number(this.tournament.maxRound); i++) {
+			const gamesOfRound = this.tournament.games.filter((g: any) => Number(g.round) === i);
+			const round = document.createElement("div");
+			round.classList.add("round", "w-[45rem]", "max-w-[1000px]", "h-[10rem]", "max-h-[500px]", "round-[0.5rem]", "flex", "justify-center", "items-center", "gap-[0.5rem]");
+			for (let j = 0; j < gamesPerRound; j++) {
+				const gameCell = new TournamentGameCell(gamesOfRound[j])
+				gameCell.style.flex = `0 1 ${lenghtOfFirstRow}%`;
+				round.appendChild(gameCell);
+			}
+			gamesPerRound /= 2;
+			this.gamesBrackets.insertAdjacentElement('afterend', round);
 		}
 	}
 }

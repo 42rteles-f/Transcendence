@@ -1,6 +1,12 @@
+import TournamentDatabase from '../database/tournament';
 import Pong from '../services/Games/PongGame/Pong';
+import { Tournament } from '../services/Tournament/Tournament';
 import Client from './Client';
 import SocketManager from './SocketManager';
+import { randomUUID } from 'node:crypto';
+import { dbLite } from '..';
+
+
 
 const INTERVAL_MATCHMAKING = 3000;
 
@@ -11,14 +17,17 @@ interface IInvite {
 }
 
 class Matchmaker {
-	private	queue:		Client[] = [];
-	private	invites:	Map<Client, IInvite> = new Map();
-	private games:		Array<{id: string, pong: Pong}> = new Array();
-	private watcher:	NodeJS.Timeout | null = null;
-	private server:		SocketManager;
+	private	queue:			Client[] = [];
+	private	invites:		Map<Client, IInvite> = new Map();
+	private games:			Array<{id: string, pong: Pong}> = new Array();
+	private watcher:		NodeJS.Timeout | null = null;
+	private server:			SocketManager;
+	private tournaments:	Tournament[] = [];
+	private db:				TournamentDatabase;
 
 	public constructor(server: SocketManager) {
 		this.server = server;
+		this.db = new TournamentDatabase(dbLite);
 		this.startMatchmaking();
 	}
 
@@ -125,6 +134,100 @@ class Matchmaker {
 			return true;
 		});
 	}
+
+	public createTournament(client: Client, name: string, displayName: string, numberOfPlayers: number) {
+		if (this.tournaments.some((t) => t.owner.client.id == client.id))
+			return (undefined);
+		const id = `${client.id}-${randomUUID()}`;
+		this.tournaments.push(new Tournament(client, name, displayName, numberOfPlayers, id));
+		return (id);
+	}
+
+	public joinTournament(client: Client, displayName: string, tournamentId: string) {
+		// TODO: To be checked with Rubens
+
+		const targetTournament = this.tournaments.filter((t) => t.id == tournamentId)[0];
+		if (!targetTournament)
+			return ("Tournament not found");
+		if (this.tournaments.some((t) => t.players.some((p) => p.client.id === client.id)))
+			return ("Already subscribed to another tournament");
+		if (targetTournament.players.some(p => p.displayName === displayName))
+			return ("Display name already taken");
+		if (targetTournament.players.length === targetTournament.numberOfPlayers)
+			return ("Tournament already full");
+		if (targetTournament.start_date)
+			return ("Tournament already started or finished");
+		targetTournament.joinTournament(client, displayName);
+		return ("ok");
+	}
+
+	public leaveTournament(client: Client, tournamentId: string) {
+		const targetTournament = this.tournaments.filter(t => t.id === tournamentId)[0];
+		if (!targetTournament)
+			return ("Tournament not found");
+		if (!(targetTournament.players.filter(p => p.client.id === client.id)[0]))
+			return ("Not subscribed to this tournament");
+		if (targetTournament.start_date)
+			return ("Tournament already started or finished");
+		targetTournament.unsubscribeTournament(client);
+		return ("ok");
+	}
+
+	public cancelTournament(client: Client, tournamentId: string) {
+		const targetTournament = this.tournaments.filter(t => t.id === tournamentId)[0];
+		if (!targetTournament)
+			return ("Tournament not found");
+		if (!(targetTournament.players.filter(p => p.client.id === client.id)[0]))
+			return ("Not subscribed to this tournament");
+		if (targetTournament.owner.client.id !== client.id)
+			return ("Only the tournament owner can cancel it")
+		if (targetTournament.start_date)
+			return ("Tournament already started or finished");
+		this.tournaments = this.tournaments.filter(t => t.id !== tournamentId);
+		return ("ok");
+		// Emit an event to all listening sockets
+	}
+
+	public async getTournament(tournamentId: string) {
+		const targetTournament = this.tournaments.filter((t) => t.id === tournamentId)[0];
+		if (targetTournament)
+			return (targetTournament.tournamentInfos());
+		const res = await this.db.getTournament(tournamentId);
+		if (res.status != 200)
+			return (false);
+		return (res.reply);
+	}
+
+	public async getAllTournaments(pageNum: number, pageSizeNum: number) {
+		const offset = (pageNum - 1) * pageSizeNum;
+		let tournaments = this.tournaments
+		.map(t => {
+			const obj = t.tournamentInfos();
+			return (
+				{
+					id: obj.id,
+					uuid: obj.uuid,
+					name: obj.name,
+					startDate: obj.startDate,
+					winnerId: obj.winnerId,
+					ownerId: obj.ownerId,
+					ownerName: obj.ownerName,
+					numberOfPlayers: obj.numberOfPlayers,
+					status: obj.status,
+					winnerName: obj.winnerName
+				}
+			);
+		});
+		const { status, reply }  = await this.db.getAllTournaments();
+		if (status !== 200) {
+			// Should we send an error message or similar?
+		}
+		reply.tournaments.forEach((t: any) => tournaments.push(t));
+		const total = tournaments.length;
+		tournaments = tournaments.slice(offset, pageSizeNum);
+		return ({ tournaments, total });
+	} 
+
 }
 
 export default Matchmaker;
