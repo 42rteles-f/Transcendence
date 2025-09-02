@@ -347,6 +347,7 @@ class SocketManager {
 
 	public async onGetChatHistory(client: Client, { targetId }: { targetId: string }, callback: Function) {
 		const res = await this.userDatabase.getMessages(Number(client.id), Number(targetId));
+		console.log(`Chat history between ${client.id} and ${targetId}: ${JSON.stringify(res)}`);
 		callback({ ok: res.status === 200, message: res.status === 200 ? res.reply : "Could not load chat history"});
 	}
 }

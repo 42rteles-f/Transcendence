@@ -94,6 +94,7 @@ class Chat extends BaseComponent {
 		else
 			messageElement.textContent = data.message;
 
+		console.log(`chatHistory ${data.fromId} type ${typeof data.fromId}`)
 		if (!this.chatHistory.has(data.fromId))
 			this.chatHistory.set(data.fromId, []);
 		this.chatHistory.get(data.fromId)!.push(messageElement);
@@ -104,8 +105,8 @@ class Chat extends BaseComponent {
 		}
 		this.chatMessages.appendChild(messageElement);
 
-		while (this.chatMessages.children.length > this.messageLimit)
-			this.chatMessages.removeChild(this.chatMessages.firstChild!);
+		// while (this.chatMessages.children.length > this.messageLimit)
+		// 	this.chatMessages.removeChild(this.chatMessages.firstChild!);
 
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 	};
@@ -269,24 +270,23 @@ class Chat extends BaseComponent {
 		this.chatMessages.innerHTML =  '';
 	
 		const { id: myId } = AppControl.getValidDecodedToken() as { id: string | number };
-
-		const res = await Socket.request('get-chat-history', { targetId: client.id});
-		if (!res.ok)
-			this.chatMessages.innerHTML =  `<h3>${res.message}</h3>`;
-		else {
-			console.log(`chat history from db: ${JSON.stringify(res.message)}`);
-			res.message.forEach((m: any) => {
-				this.addMessage({
-					fromId: m.senderId,
-					fromName: m.senderName ?? client.name,
-					message: m.message
-				}, m.senderId === myId ? "incoming" : "outgoing");
+		// console.log(`myId ${typeof myId}`)
+		if (this.chatHistory.has(client.id)) {
+			this.chatHistory.get(client.id)!.forEach((msg) => {
+				this.chatMessages.appendChild(msg);
 			});
 		}
-		
-		this.chatHistory.get(client.id)?.forEach((msg) => {
-			this.chatMessages.appendChild(msg);
-		});
+		else {
+			const res = await Socket.request('get-chat-history', { targetId: client.id });
+			res.message.forEach((m: any) => {
+				// console.log(`type of id ${typeof m.senderId}`)
+				this.addMessage({
+					fromId: String(m.senderId),
+					fromName: m.senderName ?? client.name,
+					message: m.message
+				}, m.senderId === myId ? "outgoing" : "incoming");
+			});
+		}
 
 		this.hideNotification(client.id);
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
