@@ -94,7 +94,6 @@ class Chat extends BaseComponent {
 		else
 			messageElement.textContent = data.message;
 
-		console.log(`chatHistory ${data.fromId} type ${typeof data.fromId}`)
 		if (!this.chatHistory.has(data.fromId))
 			this.chatHistory.set(data.fromId, []);
 		this.chatHistory.get(data.fromId)!.push(messageElement);
@@ -216,13 +215,23 @@ class Chat extends BaseComponent {
 		}
 	}
 
+	storageSystemMessage(data: any) {
+		const stored = JSON.parse(localStorage.getItem("chatMessages") || "[]");
+
+		stored.push({ senderId: "system", message: data });
+
+		while (stored.length > 5) stored.shift();
+
+		localStorage.setItem("chatMessages", JSON.stringify(stored));
+	}
+
 	addSystemMessage(element: HTMLDivElement, message: any) {
 		const fieldName = this.systemMessages.find(f => f in message);
 		console.log(`addSystemMessage fieldName ${fieldName}`)
 		if (!fieldName) return false;
 
+		this.storageSystemMessage(message);
 		const methodName = `onSystem${fieldName.charAt(0).toUpperCase()}${fieldName.slice(1)}`;
-
 		if (typeof (this as any)[methodName] === "function") {
 			(this as any)[methodName](element, message);
 			return true;
@@ -259,6 +268,37 @@ class Chat extends BaseComponent {
 		console.log("Clients removed");
 	};
 
+	openSystemMessages() {
+		if (!this.chatHistory.has("system")) {
+			const history = localStorage.getItem("systemChat")?.split('<>');
+			history?.forEach((entry) => {
+				this.addMessage({
+					fromId: "system",
+					fromName: this.chatName.textContent!,
+					message: entry
+				}, "incoming");
+			})
+		}
+	}
+
+	retrieveSystemMessages() {
+		if (this.chatHistory.has("system")) return ;
+
+		const stored = JSON.parse(localStorage.getItem("chatMessages") || "[]");
+
+		if (!this.chatHistory.has("chatMessages"))
+			this.chatHistory.set("chatMessages", []);
+
+		stored.forEach((msg: any) => {
+			const messageElement = document.createElement("div");
+			messageElement.className = `chat-message-${msg.type}`;
+			messageElement.textContent = msg.message;
+
+
+			this.chatHistory.get(msg.fromId)!.push(messageElement);
+		});
+	}
+
 	async openChat(client: IClient) {
 		if (this.chatName.dataset.id === client.id) return ;
 
@@ -270,19 +310,23 @@ class Chat extends BaseComponent {
 		this.chatMessages.innerHTML =  '';
 	
 		const { id: myId } = AppControl.getValidDecodedToken() as { id: string | number };
-		// console.log(`myId ${typeof myId}`)
 		if (this.chatHistory.has(client.id)) {
 			this.chatHistory.get(client.id)!.forEach((msg) => {
 				this.chatMessages.appendChild(msg);
 			});
 		}
 		else {
-			const res = await Socket.request('get-chat-history', { targetId: client.id });
+			let res;
+			if (client.id === "system") {
+				res = { message: JSON.parse(localStorage.getItem("chatMessages") || "[]").map((m: any) => ({ senderId: m.senderId, message: m.message })) };
+				localStorage.removeItem("chatMessages");
+			}
+			else
+				res = await Socket.request('get-chat-history', { targetId: client.id });
 			res.message.forEach((m: any) => {
-				// console.log(`type of id ${typeof m.senderId}`)
 				this.addMessage({
-					fromId: String(m.senderId),
-					fromName: m.senderName ?? client.name,
+					fromId: this.chatName.dataset.id!,
+					fromName: this.chatName.textContent!,
 					message: m.message
 				}, m.senderId === myId ? "outgoing" : "incoming");
 			});
