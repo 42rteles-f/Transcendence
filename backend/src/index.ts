@@ -10,13 +10,20 @@ import path from 'path';
 import googleAuthRoutes from './routes/googleAuth';
 import { Database } from 'sqlite3';
 import TournamentDatabase from './database/tournament';
+import fs from 'fs';
 
 
 dotenv.config();
 
+const httpsConfig = {
+	key: fs.readFileSync(path.join(__dirname, '../config/certs/server.key')),
+	cert: fs.readFileSync(path.join(__dirname,'../config/certs/server.crt'))
+}
+
 export const server = Fastify({
 	logger: false,
-	bodyLimit: 1048576
+	bodyLimit: 1048576,
+	https: httpsConfig
 });
 
 server.register(cors, {
@@ -103,7 +110,7 @@ export { dbLite };
 import "./routes/user";
 import "./routes/tournament";
 
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 443;
 
 start(port);
 

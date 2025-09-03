@@ -7,18 +7,19 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-	"prune": "rm -rf node_modules && rm -rf package-lock.json && npm cache clean --force",
-	"re": "npm run prune && npm install && npm run build"
+    "prune": "rm -rf node_modules && rm -rf package-lock.json && npm cache clean --force",
+    "re": "npm run prune && npm install && npm run build"
   },
   "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.8",
+    "babylonjs": "^6.0.0",
     "jwt-decode": "^4.0.0",
     "socket.io-client": "^4.8.1",
-    "tailwindcss": "^4.1.8",
-    "babylonjs": "^6.0.0"
+    "tailwindcss": "^4.1.8"
   }
 }
