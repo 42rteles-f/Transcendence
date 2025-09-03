@@ -120,7 +120,10 @@ export class Tournament {
 				if (winnerPlayer)
 					roundWinners.push(winnerPlayer);
 				if (loserPlayer)
+				{
 					loserPlayer.client.socket.emit("tournament-eliminated", {tournamentId: this.id});
+					this.unsubscribeTournament(loserPlayer.client);
+				}
 			}
 		}
 		this.qualified = roundWinners;
@@ -135,6 +138,7 @@ export class Tournament {
 		{
 			console.log(`Tournament winner: ${this.qualified[0].displayName}`);
 			this.winner = this.qualified[0];
+			this.unsubscribeTournament(this.winner.client);
 			this.endTournament();
 		}
 	}
@@ -159,6 +163,7 @@ export class Tournament {
 	}
 
 	public unsubscribeTournament(client: Client) {
+		console.log("Player unsubscribed!");
 		this.players = this.players.filter(p => p.client.id !== client.id);
 		this.qualified = this.qualified.filter(p => p.client.id !== client.id);
 	}
@@ -174,10 +179,6 @@ export class Tournament {
 		this.end_date = new Date().toISOString();
 		this.status = "finished";
 		console.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
-	}
-
-	private registerGame(game: Pong) {
-		// call db
 	}
 
 	public tournamentInfos() {

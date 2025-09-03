@@ -79,9 +79,8 @@ class Matchmaker {
 	}
 
 	public	addToQueue(client: Client): void {
-		if (!this.queue.some(c => c.socket.id === client.socket.id)) {
+		if (!this.queue.some(c => c.id === client.id))
 			this.queue.push(client);
-		}
 	}
 
 	public	removeFromQueue(client: Client): void {
