@@ -89,7 +89,6 @@ class SocketManager {
 
 			this.authorizedBroadcast(client, "client-arrival", [client.basicInfo()]);
 			socket.onAny((event: string, ...args: any[]) => {
-				// handle try
 				if (
 					!client.eventCaller(event, ...args) &&
 					!this.eventCaller(event, client, ...args))
@@ -118,6 +117,7 @@ class SocketManager {
 
 		const client = new Client(this, socket, clientData!);
 		this.clients.set(socket.id, client);
+		this.matchmaker!.clientReconnect(client);
 		return (client);
 	}
 

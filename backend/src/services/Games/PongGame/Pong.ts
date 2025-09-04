@@ -22,9 +22,9 @@ class Pong extends GameSocket {
 	private	players:	PongPlayer[] = [];
 	private ball:		Pointer<Ball> = null;
 	private status: 	"waiting" | "playing" | "finished" | "error";
+	private localPlay:	string = "";
 	public	winner:		Pointer<PongPlayer> = null;
 
-	// Added optional room name
 	constructor(clients: Socket[], roomName?: string) {
 		super(clients, roomName);
 		if (clients.length !== 2) {
@@ -34,7 +34,7 @@ class Pong extends GameSocket {
 		}
 		clients.forEach((client, index) => {
 			this.players.push({
-				id: client.data.user.id.toString(),  // Use database user ID //	client.id,
+				id: client.data.user.id.toString(),
 				name: client.data.user.username,
 				paddle: new Paddle(
 					index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH,
@@ -43,19 +43,22 @@ class Pong extends GameSocket {
 				score: 0,
 				online: false
 			});
-			const localPlay = (clients[0].id === clients[1].id && index === RIGHT) ? "second-" : "";
-			this.addEventHook(clients[index], localPlay + `paddle-update`, ({ direction }: { direction: number }) => {
-				this.players[index].paddle.changeDirection(direction);
-			});
+			this.localPlay = (clients[0].id === clients[1].id && index === RIGHT) ? "second-" : "";
+			// this.addEventHook(clients[index], this.localPlay + `paddle-update`, ({ direction }: { direction: number }) => {
+			// 	this.players[index].paddle.changeDirection(direction);
+			// });
 		});
 
 		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2 - BALL_SIZE / 2);
 		this.status = 'playing';
-		this.updateState();
-		this.startGameLoop();
+		// this.startGameLoop();
 	}
 
 	protected onTick(): void {
+		if (this.players.map((player) => { !player.online; })) {
+			this.status = 'error';
+			return ;
+		}
 		this.ball!.update();
 		this.players.forEach((player) => {
 			player.paddle.update();
@@ -119,6 +122,11 @@ class Pong extends GameSocket {
 				y: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2
 			});
 		});
+	}
+
+	protected onPlayerJoin(socket: Socket): void {
+		const player = this.players.find((p) => p.id === socket.data.user.id.toString());
+		player?.online = true;
 	}
 
 	public destructor(): void {

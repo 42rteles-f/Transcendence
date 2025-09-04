@@ -85,7 +85,7 @@ class PongGame extends BaseComponent {
 			Socket.emit("pong-local-play");
 		}
 		else if (this.tournamentPlay)
-			console.log("Tournament mode"); // Log to frontend only
+			console.log("Tournament mode");
 		else
 			Socket.emit("pong-match-find");
 		this.canvas.tabIndex = 0;
@@ -94,7 +94,6 @@ class PongGame extends BaseComponent {
 	}
 
 	private setupCanvas() {
-		//if (!this.canvas.id)
 		this.canvas.id = "pongCanvas";
 		const canvasWidth = this.canvas.width || 800;
 		const canvasHeight = this.canvas.height || 600;

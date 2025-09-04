@@ -6,19 +6,22 @@ import SocketManager from './SocketManager';
 import { randomUUID } from 'node:crypto';
 import { dbLite } from '..';
 
-
-
 const INTERVAL_MATCHMAKING = 3000;
 
+interface ClientRef {
+	id: string;
+	info: Client;
+}
+
 interface IInvite {
-	guest: Client;
+	guest: ClientRef;
 	room: string;
 	status: 'pending' | 'accepted' | 'started';
 }
 
 class Matchmaker {
 	private	queue:			Client[] = [];
-	private	invites:		Map<Client, IInvite> = new Map();
+	private	invites:		Map<ClientRef, IInvite> = new Map();
 	private games:			Array<{id: string, pong: Pong}> = new Array();
 	private watcher:		NodeJS.Timeout | null = null;
 	private server:			SocketManager;
@@ -31,16 +34,34 @@ class Matchmaker {
 		this.startMatchmaking();
 	}
 
+	private findInviteById(id: string): IInvite | undefined {
+		for (const [clientRef, invite] of this.invites) {
+			if (clientRef.id === id) {
+			return invite;
+			}
+		}
+		return (undefined);
+	}
+
+	removeInviteById(id: string): boolean {
+		for (const clientRef of this.invites.keys()) {
+			if (clientRef.id === id) {
+				return this.invites.delete(clientRef);
+			}
+		}
+		return (false);
+	}
+
 	public createInvite(host: Client, guest: Client): void {
-		const invite = this.invites.get(host);
+		const invite = this.findInviteById(host.id);
 		if (invite) this.removeInvite(host);
 
 		const newInvite: IInvite = {
-			guest,
+			guest: { id: guest.id, info: guest },
 			room: this.createGameId('invite', [host, guest]),
 			status: 'pending',
 		}
-		this.invites.set(host, newInvite);
+		this.invites.set({ id: host.id, info: host }, newInvite);
 
 		host.socket.join(newInvite!.room);
 		guest.socket.join(newInvite!.room);
@@ -53,7 +74,7 @@ class Matchmaker {
 	}
 
 	public joinInvite(host: Client, guest: Client): void {
-		const invite = this.invites.get(host);
+		const invite = this.findInviteById(host.id);
 		if (!invite || (invite && invite.guest.id !== guest.id)) {
 			this.server.serverChat(guest.socket.id, { error: `Invite ${host.username}-${guest.username} expired` })
 			console.log(`joinInvite ${invite?.guest.id} !== ${guest.id}`)
@@ -63,15 +84,15 @@ class Matchmaker {
 	}
 
 	public removeInvite(host: Client): void {
-		const invite = this.invites.get(host);
+		const invite = this.findInviteById(host.id);
 		console.log(`invite being removed ${invite?.guest}`)
 		if (!invite) return ;
 
-		const guest = invite.guest;
+		const guest = invite.guest.info;
 		this.server.serverChat(host.socket.id, { error: `Invite ${host.username}-${guest.username} expired` })
 		host.socket.leave(invite!.room);
 		guest.socket.leave(invite!.room);
-		this.invites.delete(host);
+		this.removeInviteById(host.id);
 	}
 
 	createGameId(prefix:string, players: Client[]): string {
@@ -115,7 +136,7 @@ class Matchmaker {
 	private startInviteGames(): void {
 		this.invites.forEach((invite, host) => {
 			if (invite.status === 'accepted') {
-				this.games.push({ id: invite.room, pong: new Pong([host.socket, invite.guest.socket]) });
+				this.games.push({ id: invite.room, pong: new Pong([host.info.socket, invite.guest.info.socket]) });
 				this.server.serverChat(invite!.room, {
 					room: invite!.room
 				});
@@ -226,8 +247,31 @@ class Matchmaker {
 		const total = tournaments.length;
 		tournaments = tournaments.slice(offset, pageSizeNum);
 		return ({ tournaments, total });
-	} 
+	}
 
+	clientReconnect(client: Client) {
+		this.invites.forEach((invite, clientRef) => {
+			let update;
+			if (clientRef.id === client.id) {
+				clientRef.info = client;
+				update = true;
+			}
+			else if (invite.guest.id === client.id) {
+				invite.guest.info = client;
+				update = true;
+			}
+			if (update)
+				client.socket.join(invite.room);
+		});
+		// this.tournaments.forEach(t => {
+		// 	if (t.owner.client.id === client.id)
+		// 		t.owner.client = client;
+		// 	t.players.forEach((p, index) => {
+		// 		if (p.client.id === client.id)
+		// 			t.players[index].client = client;
+		// 	});
+		// });
+	}
 }
 
 export default Matchmaker;

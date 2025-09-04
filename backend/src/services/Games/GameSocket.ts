@@ -26,17 +26,11 @@ abstract class GameSocket {
 		this.io = clients[0].nsp;
 		clients.forEach(client => {
 			this.clients.set(client.id, client);
+			client.onAny(this.eventCaller);
 		});
-		this.clients.forEach(client => {
-			client.on("pong-match-leave", () => {
-				this.handleDisconnect(client);
-			});
-		})
 		this.initRoom(roomName);
     }
 
-	// Rooms use Socket IDs for navigation?
-	// Players should only receive events from their own room
 	private initRoom(roomName?: string) {
 		if (roomName)
 			this.room = roomName
@@ -51,7 +45,19 @@ abstract class GameSocket {
 		});
 	}
 
-	eventCaller(event: string, ...args: any[]) {
+	onPongMatchLeave(client: Socket) {
+		this.handleDisconnect(client);
+		this.onPlayerLeave(client);
+		client.removeListener("onAny", this.eventCaller);
+	}
+
+	onDisconnect(client: Socket) {
+		this.handleDisconnect(client);
+		this.onPlayerLeave(client);
+		client.removeListener("onAny", this.eventCaller);
+	}
+
+	eventCaller = (event: string, ...args: any[]) => {
 		event = `-${event}`;
 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
 		if (typeof (this as any)[methodName] === 'function') {
@@ -63,6 +69,7 @@ abstract class GameSocket {
 
     protected handleDisconnect(client: Socket) {
 		client.removeAllListeners("pong-match-leave");
+		client.removeAllListeners("disconnect");
 		client.leave(this.room!);
 		this.clients.delete(client.id);
         if (this.clients.size === 0) {
@@ -109,9 +116,9 @@ abstract class GameSocket {
         this.io.to(socketId).emit(event, payload);
     }
 
-    // protected abstract onPlayerJoin(socket: Socket, info?: C): void;
+    protected abstract onPlayerJoin(socket: Socket): void;
 
-    // protected abstract onPlayerLeave(socket: Socket): void;
+    protected abstract onPlayerLeave(socket: Socket): void;
 
     protected abstract onTick(): void;
 
