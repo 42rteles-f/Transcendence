@@ -11,9 +11,9 @@ class Socket {
 			return true;
 		}
 
-		let apiUrl = import.meta.env.API_URL || "http://localhost:443";
+		let apiUrl = import.meta.env.API_URL || "http://localhost:3000";
 		if (window.location.protocol === 'https:') {
-			apiUrl = apiUrl.replace('http://', 'https://').replace(':3000', ':443');
+			apiUrl = apiUrl.replace('http://', 'https://');
 		}
 
 		this.socket = io(apiUrl, {

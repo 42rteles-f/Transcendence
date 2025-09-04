@@ -9,7 +9,7 @@ services:
     working_dir: /app
     command: sh -c "npm install && npm run dev"
     ports:
-      - "${PORT:-443}:${PORT:-443}"
+      - "${PORT:-3000}:${PORT:-443}"
     networks:
       - transcendence_net
     env_file:
