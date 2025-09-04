@@ -1,5 +1,10 @@
 #!/bin/bash
 
+ip=$(ifconfig | grep 'inet ' | grep -v '127.0.0.1' | awk '{print $2}' | head -n 1)
+echo "$ip"
+
+export MACHINE_IP=$ip
+
 sed -i 's/\r$//' .env
 source .env
 

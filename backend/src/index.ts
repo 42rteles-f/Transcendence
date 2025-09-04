@@ -27,7 +27,7 @@ export const server = Fastify({
 });
 
 server.register(cors, {
-	origin: "*",
+	origin: ['https://localhost:5173', 'https://localhost'],
 	credentials: true,
 });
 
@@ -71,6 +71,10 @@ server.decorate('authenticate', async function (req: FastifyRequest, res: Fastif
 });
 
 server.register(googleAuthRoutes)
+
+server.get('/test', async (req, res) => {
+	res.send({ message: 'Test endpoint' });
+})
 
 const start = async (port: number) => {
 	try {
