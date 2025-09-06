@@ -3,17 +3,6 @@
 ip=$(hostname -I | awk '{print $1}')
 echo "Host IP: $ip"
 
-export HOST_IP=$ip
-
-echo "VITE_API_URL=https://$HOST_IP:3000/" > ./frontend/.env
-echo "VITE_USER_API_URL=https://$HOST_IP:3000/user/" >> ./frontend/.env
-echo "VITE_GAME_API_URL=https://$HOST_IP:3000/game/" >> ./frontend/.env
-
-
-echo "VITE_API_URL=https://$HOST_IP:5173/" >> ./backend/config/.backend.env
-echo "VITE_USER_API_URL=https://$HOST_IP:5173/user/" >> ./backend/config/.backend.env
-echo "VITE_GAME_API_URL=https://$HOST_IP:5173/game/" >> ./backend/config/.backend.env
-
 sed -i 's/\r$//' .env
 source .env
 

@@ -11,6 +11,9 @@ class UserCard extends BaseComponent {
     private userCardUsername!: HTMLElement;
 	private friendActionButton!: HTMLDivElement;
 	private onActionComplete?: () => void;
+	private user: any;
+    private uploadUrl: string;
+	private ownerId: number | string | null;
 
     constructor(user: any, uploadUrl: string, ownerId: number | string, callback?: () => void) {
         super("/components/userCard.html");
@@ -19,10 +22,6 @@ class UserCard extends BaseComponent {
 		this.ownerId = ownerId;
 		this.onActionComplete = callback;
     }
-
-    user: any;
-    uploadUrl: string;
-	ownerId: number | string | null;
 
     async onInit() {
 		this.userCard.onclick = (e) => {

@@ -5,7 +5,6 @@ import Socket from '../../src/Socket';
 
 class CreateTournamentModal extends BaseComponent {
 	private closeBtn!: HTMLButtonElement;
-	private submitBtn!: HTMLButtonElement;
 	private cancelBtn!: HTMLButtonElement;
 	private nameInput!: HTMLInputElement;
 	private displayNameInput!: HTMLInputElement;
@@ -15,7 +14,6 @@ class CreateTournamentModal extends BaseComponent {
 	constructor() {
 		super("/components/createTournamentModal.html");
 		this.tabIndex = -1;
-		this.submitBtn;
 	}
 
 	async onInit() {

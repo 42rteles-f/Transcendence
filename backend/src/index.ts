@@ -21,8 +21,9 @@ export const server = Fastify({
 server.register(cors, {
 	origin: (origin, cb) => {
 		const allowedOrigins = [
-			'https://localhost:8443',
-			'http://frontend:5173'
+			`${process.env.HOST_ADDRESS}`,
+			`${process.env.FRONTEND_ADDRESS}`,
+			'https://localhost:8443'
 		];
 		if (!origin || allowedOrigins.includes(origin)) {
 			cb(null, true);
