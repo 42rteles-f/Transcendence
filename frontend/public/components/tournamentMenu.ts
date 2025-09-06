@@ -67,7 +67,8 @@ class TournamentMenu extends BaseComponent {
 		this.winnerName.innerText = this.menuInfo.winnerName ?? '?';
 
 		this.ownerName.addEventListener("click", () => routes.navigate(`/profile/${this.menuInfo.ownerId}`));
-		this.winnerName.addEventListener("click", () => routes.navigate(`/profile/${this.menuInfo.winnerId}`));
+		if (this.winnerName.textContent !== "?")
+			this.winnerName.addEventListener("click", () => routes.navigate(`/profile/${this.menuInfo.winnerId}`));
 
 		this.startDate.innerText = `${this.menuInfo.startDate ? new Date(this.menuInfo.startDate).toLocaleString() : "not started yet"}`;
 

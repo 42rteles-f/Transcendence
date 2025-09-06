@@ -51,7 +51,7 @@ class TournamentDashboardPage extends BaseComponent {
 
     async loadTournament() {
         try {
-            const res = await Api.getTournament(this.tournamentId);
+            const res = await Api.getTournament(this.tournamentId.toString());
             this.tournament = res.message ?? res;
 
             this.tournamentName.textContent = this.tournament.name;
