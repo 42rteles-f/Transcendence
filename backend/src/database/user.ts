@@ -154,7 +154,7 @@ export default class UserDatabase {
 											 ORDER BY g.created_at DESC
 											 LIMIT ? OFFSET ?`, [id, id, pageSize, offset]);
 			if (!games || games.length === 0)
-				return { status: 404, reply: "No games found" };
+				return { status: 200, reply: {} };
 			const total = await this.getAsync(`SELECT COUNT(*) as count
 											 FROM games g
 											 WHERE g.player1_id = ? OR g.player2_id = ?`, [id, id]);
