@@ -33,6 +33,8 @@ server.register(cors, {
 	credentials: true,
 });
 
+console.log(`server cors: origin set to ${process.env.VITE_API_URL}`);
+
 server.register(fastifyMultipart);
 
 server.register(fastifyStatic, {
@@ -115,6 +117,7 @@ export { dbLite };
 
 import "./routes/user";
 import "./routes/tournament";
+import { CLIENT_RENEG_LIMIT } from 'tls';
 
 const port = Number(process.env.PORT) || 3000;
 

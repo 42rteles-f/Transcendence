@@ -30,6 +30,7 @@ class Api {
 		console.log(`Making ${method} request to: ${fullPath}`);
         const response = await fetch(fullPath, {
             method: method,
+			credentials: "include",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${this.token || localStorage.getItem("authToken")}`
