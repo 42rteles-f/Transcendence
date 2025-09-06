@@ -16,6 +16,7 @@ class editProfile extends BaseComponent {
 		super("/pages/editProfile.html");
 		this.tabIndex = -1;
 		this.userNameValue = username;
+		this.profilePicture;
 	}
 	
 	async onInit() {

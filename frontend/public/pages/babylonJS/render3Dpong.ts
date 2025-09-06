@@ -29,16 +29,16 @@ interface PongState {
 export class PongRenderer3D {
     private engine: BABYLON.Engine | null = null;
     private scene: BABYLON.Scene | null = null;
-    private canvas: HTMLCanvasElement;
+    private canvas!: HTMLCanvasElement;
     private ball: BABYLON.Mesh | null = null;
     private paddles: BABYLON.Mesh[] = [];
-    private canvasWidth: number;
-    private canvasHeight: number;
+    private canvasWidth!: number;
+    private canvasHeight!: number;
     private initialized: boolean = false;
 
     constructor(canvasId: string, canvasWidth: number, canvasHeight: number) {
-        const canvasElement = document.getElementById(canvasId) as HTMLCanvasElement;
-        if (!canvasElement)
+        const canvasElement = document.getElementById(canvasId);
+        if (!canvasElement || !(canvasElement instanceof HTMLCanvasElement))
             return ;
             //console.error(`Canvas with id "${canvasId}" not found`);
         this.canvas = canvasElement;

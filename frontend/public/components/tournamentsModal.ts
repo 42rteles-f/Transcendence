@@ -1,7 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { TournamentInfo } from './tournamentInfo';
 import { routes } from '../../src/routes';
-import Api from '../../src/api/Api';
 import Socket from '../../src/Socket';
 import { showToast } from '../pages/toastNotification';
 

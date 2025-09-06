@@ -1,7 +1,5 @@
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
-import fs from 'fs'
-import path from 'path'
 
 export default defineConfig({
     plugins: [
@@ -10,13 +8,17 @@ export default defineConfig({
     server: {
         port: 5173,
         host: '0.0.0.0',
-        https: {
-            key: fs.readFileSync(path.resolve(__dirname, 'certs/server.key')),
-            cert: fs.readFileSync(path.resolve(__dirname, 'certs/server.crt'))
-        },
         headers: {
             'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
             'Cross-Origin-Embedder-Policy': 'unsafe-none',
-        }
+        },
+		proxy: {
+            '^(?!.*\\.(css|js|html|ico|png|jpg|gif|svg|woff2|woff|ttf|eot)$)': {
+                target: 'http://backend:3000',
+                changeOrigin: true,
+                ws: true,
+                secure: false,
+            }
+        },
     },
 });

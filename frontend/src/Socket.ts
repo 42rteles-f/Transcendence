@@ -1,6 +1,5 @@
 import { Pointer } from './PageManager';
 import { io, Socket as SocketIo } from 'socket.io-client';
-import { routes } from './routes';
 
 class Socket {
 	private	static socket:			Pointer<SocketIo> = null;
@@ -11,12 +10,13 @@ class Socket {
 			return true;
 		}
 
-		let apiUrl = import.meta.env.API_URL || "http://localhost:443";
-		if (window.location.protocol === 'https:') {
-			apiUrl = apiUrl.replace('http://', 'https://').replace(':3000', ':443');
-		}
+		const host = window.location.hostname;
+        const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        const protocol = window.location.protocol;
 
+		let apiUrl = `${protocol}//${host}:${port}`;
 		this.socket = io(apiUrl, {
+			path: '/socket.io/',
 			transports: ['websocket'],
 			auth: {
 				token: localStorage.getItem("authToken") || ""

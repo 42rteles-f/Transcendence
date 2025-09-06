@@ -2,24 +2,6 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "../pages/toastNotification";
 import { routes } from "../../src/routes";
 import Socket from '../../src/Socket';
-
-const fakeMatchmaking = {
-    searching: false,
-    timeout: null as any,
-    start(onFound: (gameId: string) => void) {
-        this.searching = true;
-        this.timeout = setTimeout(() => {
-            if (this.searching) {
-                onFound("pong-game-123");
-            }
-        }, 3000);
-    },
-    cancel() {
-        this.searching = false;
-        clearTimeout(this.timeout);
-    }
-};
-
 class PongModal extends BaseComponent {
     private closeBtn!: HTMLButtonElement;
     private searchBtn!: HTMLButtonElement;

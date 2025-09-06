@@ -1,6 +1,5 @@
 import { BaseComponent } from "./BaseComponent";
 import { AppControl } from "./AppControl";
-import { createLogger } from 'vite';
 
 type AnyBaseComponent = new (...args: any[]) => BaseComponent;
 

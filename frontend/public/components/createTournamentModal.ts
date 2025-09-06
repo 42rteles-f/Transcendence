@@ -1,7 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "../pages/toastNotification";
 import { routes } from '../../src/routes';
-import Api from '../../src/api/Api';
 import Socket from '../../src/Socket';
 
 class CreateTournamentModal extends BaseComponent {
@@ -16,6 +15,7 @@ class CreateTournamentModal extends BaseComponent {
 	constructor() {
 		super("/components/createTournamentModal.html");
 		this.tabIndex = -1;
+		this.submitBtn;
 	}
 
 	async onInit() {

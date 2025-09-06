@@ -20,6 +20,7 @@ class TournamentGameCell extends BaseComponent {
 	constructor (gameInfo: IGameInfo) {
 		super('/components/tournamentGameCell.html');
 		this.info = gameInfo;
+		this.gameCell;
 		// console.log(`gameInfo: ${JSON.stringify(gameInfo)}`);
 	}
 
