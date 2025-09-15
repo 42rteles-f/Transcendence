@@ -6,32 +6,47 @@ export interface PongScore {
 	score: number;
 }
 
+export type EventArray = Array<{event: string, callback: Function}>;
+
 interface Player {
 	id: string;
+	socket: Socket;
+	events: EventArray;
 }
 
 abstract class GameSocket {
-	private 	io: Namespace;
-    protected	room: string | null = null;
-	protected	state: any = {};
-    protected	clients: Map<string, Socket> = new Map();
-    private		tickHandle?: NodeJS.Timeout;
-    private		tickInterval: number;
+	private 	io:				Namespace;
+    protected	room:			string | null = null;
+	protected	state:			any = {};
+    protected	clients:		Map<string, Player> = new Map();
+    private		tickHandle?:	NodeJS.Timeout;
+    private		tickInterval:	number;
 
     constructor(
         clients: Socket[],
-		roomName?: string
+		roomName: string,
 	) {
 		this.tickInterval = 1000 / 60;
 		this.io = clients[0].nsp;
 		clients.forEach(client => {
-			this.clients.set(client.id, client);
-			client.onAny(this.eventCaller);
+			this.clients.set(client.data.user.id.toString(), {
+				id: client.data.user.id.toString(),
+				socket: client,
+				events: new Array()
+			});
+			client.on("disconnect", () => this.onDisconnect(client));
 		});
 		this.initRoom(roomName);
     }
 
-	private initRoom(roomName?: string) {
+	addEvents(clientId: string, events: EventArray) {
+		this.clients.get(clientId)?.events.push(...events);
+		this.clients.get(clientId)?.events.forEach(({event, callback}) => {
+			this.clients.get(clientId)?.socket.on(event, callback as any);
+		});
+	}
+
+	private initRoom(roomName: string) {
 		if (roomName)
 			this.room = roomName
 		else
@@ -41,35 +56,18 @@ abstract class GameSocket {
 			this.room = `pong-${ids}-${date}`;
 		}
 		this.clients.forEach(client => {
-			client.join(this.room!);
+			client.socket.join(this.room!);
 		});
-	}
-
-	onPongMatchLeave(client: Socket) {
-		this.handleDisconnect(client);
-		this.onPlayerLeave(client);
-		client.removeListener("onAny", this.eventCaller);
 	}
 
 	onDisconnect(client: Socket) {
 		this.handleDisconnect(client);
 		this.onPlayerLeave(client);
-		client.removeListener("onAny", this.eventCaller);
+		this.clients.delete(client.id);
+		client.leave(this.room!);
 	}
 
-	eventCaller = (event: string, ...args: any[]) => {
-		event = `-${event}`;
-		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
-		if (typeof (this as any)[methodName] === 'function') {
-			(this as any)[methodName](...args);
-			return (true);
-		}
-		return (false);
- 	}
-
     protected handleDisconnect(client: Socket) {
-		client.removeAllListeners("pong-match-leave");
-		client.removeAllListeners("disconnect");
 		client.leave(this.room!);
 		this.clients.delete(client.id);
         if (this.clients.size === 0) {
@@ -87,20 +85,6 @@ abstract class GameSocket {
 		this.tickInterval);
     }
 
-	protected	addEventHook(player: Socket, event: string, callback: (...args: any[]) => void) {
-		player.on(event, callback);
-	}
-
-	protected removeEventHook(event: string): void {
-		this.clients.forEach((client) => {
-			client.removeAllListeners(event);
-		});
-	}
-	
-	protected clientRemoveEventHook(client: Socket, event: string): void {
-			client.removeAllListeners(event);
-	}
-
     protected stopGameLoop() {
         if (this.tickHandle) {
             clearInterval(this.tickHandle);
@@ -109,16 +93,27 @@ abstract class GameSocket {
     }
 
     protected broadcastState() {
-        this.io.to(this.room!).volatile.emit("pong-state", this.state);
+        this.io.to(this.room!).volatile.emit("game-state", this.state);
     }
 
     protected sendTo(socketId: string, event: string, payload: any) {
         this.io.to(socketId).emit(event, payload);
     }
 
-    protected abstract onPlayerJoin(socket: Socket): void;
+    protected onPlayerJoin(socket: Socket): void {
+		// this.clients.get(socket.id)?.events.forEach(({event, callback}) => {
+		// 	socket.on(event, (...args: any[]) => callback(...args));
+		// });
+	}
 
-    protected abstract onPlayerLeave(socket: Socket): void;
+    protected onPlayerLeave(socket: Socket): void {
+		// this.clients.get(socket.id)?.events.forEach(({event, callback}) => {
+		// 	socket.removeListener(event, (...args: any[]) => callback(...args));
+		// });
+		if (this.clients.size === 0) {
+			this.destructor();
+		}
+	}
 
     protected abstract onTick(): void;
 
@@ -126,12 +121,24 @@ abstract class GameSocket {
 		console.log(`GameSocket destructor called for room: ${this.room}`);
 		this.stopGameLoop();
 		this.clients.forEach(client => {
-			client.leave(this.room!);
+			client.socket.leave(this.room!);
+			client.events.forEach(({event, callback}) => {
+				client.socket.removeListener(event, callback as any);
+			});
 		});
-		this.removeEventHook("pong-match-leave");
 		this.clients.clear();
 	}
 
 }
 
 export default GameSocket;
+
+// 	eventCaller(event: string, ...args: any[]) {
+// 		event = `-${event}`;
+// 		const methodName = `on${event.replace(/-([a-z])/g, (_, char) => char.toUpperCase())}`;
+// 		if (typeof (this as any)[methodName] === 'function') {
+// 			(this as any)[methodName](this, ...args);
+// 			return (true);
+// 		}
+// 		return (false);
+//  	}

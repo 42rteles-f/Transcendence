@@ -1,6 +1,6 @@
 import GameSocket from '../GameSocket';
+import { EventArray } from '../GameSocket';
 import { Socket } from 'socket.io';
-import { Pointer } from "../../../socket/SocketManager"
 import Ball from './PongBall';
 import Paddle from './PongPaddle';
 import {
@@ -19,19 +19,21 @@ import {
 } from './PongTypes';
 
 class Pong extends GameSocket {
-	private	players:	PongPlayer[] = [];
-	private ball:		Pointer<Ball> = null;
-	private status: 	"waiting" | "playing" | "finished" | "error";
-	private localPlay:	string = "";
-	public	winner:		Pointer<PongPlayer> = null;
+	private	players:		PongPlayer[] = [];
+	private ball?:			Ball = undefined;
+	private status:			"waiting" | "playing" | "finished" | "error";
+	private localPlay:		boolean = false;
+	private leaveTimeout?:	NodeJS.Timeout = undefined;
+	public	winner?:		PongPlayer = undefined;
 
 	constructor(clients: Socket[], roomName?: string) {
-		super(clients, roomName);
+		super(clients, roomName ?? "noRoom");
 		if (clients.length !== 2) {
 			this.status = 'error';
 			console.error("Pong game requires exactly 2 players.");
 			return ;
 		}
+		
 		clients.forEach((client, index) => {
 			this.players.push({
 				id: client.data.user.id.toString(),
@@ -43,20 +45,38 @@ class Pong extends GameSocket {
 				score: 0,
 				online: false
 			});
-			this.localPlay = (clients[0].id === clients[1].id && index === RIGHT) ? "second-" : "";
-			// this.addEventHook(clients[index], this.localPlay + `paddle-update`, ({ direction }: { direction: number }) => {
-			// 	this.players[index].paddle.changeDirection(direction);
-			// });
 		});
+		this.localPlay = (clients[0].id === clients[1].id);
+
+		this.mapEvents();
 
 		this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2 - BALL_SIZE / 2);
-		this.status = 'playing';
-		// this.startGameLoop();
+		this.status = 'waiting';
+		this.leaveTimeout = setTimeout(() => {
+			if (this.status === 'waiting') {
+				this.status = 'error';
+				this.destructor();
+			}
+		}, 10000);
+		if (this.localPlay)
+			this.onPongMatchJoin(this.players[0], this.room!);
+	}
+
+	private mapEvents(): void {
+		this.players.forEach((player) => {
+			const events: EventArray = [];
+			events.push({event: "pong-match-join", callback: (room: string) => this.onPongMatchJoin(player, room)});
+			events.push({event: "pong-match-leave", callback: (room: string) => this.onPongMatchLeave(player, room)});
+			events.push({event: "player-forfeit", callback: (room: string) => this.playerForfeit(player, room)});
+			events.push({event: "paddle-update", callback: (direction: number) => player.paddle.changeDirection(direction)});
+			if (this.localPlay)
+				events.push({event: "second-paddle-update", callback: (direction: number) => player.paddle.changeDirection(direction)});
+			this.addEvents(player.id, events);
+		});
 	}
 
 	protected onTick(): void {
-		if (this.players.map((player) => { !player.online; })) {
-			this.status = 'error';
+		if (this.players.some((player) => !player.online)) {
 			return ;
 		}
 		this.ball!.update();
@@ -80,6 +100,11 @@ class Pong extends GameSocket {
 				this.winner = this.players[side];
 				this.status = 'finished';
 			}
+		}
+		if (this.leaveTimeout
+			&& (this.players.every((p) => p.online) || this.winner)
+		) {
+			this.endTimeout();
 		}
 	}
 
@@ -124,39 +149,66 @@ class Pong extends GameSocket {
 		});
 	}
 
-	protected onPlayerJoin(socket: Socket): void {
-		const player = this.players.find((p) => p.id === socket.data.user.id.toString());
-		player?.online = true;
+	private onPongMatchJoin(player: PongPlayer, room: string): void {
+		// if (room != this.room || !player) return ;
+
+		player.online = true;
+		const allClientsReady = this.players.every((p) => p.online) ?? this.localPlay;
+		console.log("All clients ready: ", allClientsReady, " Status: ", this.status);
+		if (allClientsReady) {
+			this.status = 'playing';
+			console.log("Starting game loop");
+			this.endTimeout();
+			this.startGameLoop();
+		}
+	}
+
+	private onPongMatchLeave(player: PongPlayer, room: string): void {
+		// if (room != this.room || !player) return ;
+		
+		player.online = false;
+		super.onPlayerLeave(player as unknown as Socket);
+		if (this.players.every((p) => !p.online)) {
+			this.winByDisconnect(player);
+		}
+		else
+		{
+			this.leaveTimeout = setTimeout(() => {
+				console.log("A player did not return in time, ending the game.");
+				console.log("Status: ", this.status, " Players online: ", this.players.some((p) => !p.online));
+				if (this.status === 'playing' && this.players.some((p) => !p.online)) {
+					this.winByDisconnect();
+				}
+			}, 10000);
+		}
+	}
+
+	private playerForfeit(player: PongPlayer, room: string): void {
+		// if (room != this.room || !player) return ;
+
+		player.online = false;
+		this.winByDisconnect();
+	}
+
+	private winByDisconnect(winner?: PongPlayer): void {
+		this.stopGameLoop();
+		this.status = 'finished';
+		if (!this.winner) this.winner = winner ?? this.players.find((p) => p.online)!;
+		this.endTimeout();
+		this.destructor();
+	}
+
+	private endTimeout() {
+		if (!this.leaveTimeout) return ;
+
+		clearTimeout(this.leaveTimeout);
+		this.leaveTimeout = undefined;
 	}
 
 	public destructor(): void {
-		console.log(`Pong game ended. Winner: ${this.winner ? this.winner.name : 'None'}`);
 		this.stopGameLoop();
-		this.removeEventHook(`paddle-update`);
-		this.removeEventHook(`second-paddle-update`);
 		super.destructor();
 	}
 }
 
 export default Pong;
-
-	// protected onInit(): void {
-	// 	this.state = { players: {}, ball: { x: 0, y: 0 } };
-	// 	this.setState({
-	// 		score: [],
-	// 		ball: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
-	// 		paddleLeft: { x: 0, y: GAME_HEIGHT / 2 },
-	// 		paddleRight: { x: GAME_WIDTH - PADDLE_WIDTH, y: GAME_HEIGHT / 2 }
-	// 	});
-
-	// 	this.ball = new Ball(GAME_WIDTH / 2, GAME_HEIGHT / 2, 1, 0);
-
-	// 	this.players.forEach((player, index) => {
-	// 		player.paddle = new Paddle(index === LEFT ? 0 : GAME_WIDTH - PADDLE_WIDTH, GAME_HEIGHT / 2);
-	// 		this.addEventHook(player, `paddle-update`, (direction: number) => {
-	// 			player.paddle.changeDirection(direction);
-	// 		});
-	// 	});
-
-	// 	this.startGameLoop();
-	// }

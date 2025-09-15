@@ -209,7 +209,9 @@ class Chat extends BaseComponent {
 			const button = this.createButton(
 				{id: "server"} as IClient,
 				"Join Room",
-				() => routes.navigate("/pong")
+				() => {
+					routes.navigate("/pong/" + response.room);
+				}
 			);
 			element.appendChild(button);
 		}

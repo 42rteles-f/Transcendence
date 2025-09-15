@@ -35,6 +35,7 @@ class PongGame extends BaseComponent {
 	private	localPlay: boolean = false;
 	private tournamentPlay: boolean = false;
 	private renderer3D!: PongRenderer3D;
+	private invite?: string;
 
 	private player1Name!: HTMLElement;
 	private player1Score!: HTMLElement;
@@ -45,10 +46,10 @@ class PongGame extends BaseComponent {
 		super("/pages/pong.html");
 		this.localPlay = args === "local-play";
 		this.tournamentPlay = args === "tournament";
-
+		if (args.startsWith("invite-"))
+			this.invite = args;
 		if (this.tournamentPlay)
 			this.isUserPlayingTournament()
-			
 	}
 
 	/*isUserPlayingTournament()
@@ -86,6 +87,8 @@ class PongGame extends BaseComponent {
 		}
 		else if (this.tournamentPlay)
 			console.log("Tournament mode");
+		else if (this.invite)
+			Socket.emit("pong-match-join", { room: this.invite });
 		else
 			Socket.emit("pong-match-find");
 		this.canvas.tabIndex = 0;
@@ -132,7 +135,7 @@ class PongGame extends BaseComponent {
 	}
 
 	private setupGameStateListener() {												// Game state listener
-		Socket.addEventListener("pong-state", (state: PongState) => { this.drawGame(state); });
+		Socket.addEventListener("game-state", (state: PongState) => { this.drawGame(state); });
 	}
 
 	private setupTournamentListeners() {											// Recive tournament end, player elimination, game start
@@ -167,8 +170,7 @@ class PongGame extends BaseComponent {
 
 	onDestroy()
 	{
-		if (!this.tournamentPlay)
-			Socket.emit("pong-match-leave");
+		Socket.emit("pong-match-leave");
 
 		if (this.renderer3D)
 			this.renderer3D.dispose();

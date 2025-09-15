@@ -3,13 +3,10 @@ import Matchmaker from "./Matchmaker";
 import { Server, Socket } from "socket.io";
 import Client from "./Client";
 import jwt from "jsonwebtoken";
-import { GameManagerInstance } from "../game/gameManger";
 export type Pointer<T> = T | null;
 import Pong from "../services/Games/PongGame/Pong";
-import { Tournament } from "../services/Tournament/Tournament";
 import { dbLite } from "../index";
 import UserDatabase from "../database/user";
-import { json } from 'node:stream/consumers';
 
 
 function isIntegerString(str: string): boolean {
@@ -55,9 +52,9 @@ class SocketManager {
 		if (!token) return next(new Error("Unauthorized"));
 
 		try {
-			const user = jwt.verify(token, process.env.JWT_SECRET!) as any;	// Lost type safety
+			const user = jwt.verify(token, process.env.JWT_SECRET!) as any;
 			socket.data.user = user;
-			console.log("Connected: ", user.id); // console.log(`Connected ${user}`);
+			console.log("Connected: ", user.id);
 			next();
 		} catch (err) {
 			console.log(`denied ${token}`);
