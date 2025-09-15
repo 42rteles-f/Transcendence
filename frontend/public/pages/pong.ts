@@ -46,7 +46,7 @@ class PongGame extends BaseComponent {
 		super("/pages/pong.html");
 		this.localPlay = args === "local-play";
 		this.tournamentPlay = args === "tournament";
-		if (args.startsWith("invite-"))
+		if (args && args.startsWith("invite-"))
 			this.invite = args;
 		if (this.tournamentPlay)
 			this.isUserPlayingTournament()

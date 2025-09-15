@@ -263,6 +263,9 @@ class Matchmaker {
 			if (update)
 				client.socket.join(invite.room);
 		});
+		this.games.forEach(game => {
+			game.pong.onPlayerJoin(client.socket);
+		});
 		// this.tournaments.forEach(t => {
 		// 	if (t.owner.client.id === client.id)
 		// 		t.owner.client = client;

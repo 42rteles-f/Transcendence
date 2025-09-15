@@ -92,6 +92,10 @@ abstract class GameSocket {
         }
     }
 
+	protected broadcast(event: string, payload: any) {
+		this.io.to(this.room!).emit(event, payload);
+	}
+
     protected broadcastState() {
         this.io.to(this.room!).volatile.emit("game-state", this.state);
     }
@@ -101,9 +105,14 @@ abstract class GameSocket {
     }
 
     protected onPlayerJoin(socket: Socket): void {
-		// this.clients.get(socket.id)?.events.forEach(({event, callback}) => {
-		// 	socket.on(event, (...args: any[]) => callback(...args));
-		// });
+		const client = this.clients.get(socket.data.user.id.toString());
+		if (!client) return ;
+		client.socket = socket;
+		client.socket.join(this.room!);
+		client.events.forEach(({event, callback}) => {
+			client.socket.on(event, callback as any);
+		});
+		client.socket.on("disconnect", () => this.onDisconnect(client.socket));
 	}
 
     protected onPlayerLeave(socket: Socket): void {
@@ -125,6 +134,7 @@ abstract class GameSocket {
 			client.events.forEach(({event, callback}) => {
 				client.socket.removeListener(event, callback as any);
 			});
+			client.socket.removeListener("disconnect", () => this.onDisconnect(client.socket));
 		});
 		this.clients.clear();
 	}

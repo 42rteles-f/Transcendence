@@ -68,17 +68,14 @@ class Pong extends GameSocket {
 			events.push({event: "pong-match-join", callback: (room: string) => this.onPongMatchJoin(player, room)});
 			events.push({event: "pong-match-leave", callback: (room: string) => this.onPongMatchLeave(player, room)});
 			events.push({event: "player-forfeit", callback: (room: string) => this.playerForfeit(player, room)});
-			events.push({event: "paddle-update", callback: (direction: number) => player.paddle.changeDirection(direction)});
+			events.push({event: "paddle-update", callback: ({ direction }:{ direction: number }) => player.paddle.changeDirection(direction)});
 			if (this.localPlay)
-				events.push({event: "second-paddle-update", callback: (direction: number) => player.paddle.changeDirection(direction)});
+				events.push({event: "second-paddle-update", callback: ({ direction }:{ direction: number }) => player.paddle.changeDirection(direction)});
 			this.addEvents(player.id, events);
 		});
 	}
 
 	protected onTick(): void {
-		if (this.players.some((player) => !player.online)) {
-			return ;
-		}
 		this.ball!.update();
 		this.players.forEach((player) => {
 			player.paddle.update();
@@ -171,15 +168,24 @@ class Pong extends GameSocket {
 		if (this.players.every((p) => !p.online)) {
 			this.winByDisconnect(player);
 		}
-		else
-		{
+		else {
+			if (this.leaveTimeout) { clearTimeout(this.leaveTimeout); }
 			this.leaveTimeout = setTimeout(() => {
 				console.log("A player did not return in time, ending the game.");
 				console.log("Status: ", this.status, " Players online: ", this.players.some((p) => !p.online));
 				if (this.status === 'playing' && this.players.some((p) => !p.online)) {
 					this.winByDisconnect();
 				}
+				this.leaveTimeout = undefined;
 			}, 10000);
+		}
+	}
+
+	public onPlayerJoin(socket: Socket): void {
+		super.onPlayerJoin(socket);
+		const player = this.players.find((p) => p.id === socket.data.user.id.toString());
+		if (player) {
+			this.onPongMatchJoin(player, this.room!);
 		}
 	}
 
@@ -194,6 +200,7 @@ class Pong extends GameSocket {
 		this.stopGameLoop();
 		this.status = 'finished';
 		if (!this.winner) this.winner = winner ?? this.players.find((p) => p.online)!;
+		this.broadcast("pong-game-over", { winner: this.winner });
 		this.endTimeout();
 		this.destructor();
 	}
