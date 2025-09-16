@@ -1,4 +1,5 @@
 import TournamentDatabase from '../database/tournament';
+import GameDatabase from '../database/game';
 import Pong from '../services/Games/PongGame/Pong';
 import { Tournament } from '../services/Tournament/Tournament';
 import Client from './Client';
@@ -24,13 +25,15 @@ class Matchmaker {
 	private	invites:		Map<ClientRef, IInvite> = new Map();
 	private games:			Array<{id: string, pong: Pong}> = new Array();
 	private watcher:		NodeJS.Timeout | null = null;
-	private server:			SocketManager;
 	private tournaments:	Tournament[] = [];
-	private db:				TournamentDatabase;
+	private tournamentDB:	TournamentDatabase;
+	private gameDB:			GameDatabase;
 
-	public constructor(server: SocketManager) {
-		this.server = server;
-		this.db = new TournamentDatabase(dbLite);
+	public constructor(
+		private server: SocketManager
+	) {
+		this.tournamentDB = new TournamentDatabase(dbLite);
+		this.gameDB = new GameDatabase(dbLite);
 		this.startMatchmaking();
 	}
 
@@ -104,6 +107,11 @@ class Matchmaker {
 		) {
 			return ;
 		}
+		const gameWithClient = this.games.find(g => g.pong.getState().playersState.some(p => p.id === client.id));
+		if (gameWithClient) {
+			gameWithClient.pong.onPlayerJoin(client.socket);
+			return ;
+		}
 		this.queue.push(client);
 	}
 
@@ -151,11 +159,30 @@ class Matchmaker {
 		});
 	}
 
+	endPongHandler(game: Pong): void {
+		const gameState = game.getState();
+		const { gameStatus } = game.getState();
+		// console.log(`Ending pong game with status: ${gameStatus} and winner: ${game.winner?.name}`);
+		if (gameStatus !== 'finished' || !game.winner)
+			return ;
+		this.gameDB.registerGame({
+			player1_id: parseInt(gameState.playersState[0].id),
+			player2_id: parseInt(gameState.playersState[1].id),
+			player1_score: gameState.playersState[0].score,
+			player2_score: gameState.playersState[1].score,
+			winner_id: parseInt(game.winner!.id),
+			status: gameStatus,
+		});
+	}
+
 	private checkGames(): void {
+		// console.log(`Checking ${this.games.length} active games`);
 		this.games = this.games.filter(game => {
 			const { gameStatus } = game.pong.getState();
+			// console.log(`Checking game ${game.id} with status: ${gameStatus}`);
 			if (gameStatus === 'finished' || gameStatus === 'error') {
 				game.pong.destructor();
+				this.endPongHandler(game.pong);
 				return false;
 			}
 			return true;
@@ -219,7 +246,7 @@ class Matchmaker {
 		const targetTournament = this.tournaments.filter((t) => t.id === tournamentId)[0];
 		if (targetTournament)
 			return (targetTournament.tournamentInfos());
-		const res = await this.db.getTournament(tournamentId);
+		const res = await this.tournamentDB.getTournament(tournamentId);
 		if (res.status != 200)
 			return (false);
 		return (res.reply);
@@ -245,7 +272,7 @@ class Matchmaker {
 				}
 			);
 		});
-		const { status, reply }  = await this.db.getAllTournaments();
+		const { status, reply }  = await this.tournamentDB.getAllTournaments();
 		if (status !== 200) {
 			// Should we send an error message or similar?
 		}

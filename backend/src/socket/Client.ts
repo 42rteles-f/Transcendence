@@ -5,10 +5,11 @@ import Pong from "../services/Games/PongGame/Pong";
 interface IUserProfile {
 	id?: string;
 	username: string;
-  nickname: string;
-  gamesPlayed: number;
-  gamesWon: number;
-  gamesLost: number;
+	nickname: string;
+	gamesPlayed: number;
+	gamesWon: number;
+	gamesLost: number;
+	blockedList: string[];
 }
 
 class Client {
@@ -25,6 +26,8 @@ class Client {
 	  this.server = manager;
 	  this.socket = socket;
 	  this.username = info.username;
+	  this.blockedList = info.blockedList || [];
+	  console.log(`Blocked list for ${this.username}:`, this.blockedList);
 	  this.id = info.id?.toString() || '';
 	  console.log(`Client created: ${info.id} as ${info.username}`);	//console.log(`Client created: ${info}`);
 	}

@@ -89,7 +89,9 @@ class ProfilePage extends BaseComponent {
 		}
 		
 		Socket.notifyEventListener("client-arrival", (clients: { id: string, name: string }[]) => {
-			if (clients.find(client => client.name === this.username.textContent)) {
+			if (clients.find(client => client.name === this.username.textContent) ||
+				Number(this.userId) === Number(loggedUser?.id)
+			) {
 				this.onlineStatus!.style.backgroundColor = "green";
 			}
 		})
@@ -113,6 +115,10 @@ class ProfilePage extends BaseComponent {
 	async showLogoutConfirmation() {
 		const modal = new LogoutModal();
 		document.body.appendChild(modal);
+	}
+
+	onDestroy(): void {
+		Socket.clearEventListeners("client-arrival");
 	}
 }
 
