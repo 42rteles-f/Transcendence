@@ -61,6 +61,15 @@ class Socket {
 		this.socket.off(event, callback);
 	}
 
+	static clearEventListeners(event: string): void {
+		if (!this.socket) {
+			console.error("Socket not initialized");
+			return;
+		}
+		this.socket.emit(`unsubscribe-${event}`);
+		this.socket.removeAllListeners(event);
+	}
+
 	static emit(event: string, ...args: any[]): void {
 		if (!this.socket) {
 			console.error("Socket not initialized");

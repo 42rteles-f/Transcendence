@@ -20,6 +20,7 @@ interface PongPlayerState {
 		height: number;
 	};
 	score: number;
+	online: boolean;
 }
 
 interface PongState {
@@ -29,7 +30,6 @@ interface PongState {
 	gameStatus: string;
 }
 
-// Why does file pong.ts has class PongGame?, there there is Pong.ts with Pong class ~ ~ ~
 class PongGame extends BaseComponent {
 	private canvas!: HTMLCanvasElement;
 	private	localPlay: boolean = false;
@@ -160,9 +160,9 @@ class PongGame extends BaseComponent {
 		// eFfIciENcY 1oo%
 		if (state.playersState && state.playersState.length >= 2)
 		{
-			this.player1Name.textContent = state.playersState[0].name || "Player 1";
+			this.player1Name.textContent =  state.playersState[0].online ? state.playersState[0].name : `${state.playersState[0].name} (Offline)`;
 			this.player1Score.textContent = state.playersState[0].score.toString();
-			this.player2Name.textContent = state.playersState[1].name || "Player 2";
+			this.player2Name.textContent = state.playersState[1].online ? state.playersState[1].name : `${state.playersState[0].name} (Offline)`;
 			this.player2Score.textContent = state.playersState[1].score.toString();
 		}
 		this.renderer3D.drawGame(state);
@@ -171,6 +171,10 @@ class PongGame extends BaseComponent {
 	onDestroy()
 	{
 		Socket.emit("pong-match-leave");
+		Socket.clearEventListeners("game-state");
+		Socket.clearEventListeners("tournament-completed");
+		Socket.clearEventListeners("tournament-eliminated");
+		Socket.clearEventListeners("tournament-game-start");
 
 		if (this.renderer3D)
 			this.renderer3D.dispose();

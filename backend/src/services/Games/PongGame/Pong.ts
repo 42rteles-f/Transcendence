@@ -124,7 +124,8 @@ class Pong extends GameSocket {
 					width: PADDLE_WIDTH,
 					height: PADDLE_HEIGHT
 				},
-				score: player.score
+				score: player.score,
+				online: player.online
 			})),
 			ball: this.ball!.position(),
 			ballSize: BALL_SIZE,

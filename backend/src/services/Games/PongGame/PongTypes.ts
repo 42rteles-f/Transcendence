@@ -33,6 +33,7 @@ export interface PongPlayerState {
 		height: number;
 	};
     score: number;
+	online: boolean;
 }
 
 export interface Collidable {
