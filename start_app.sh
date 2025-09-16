@@ -24,9 +24,15 @@ docker-compose down
 docker-compose up -d
 
 echo "Setup complete!"
-
+x
 # curl:
 # -X METHOD - POST
 # -H HEADERS - Content type
 # -u HEADERS - Auth
 # -d DATA/BODY
+
+
+# docker stop $(docker ps -aq)
+# docker rm -f $(docker ps -aq)
+# docker rmi -f $(docker images -q)
+# docker volume prune -f --all

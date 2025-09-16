@@ -1,5 +1,6 @@
 import Pong from "../Games/PongGame/Pong";
 import Client from '../../socket/Client';
+import {tournamentGameLogger} from "../../logger/logger"
 
 interface ITournamentPlayer {
 	client:			Client;
@@ -56,6 +57,7 @@ export class Tournament {
 		{
 			this.start_date = new Date().toISOString();
 			this.status = 'active';
+
 		}
 		this.currentRound++;
 	}
@@ -80,7 +82,7 @@ export class Tournament {
 			pong: new Pong([player1.client.socket, player2.client.socket]),
 			round: this.currentRound
 		};
-		// console.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);
+		tournamentGameLogger.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);
 		return game;
 	}
 
@@ -103,9 +105,9 @@ export class Tournament {
 	private checkRoundCompletion(): ITournamentGame[] | null														// Check if all games in the round are finished
 	{
 		const currentRoundGames = this.games.filter(game => game.round === this.currentRound);
-		if (currentRoundGames.some(game => game.pong.winner === null))		//  console.log(`Tournament ${this.id}: Round ${this.currentRound} - waiting for games to finish`);
+		if (currentRoundGames.some(game => game.pong.winner === null))
 			return null;
-		// console.log(`Tournament ${this.id}: Round ${this.currentRound} complete - processing winners`);
+		tournamentGameLogger.log(`Tournament ${this.id}: Round ${this.currentRound} complete - processing winners`);
 		return currentRoundGames;
 	}
 
@@ -128,12 +130,12 @@ export class Tournament {
 
 	private handleTournamentProgression()																			// Starts new round or finishes tournament
 	{
-		//	console.log(`Round ${this.currentRound} winners: ${this.qualified.map(p => p.displayName).join(', ')}`);
-		if (this.qualified.length > 1)		//	console.log(`Starting next round (number ${this.currentRound + 1})`);
+		tournamentGameLogger.log(`Round ${this.currentRound} winners: ${this.qualified.map(p => p.displayName).join(', ')}`);
+		if (this.qualified.length > 1)
 			this.startRound();
 		else if (this.qualified.length === 1)
 		{
-			console.log(`Tournament winner: ${this.qualified[0].displayName}`);
+			tournamentGameLogger.log(`Tournament winner: ${this.qualified[0].displayName}`);
 			this.winner = this.qualified[0];
 			this.endTournament();
 		}
@@ -170,14 +172,9 @@ export class Tournament {
 		}
 
 		this.winner?.client.socket.emit("tournament-completed", { tournamentId: this.id, result: "winner" });
-
 		this.end_date = new Date().toISOString();
 		this.status = "finished";
-		console.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
-	}
-
-	private registerGame(game: Pong) {
-		// call db
+		tournamentGameLogger.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
 	}
 
 	public tournamentInfos() {
@@ -190,7 +187,7 @@ export class Tournament {
 		});
 		const games = this.games.map((g) => {
 			return ({
-				id: null, /// Check with Rubens
+				id: null,
 				player1Id: g.player1.client.id,
 				player1Username: g.player1.client.username,
 				player1DisplayName: g.player1.displayName,

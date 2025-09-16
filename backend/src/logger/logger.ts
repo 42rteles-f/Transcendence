@@ -6,10 +6,10 @@ class ELKLogger {
   private environment: string;
 
   constructor(
-    logstashHost: string = process.env.LOGSTASH_HOST || 'transcendence-logstash',
-    logstashPort: number = parseInt(process.env.LOGSTASH_PORT || '5000'),
-    serviceName: string = process.env.SERVICE_NAME || 'backend',
-    environment: string = process.env.NODE_ENV || 'development'
+	logstashHost: string = process.env.LOGSTASH_HOST || 'transcendence-logstash',
+	logstashPort: number = parseInt(process.env.LOGSTASH_PORT || '5000'),
+	serviceName: string = process.env.SERVICE_NAME || 'backend',
+	environment: string = process.env.NODE_ENV || 'development'
   ) {
 	this.logstashUrl = `http://${logstashHost}:${logstashPort}`;
 	this.serviceName = serviceName;
@@ -53,7 +53,11 @@ class ELKLogger {
   }
 }
 
+const pongGameLogger = new ELKLogger('transcendence-logstash', 5000, 'online-game-logger', 'production');
+const tournamentGameLogger = new ELKLogger('transcendence-logstash', 5000, 'tournament-game-logger', 'production');
+const localGameLogger = new ELKLogger('transcendence-logstash', 5000, 'local-logger', 'production');
+
 const logger = new ELKLogger();
 
-export default logger;
+export {logger, pongGameLogger, tournamentGameLogger, localGameLogger};
 //export { ELKLogger };

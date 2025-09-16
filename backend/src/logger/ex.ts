@@ -1,4 +1,4 @@
-import logger from './logger';  // { ELKLogger }
+import { logger } from './logger';  // { ELKLogger }
 
 // async + await | Blocking
 // no async + await | Non blocking

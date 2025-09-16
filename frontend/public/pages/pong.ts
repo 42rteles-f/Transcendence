@@ -52,20 +52,8 @@ class PongGame extends BaseComponent {
 			this.isUserPlayingTournament()
 	}
 
-	/*isUserPlayingTournament()
-	{
-		const gameInfo = sessionStorage.getItem('tournamentGame');
-		if (gameInfo) 												
-			sessionStorage.removeItem('tournamentGame');
-		else {
-			console.log("No tournament game found in session");
-			routes.navigate("/tournaments");
-			return;
-		}
-	}*/
-
 	isUserPlayingTournament() {
-		const gameInfo = sessionStorage.getItem('tournamentGame');					// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
+		const gameInfo = sessionStorage.getItem('tournamentGame');
 		if (!gameInfo) {
 			console.log("No tournament game found in session");
 			
@@ -179,9 +167,7 @@ class PongGame extends BaseComponent {
 		if (this.renderer3D)
 			this.renderer3D.dispose();
 
-		// TODO: Fix event listener cleanup ~~~ Browser automatically cleans up when components are removed
-		// Socket.removeEventListener("tournament-eliminated", callback);
-		// Socket.removeEventListener("tournament-game-start", callback);
+		// Browser automatically cleans up when components are removed
 	}
 }
 

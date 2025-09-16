@@ -43,10 +43,7 @@ class GameManager {
 	} else {
 
 	}
-
     // Notify players
-
-    /// Game Manager should hold the sockets that update the game? No, pong manger is just to manage the PongGame, so what should update the frontend? Some socket on Socket Manager?
   }
 }
 
