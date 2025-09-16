@@ -129,7 +129,10 @@ class Matchmaker {
 	private startQueueGames(): void {
 		while (this.queue.length >= 2) {
 			const players = this.queue.splice(0, 2);
-			this.games.push({ id: this.createGameId("pong", players), pong: new Pong(players.map(c => c.socket)) });
+			const pongGame = new Pong(players.map(c => c.socket));
+			pongGame.onPlayerJoin(players[0].socket);
+			pongGame.onPlayerJoin(players[1].socket);
+			this.games.push({ id: this.createGameId("pong", players), pong: pongGame });
 		}
 	}
 
