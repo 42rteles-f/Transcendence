@@ -30,9 +30,9 @@ interface ITournamentCreation {
 
 class SocketManager {
 	private clients:			Map<string, Client> = new Map();
-	public io:					Server;
+	public	io:					Server;
 	private matchmaker:			Matchmaker;
-	private userDatabase:		UserDatabase;
+	public	userDatabase:		UserDatabase;
 
 	constructor(httpServer: any) {
 		this.io = new Server(httpServer, {

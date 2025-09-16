@@ -58,6 +58,7 @@ class Pong extends GameSocket {
 				this.destructor();
 			}
 		}, 10000);
+		this.updateState();
 		if (this.localPlay) {
 			this.players.forEach((p) => p.online = true);
 			this.onPlayerJoin(clients[0]);
@@ -212,7 +213,7 @@ class Pong extends GameSocket {
 
 	private winByDisconnect(winner?: PongPlayer): void {
 		this.stopGameLoop();
-		this.status = 'finished';
+		this.status = 'finished';``
 		if (!this.winner) this.winner = winner ?? this.players.find((p) => p.online)!;
 		this.broadcast("pong-game-over", { winner: this.winner });
 		this.endTimeout();
@@ -227,6 +228,8 @@ class Pong extends GameSocket {
 	}
 
 	public destructor(): void {
+		console.log(`Destructing Pong game: ${this.status}`);
+		this.updateState();
 		this.stopGameLoop();
 		super.destructor();
 	}
