@@ -45,27 +45,15 @@ class PongGame extends BaseComponent {
 	constructor(args: string) {
 		super("/pages/pong.html");
 		this.localPlay = args === "local-play";
-		this.tournamentPlay = args === "tournament";
-		if (args && args.startsWith("invite-"))
+		this.tournamentPlay = (!!args && args.startsWith("tournament-"));
+		if (args && (args.startsWith("invite-") || this.tournamentPlay))
 			this.invite = args;
 		if (this.tournamentPlay)
 			this.isUserPlayingTournament()
 	}
 
-	/*isUserPlayingTournament()
-	{
-		const gameInfo = sessionStorage.getItem('tournamentGame');
-		if (gameInfo) 												
-			sessionStorage.removeItem('tournamentGame');
-		else {
-			console.log("No tournament game found in session");
-			routes.navigate("/tournaments");
-			return;
-		}
-	}*/
-
 	isUserPlayingTournament() {
-		const gameInfo = sessionStorage.getItem('tournamentGame');					// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
+		const gameInfo = sessionStorage.getItem('tournamentGame');
 		if (!gameInfo) {
 			console.log("No tournament game found in session");
 			
@@ -85,9 +73,7 @@ class PongGame extends BaseComponent {
 			this.setControlKeys("ArrowUp", "ArrowDown", "second-paddle-update");
 			Socket.emit("pong-local-play");
 		}
-		else if (this.tournamentPlay)
-			console.log("Tournament mode");
-		else if (this.invite)
+		else if (this.invite || this.tournamentPlay)
 			Socket.emit("pong-match-join", { room: this.invite });
 		else
 			Socket.emit("pong-match-find");
@@ -147,11 +133,11 @@ class PongGame extends BaseComponent {
 	private handleTournamentGameStart(data: any) {									// Recive tournament game start, save item to localstorage, redirect user
 		const myUserId = this.getUserId();
 		console.log(`My userId: ${myUserId}, Event playerId: ${data.playerId}`);
-		
+
 		if (Number(data.playerId) === Number(myUserId))
 		{
 			sessionStorage.setItem('tournamentGame', JSON.stringify({ gameId: data.gameId, tournamentId: data.tournamentId }));
-			routes.navigate(`/pong/tournament`);
+			routes.navigate(`/pong/${data.gameId}`);
 		}
 	}
 
@@ -179,9 +165,7 @@ class PongGame extends BaseComponent {
 		if (this.renderer3D)
 			this.renderer3D.dispose();
 
-		// TODO: Fix event listener cleanup ~~~ Browser automatically cleans up when components are removed
-		// Socket.removeEventListener("tournament-eliminated", callback);
-		// Socket.removeEventListener("tournament-game-start", callback);
+		// Browser automatically cleans up when components are removed
 	}
 }
 
