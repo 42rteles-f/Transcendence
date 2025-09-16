@@ -162,7 +162,7 @@ class Matchmaker {
 	endPongHandler(game: Pong): void {
 		const gameState = game.getState();
 		const { gameStatus } = game.getState();
-		console.log(`Ending pong game with status: ${gameStatus} and winner: ${game.winner?.name}`);
+		// console.log(`Ending pong game with status: ${gameStatus} and winner: ${game.winner?.name}`);
 		if (gameStatus !== 'finished' || !game.winner)
 			return ;
 		this.gameDB.registerGame({
@@ -176,10 +176,10 @@ class Matchmaker {
 	}
 
 	private checkGames(): void {
-		console.log(`Checking ${this.games.length} active games`);
+		// console.log(`Checking ${this.games.length} active games`);
 		this.games = this.games.filter(game => {
 			const { gameStatus } = game.pong.getState();
-			console.log(`Checking game ${game.id} with status: ${gameStatus}`);
+			// console.log(`Checking game ${game.id} with status: ${gameStatus}`);
 			if (gameStatus === 'finished' || gameStatus === 'error') {
 				game.pong.destructor();
 				this.endPongHandler(game.pong);
