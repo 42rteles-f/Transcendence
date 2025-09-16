@@ -1,12 +1,10 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "../pages/toastNotification";
 import { routes } from '../../src/routes';
-import Api from '../../src/api/Api';
 import Socket from '../../src/Socket';
 
 class CreateTournamentModal extends BaseComponent {
 	private closeBtn!: HTMLButtonElement;
-	private submitBtn!: HTMLButtonElement;
 	private cancelBtn!: HTMLButtonElement;
 	private nameInput!: HTMLInputElement;
 	private displayNameInput!: HTMLInputElement;

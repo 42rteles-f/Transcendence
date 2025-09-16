@@ -2,6 +2,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { routes } from "../../src/routes";
 import { showToast } from './toastNotification';
 import Api from '../../src/api/Api';
+import Socket from '../../src/Socket';
 
 console.log("executing RegisterPage.ts");
 
@@ -42,6 +43,7 @@ class RegisterPage extends BaseComponent {
 		)
 		.then(() => {
 			showToast("Registration successful!", 3000, "success");
+			Socket.init();
 			routes.navigate("/home");
 		})
 		.catch((error) => {

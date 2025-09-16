@@ -1,6 +1,9 @@
 TODO:
-- Make db calls after torunament is created, status and finishes
-- Game against self should not be possible
+
+- Ws Wss ?
+- Fix SSL
+- Must work between computers, not on localhost
+- Check error/warns firefox
 
 Before delivery
 - Add Logger logs
@@ -10,3 +13,5 @@ Before delivery
 Delivery
 - Run start_app.sh (to build ELK stack propperly)
 - Must have docker-compose, docker, curl
+
+

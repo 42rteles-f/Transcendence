@@ -1,7 +1,5 @@
 import { routes } from "../../src/routes";
 import { BaseComponent } from "../../src/BaseComponent";
-import { PongModal } from "../components/pongModal";
-
 
 console.log("executing navbar copy");
 

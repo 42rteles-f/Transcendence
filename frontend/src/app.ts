@@ -6,10 +6,10 @@ import './style.css';
 
 console.log("app start." + window.location.pathname);
 
-//(() => {console.warn = () => {}; console.error = () => {};
-//	Object.defineProperty(console, 'warn', { value: () => {}, writable: false, configurable: false });
-//	Object.defineProperty(console, 'error', { value: () => {}, writable: false, configurable: false });
-//})();
+(() => {console.warn = () => {}; console.error = () => {};
+	Object.defineProperty(console, 'warn', { value: () => {}, writable: false, configurable: false });
+	Object.defineProperty(console, 'error', { value: () => {}, writable: false, configurable: false });
+})();
 
 export function	warnIf(condition :Boolean, message :string) {
 	if (condition)

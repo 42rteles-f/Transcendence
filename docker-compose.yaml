@@ -2,13 +2,14 @@ services:
   backend:
     image: node:latest
     container_name: backend
+    restart: always
     volumes:
       - ./backend:/app
       - ./backend/db:/app/db
     working_dir: /app
     command: sh -c "npm install && npm run dev"
-    ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+    expose:
+      - 3000
     networks:
       - transcendence_net
     env_file:
@@ -16,18 +17,33 @@ services:
   frontend:
     image: node:latest
     container_name: frontend
+    restart: on-failure
     volumes:
       - ./frontend:/app
     working_dir: /app
-    command: sh -c "npm install && npm run dev"
-    ports:
-      - "${PORT:-5173}:${PORT:-5173}"
+    command: sh -c "npm install && npm run build"
     networks:
       - transcendence_net
     env_file:
       - ./frontend/.env
     depends_on:
       - backend
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+        - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - transcendence_net
 
   elasticsearch:
     build:
@@ -53,7 +69,7 @@ services:
         - ELK_PASSWORD=${ELK_PASSWORD}
         - LS_JAVA_OPTS=${LS_JAVA_OPTS}
     container_name: transcendence-logstash
-    ports: ["5000:5000", "5001:5001", "9600:9600"]
+    ports: ["5005:5005", "5001:5001", "9600:9600"]
     volumes:
       - logstash-data:/usr/share/logstash/data
     depends_on:

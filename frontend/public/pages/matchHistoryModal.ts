@@ -30,7 +30,7 @@ class MatchHistoryModal extends BaseComponent {
     async loadHistory() {
         try {
             const matches = await Api.getMatchHistory(this.userId, this.page, this.pageSize);
-            this.renderHistory(matches.games, matches.total);
+            this.renderHistory(matches.games ?? [], matches.total ?? 0);
         } catch (error) {
             showToast("Failed to load match history matchHistoryModal", 3000, "error");
         }
@@ -41,6 +41,7 @@ class MatchHistoryModal extends BaseComponent {
 		this.totalGames.textContent = `Total Matches: ${total}`;
         if (!games.length) {
             this.historyList.innerHTML = "<p>No matches found.</p>";
+            this.historyList.style.textAlign = 'center';
             return;
         }
         games.forEach(game => {

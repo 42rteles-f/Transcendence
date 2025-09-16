@@ -1,5 +1,8 @@
 #!/bin/bash
 
+ip=$(hostname -I | awk '{print $1}')
+echo "Host IP: $ip"
+
 sed -i 's/\r$//' .env
 source .env
 
@@ -30,9 +33,3 @@ x
 # -H HEADERS - Content type
 # -u HEADERS - Auth
 # -d DATA/BODY
-
-
-# docker stop $(docker ps -aq)
-# docker rm -f $(docker ps -aq)
-# docker rmi -f $(docker images -q)
-# docker volume prune -f --all

@@ -11,16 +11,15 @@ interface IGameInfo {
 };
 
 class TournamentGameCell extends BaseComponent {
-	private gameCell!:		HTMLDivElement;
 	private player1!:		HTMLParagraphElement;
 	private player1Score!:	HTMLParagraphElement;
 	private player2!:		HTMLParagraphElement;
 	private player2Score!:	HTMLParagraphElement;
 	private info:			IGameInfo;
+
 	constructor (gameInfo: IGameInfo) {
 		super('/components/tournamentGameCell.html');
 		this.info = gameInfo;
-		// console.log(`gameInfo: ${JSON.stringify(gameInfo)}`);
 	}
 
 	async onInit() {

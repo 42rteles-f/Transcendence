@@ -7,7 +7,6 @@ console.log("executing editProfile.ts");
 
 class editProfile extends BaseComponent {
 	private username!: HTMLInputElement;
-	private profilePicture!: HTMLImageElement;
 	private closeModalButton!: HTMLButtonElement;
 	private editProfileForm!: HTMLFormElement;
 	private userNameValue!: string;
@@ -17,7 +16,7 @@ class editProfile extends BaseComponent {
 		this.tabIndex = -1;
 		this.userNameValue = username;
 	}
-	
+
 	async onInit() {
 		this.focus();
 		this.addEventListener("keydown", this.handleEsc);

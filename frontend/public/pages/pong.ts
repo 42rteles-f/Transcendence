@@ -53,13 +53,11 @@ class PongGame extends BaseComponent {
 	}
 
 	isUserPlayingTournament() {
-		const gameInfo = sessionStorage.getItem('tournamentGame');
-		if (!gameInfo) {
+		const gameInfo = sessionStorage.getItem('tournamentGame');					// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
+		if (!gameInfo)
+		{
 			console.log("No tournament game found in session");
-			
-			setTimeout(() => {
-				routes.navigate("/tournaments");
-			}, 0);
+			setTimeout(() => { routes.navigate("/tournaments"); }, 0);
 			return false;  
 		}
 		return true; 

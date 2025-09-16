@@ -11,7 +11,6 @@ import googleAuthRoutes from './routes/googleAuth';
 import { Database } from 'sqlite3';
 import TournamentDatabase from './database/tournament';
 
-
 dotenv.config();
 
 export const server = Fastify({
@@ -20,9 +19,22 @@ export const server = Fastify({
 });
 
 server.register(cors, {
-	origin: "*",
+	origin: (origin, cb) => {
+		const allowedOrigins = [
+			`${process.env.HOST_ADDRESS}`,
+			`${process.env.FRONTEND_ADDRESS}`,
+			'https://localhost:8443'
+		];
+		if (!origin || allowedOrigins.includes(origin)) {
+			cb(null, true);
+		} else {
+			cb(new Error('Not allowed by CORS'), false);
+		}
+	},
 	credentials: true,
 });
+
+console.log(`server cors: origin set to ${process.env.VITE_API_URL}`);
 
 server.register(fastifyMultipart);
 
@@ -65,6 +77,10 @@ server.decorate('authenticate', async function (req: FastifyRequest, res: Fastif
 
 server.register(googleAuthRoutes)
 
+server.get('/test', async (req, res) => {
+	res.send({ message: 'Test endpoint' });
+})
+
 const start = async (port: number) => {
 	try {
 		console.log("starting server...");
@@ -102,6 +118,7 @@ export { dbLite };
 
 import "./routes/user";
 import "./routes/tournament";
+import { CLIENT_RENEG_LIMIT } from 'tls';
 
 const port = Number(process.env.PORT) || 3000;
 

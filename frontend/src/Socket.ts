@@ -11,9 +11,13 @@ class Socket {
 			return true;
 		}
 
-		const apiUrl = import.meta.env.API_URL || "http://localhost:3000";
+		const host = window.location.hostname;
+        const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        const protocol = window.location.protocol;
 
+		let apiUrl = `${protocol}//${host}:${port}`;
 		this.socket = io(apiUrl, {
+			path: '/socket.io/',
 			transports: ['websocket'],
 			auth: {
 				token: localStorage.getItem("authToken") || ""

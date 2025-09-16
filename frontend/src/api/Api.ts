@@ -1,4 +1,3 @@
-import { jwtDecode } from "jwt-decode";
 import { Pointer } from "../PageManager";
 import { routes } from "../routes";
 import Socket from "../Socket";
@@ -25,11 +24,13 @@ class Api {
 
     static async makeRequest(apiPath: string, method: "GET" | "POST", body?: string, params?: URLSearchParams | "") {
         let fullPath = `${this.apiUrl}${apiPath}`;
+		console.log(`apiURL: ${this.apiUrl} | apiPath: ${apiPath} | fullPath: ${fullPath}`);
         if (params && typeof params === "object" && params.toString())
             fullPath += '?' + params.toString();
 		console.log(`Making ${method} request to: ${fullPath}`);
         const response = await fetch(fullPath, {
             method: method,
+			credentials: "include",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${this.token || localStorage.getItem("authToken")}`

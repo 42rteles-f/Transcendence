@@ -1,5 +1,4 @@
 import { BaseComponent } from "../../src/BaseComponent";
-import { routes } from "../../src/routes";
 import { showToast } from "./toastNotification";
 
 console.log("executing TicTacToePage.ts");
