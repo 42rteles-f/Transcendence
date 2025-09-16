@@ -229,6 +229,8 @@ class Pong extends GameSocket {
 
 	public destructor(): void {
 		console.log(`Destructing Pong game: ${this.status}`);
+		if (!this.winner)
+			this.winner = this.players[Math.floor(Math.random() * this.players.length)];
 		this.updateState();
 		this.stopGameLoop();
 		super.destructor();

@@ -77,7 +77,7 @@ export class Tournament {
 		{
 			player1,
 			player2,
-			pong: new Pong([player1.client.socket, player2.client.socket]),
+			pong: new Pong([player1.client.socket, player2.client.socket], gameId),
 			round: this.currentRound
 		};
 		// console.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);

@@ -57,7 +57,7 @@ class TournamentHubPage extends BaseComponent {
 					gameId: data.gameId,
 					tournamentId: data.tournamentId
 				}));
-				routes.navigate(`/pong/tournament`);
+				routes.navigate(`/pong/${data.gameId}`);
 			} else {														// TODO: Remove, not usefull
 				console.log("A tournament game started (spectating)");
 				showToast("You're spectating XY game", 2000, "info");

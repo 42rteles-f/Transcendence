@@ -45,8 +45,8 @@ class PongGame extends BaseComponent {
 	constructor(args: string) {
 		super("/pages/pong.html");
 		this.localPlay = args === "local-play";
-		this.tournamentPlay = args === "tournament";
-		if (args && args.startsWith("invite-"))
+		this.tournamentPlay = (!!args && args.startsWith("tournament-"));
+		if (args && (args.startsWith("invite-") || this.tournamentPlay))
 			this.invite = args;
 		if (this.tournamentPlay)
 			this.isUserPlayingTournament()
@@ -85,9 +85,7 @@ class PongGame extends BaseComponent {
 			this.setControlKeys("ArrowUp", "ArrowDown", "second-paddle-update");
 			Socket.emit("pong-local-play");
 		}
-		else if (this.tournamentPlay)
-			console.log("Tournament mode");
-		else if (this.invite)
+		else if (this.invite || this.tournamentPlay)
 			Socket.emit("pong-match-join", { room: this.invite });
 		else
 			Socket.emit("pong-match-find");
@@ -147,11 +145,11 @@ class PongGame extends BaseComponent {
 	private handleTournamentGameStart(data: any) {									// Recive tournament game start, save item to localstorage, redirect user
 		const myUserId = this.getUserId();
 		console.log(`My userId: ${myUserId}, Event playerId: ${data.playerId}`);
-		
+
 		if (Number(data.playerId) === Number(myUserId))
 		{
 			sessionStorage.setItem('tournamentGame', JSON.stringify({ gameId: data.gameId, tournamentId: data.tournamentId }));
-			routes.navigate(`/pong/tournament`);
+			routes.navigate(`/pong/${data.gameId}`);
 		}
 	}
 
