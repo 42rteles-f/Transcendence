@@ -41,7 +41,6 @@
 // 	if (gameId.status !== 200) {
 // 		// Handle error
 // 	} else {
-
 // 	}
 
 //     // Notify players
