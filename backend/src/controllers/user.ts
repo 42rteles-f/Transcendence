@@ -225,6 +225,19 @@ class UserController {
 		const { status, reply } = await service.getAllFriends(userId);
 		return { status, reply };
 	}
+
+	async getAllBlocked(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
+		const db = req.server.sqlite as Database;
+		const service = new UserService(db);
+
+		const { id } = req.params as { id: number | string };
+		const userId: number = id === 'me' ? Number((req as any).user?.id) : Number(id);
+		if (!userId || !/^\d+$/.test(String(userId)))
+			return { status: 400, reply: "Invalid user ID" };
+
+		const { status, reply } = await service.getAllBlocked(userId);
+		return { status, reply };
+	}
 };
 
 export const userController = new UserController();

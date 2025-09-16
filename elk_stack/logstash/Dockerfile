@@ -14,5 +14,5 @@ ENV ELK_USERNAME=$ELK_USERNAME \
 
 COPY --chown=logstash:logstash logstash.conf /usr/share/logstash/pipeline/logstash.conf
 
-EXPOSE 5000 5001 9600
+EXPOSE 5005 5001 9600
 #5044 

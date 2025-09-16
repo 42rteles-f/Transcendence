@@ -74,6 +74,12 @@ class UserRoutes {
 		const { status, reply } = await userController.findUsers(req, res);
 		res.status(status).send({ message: reply });
 	}
+
+	@Get("blocked-list/:id", true, [])
+	async getAllBlocked(req: FastifyRequest, res: FastifyReply) {
+		const { status, reply } = await userController.getAllBlocked(req, res);
+		res.status(status).send({ message: reply });
+	}
 };
 
 export {}

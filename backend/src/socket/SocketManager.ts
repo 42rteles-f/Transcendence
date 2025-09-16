@@ -148,9 +148,6 @@ class SocketManager {
 	}
 
 	onBlockClient(client: Client, { targetId }: { targetId: string }) {
-		const targetClient = this.getClientById(targetId)!;
-		if (!targetClient) return ;
-
 		if (client.blockedList.includes(targetId)) {
 			console.log(`Client ${client.id} already blocked ${targetId}`);
 			return ;
@@ -158,6 +155,16 @@ class SocketManager {
 		this.userDatabase.blockUser(Number(client.id), Number(targetId));
 		client.blockedList.push(targetId);
 		console.log(`Client ${client.id} blocked ${targetId}`);
+	}
+
+	onUnblockClient(client: Client, { targetId }: { targetId: string }) {
+		if (!client.blockedList.includes(targetId)) {
+			console.log(`Client ${client.id} is not blocking ${targetId}`);
+			return;
+		}
+		this.userDatabase.friendRequest(Number(client.id), Number(targetId), 'no friendship');
+		client.blockedList = client.blockedList.filter(id => id !== targetId);
+		console.log(`Client ${client.id} unblocked ${targetId}`);
 	}
 
 	onPongLocalPlay(client: Client) {

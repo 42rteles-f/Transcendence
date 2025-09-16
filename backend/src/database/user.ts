@@ -280,6 +280,20 @@ export default class UserDatabase {
 				return { status: 400, reply: "Invalid operation for accepted friendship." };
 			}
 
+			if (status === "no friendship") {
+				if (!request || request.status !== "blocked")
+					return { status: 400, reply: "No blocked relationship to unblock." };
+				await this.runAsync(
+					'UPDATE friend_requests SET status = ?, requester_id = ? WHERE user_id = ? AND friend_id = ?',
+					[status, userId, userA, userB]
+				);
+				return { status: 200, reply: "User unblocked." };
+			}
+
+			if (request.status === "blocked") {
+				return { status: 400, reply: "Cannot modify a blocked user. Unblock first." };
+			}
+
 			if (status === "pending") {
 				await this.runAsync(
 					'UPDATE friend_requests SET status = ?, requester_id = ? WHERE user_id = ? AND friend_id = ?',
@@ -324,6 +338,35 @@ export default class UserDatabase {
 			if (!requests)
 				return { status: 200, reply: "no blocks" };
 			return { status: 200, reply: blockedIds };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async findBlockedUsers(userId: number): Promise<IResponse> {
+		try {
+			let blockedUsers = await this.allAsync(`
+				SELECT
+					u.id,
+					u.username,
+					u.profile_picture,
+					fr.status as friendship_status,
+					fr.requester_id
+				FROM users u
+				JOIN friend_requests fr
+					ON (
+						(fr.user_id = u.id AND fr.friend_id = ?)
+						OR (fr.friend_id = u.id AND fr.user_id = ?)
+					)
+				WHERE fr.status = 'blocked'
+			`, [userId, userId]);
+			if (!blockedUsers)
+				return { status: 200, reply: "no blocks" };
+			blockedUsers = blockedUsers.filter((user) => user.requester_id === userId);
+			console.log("Blocked users fetched:", blockedUsers);
+			return { status: 200, reply: blockedUsers };
 		} catch (error) {
 			if (error instanceof Error)
 				return { status: 400, reply: error.message };

@@ -53,7 +53,7 @@ services:
         - ELK_PASSWORD=${ELK_PASSWORD}
         - LS_JAVA_OPTS=${LS_JAVA_OPTS}
     container_name: transcendence-logstash
-    ports: ["5000:5000", "5001:5001", "9600:9600"]
+    ports: ["5005:5005", "5001:5001", "9600:9600"]
     volumes:
       - logstash-data:/usr/share/logstash/data
     depends_on:
