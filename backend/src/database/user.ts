@@ -309,6 +309,39 @@ export default class UserDatabase {
 		}
 	}
 
+	async getBlockedIdList(userId: number): Promise<IResponse> {
+		try {
+			const requests = await this.allAsync('SELECT user_id, friend_id FROM friend_requests WHERE (user_id = ? OR friend_id = ?) AND status = "blocked"', [userId, userId]);
+			const blockedIds: String[] = [];
+
+			console.log("blocked requests:", requests);
+			requests.forEach(({user_id, friend_id}: {user_id: string, friend_id: string}) => {
+				if (Number(user_id) !== userId)
+					blockedIds.push(String(user_id));
+				if (Number(friend_id) !== userId)
+					blockedIds.push(String(friend_id));
+			});
+			if (!requests)
+				return { status: 200, reply: "no blocks" };
+			return { status: 200, reply: blockedIds };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
+	async blockUser(userId: number, targetId: number): Promise<IResponse> {
+		try {
+			await this.friendRequest(userId, targetId, 'blocked');
+			return { status: 200, reply: "User blocked." };
+		} catch (error) {
+			if (error instanceof Error)
+				return { status: 400, reply: error.message };
+			return { status: 500, reply: "Unknown error" };
+		}
+	}
+
 	async findUsers(userId: number): Promise<IResponse> {
 		try {
 			const notFriends = await this.allAsync(`

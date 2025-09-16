@@ -20,6 +20,7 @@ interface IUserProfile {
 	gamesPlayed:	number;
 	gamesWon:		number;
 	gamesLost: 		number;
+	blockedList:	string[];
 }
 
 interface ITournamentCreation {
@@ -106,11 +107,14 @@ class SocketManager {
 
 	async createClient(socket: Socket) {
 		const clientData = await this.getUserData(socket.data.user.id);
+		const blockedUsers = await this.userDatabase.getBlockedIdList(socket.data.user.id);
 		if (!clientData) {
 			console.error(`User data not found for socket ID: ${socket.id}`);
 			socket.disconnect();
 			return undefined;
 		}
+		console.log(`blockedUsers: ${JSON.stringify(blockedUsers)}`);
+		clientData.blockedList = (blockedUsers.status === 200) ? blockedUsers.reply : [];
 
 		const client = new Client(this, socket, clientData!);
 		this.clients.set(socket.id, client);
@@ -147,6 +151,11 @@ class SocketManager {
 		const targetClient = this.getClientById(targetId)!;
 		if (!targetClient) return ;
 
+		if (client.blockedList.includes(targetId)) {
+			console.log(`Client ${client.id} already blocked ${targetId}`);
+			return ;
+		}
+		this.userDatabase.blockUser(Number(client.id), Number(targetId));
 		client.blockedList.push(targetId);
 		console.log(`Client ${client.id} blocked ${targetId}`);
 	}
