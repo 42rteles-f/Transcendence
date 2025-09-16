@@ -70,7 +70,7 @@ class Pong extends GameSocket {
 				return ;
 			}
 			const events: EventArray = [];
-			events.push({event: "pong-match-join", callback: (room: string) => this.onPongMatchJoin(player, room)});
+			events.push({event: "pong-match-join", callback: ({ room }:{ room: string }) => this.onPongMatchJoin(player, room)});
 			events.push({event: "pong-match-leave", callback: (room: string) => this.onPongMatchLeave(player, room)});
 			events.push({event: "player-forfeit", callback: (room: string) => this.playerForfeit(player, room)});
 			events.push({event: "paddle-update", callback: ({ direction }:{ direction: number }) => player.paddle.changeDirection(direction)});
@@ -153,12 +153,14 @@ class Pong extends GameSocket {
 	}
 
 	private onPongMatchJoin(player: PongPlayer, room: string): void {
-		// if (room != this.room || !player) return ;
+		if (room != this.room || !player) return ;
 
+		console.log(`room ${room} - player ${player.name} joined the match`);
 		if (this.localPlay)
 			this.players.forEach((p) => p.online = true);
 		else
 			player.online = true;
+		super.onPlayerJoin(player as unknown as Socket);
 		const allClientsReady = this.players.every((p) => p.online);
 		console.log("All clients ready: ", allClientsReady, " Status: ", this.status);
 		if (allClientsReady) {

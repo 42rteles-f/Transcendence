@@ -73,7 +73,10 @@ class Socket {
 			console.error("Socket not initialized");
 			return;
 		}
-		this.socket.emit(`unsubscribe-${event}`);
+		if (this.subscribedEvents.has(event)) {
+			this.subscribedEvents.delete(event);
+			this.socket.emit(`unsubscribe-${event}`);
+		}
 		this.socket.removeAllListeners(event);
 	}
 

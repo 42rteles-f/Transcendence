@@ -32,9 +32,8 @@ abstract class GameSocket {
 			this.clients.set(client.data.user.id.toString(), {
 				id: client.data.user.id.toString(),
 				socket: client,
-				events: new Array()
+				events: [{event: "disconnect", callback: () => this.onDisconnect(client)}]
 			});
-			client.on("disconnect", () => this.onDisconnect(client));
 		});
 		this.initRoom(roomName);
     }
@@ -60,7 +59,7 @@ abstract class GameSocket {
 		});
 	}
 
-	onDisconnect = (client: Socket) => {
+	onDisconnect(client: Socket) {
 		this.handleDisconnect(client);
 		this.onPlayerLeave(client);
 		this.clients.delete(client.id);
@@ -105,7 +104,10 @@ abstract class GameSocket {
     }
 
     protected onPlayerJoin(socket: Socket): void {
-		const client = this.clients.get(socket.data.user.id.toString());
+		if (!socket.data) socket = this.clients.get(socket.id)!.socket;
+
+		const client = this.clients.get(socket.data?.user.id.toString());
+		socket.join(this.room!);
 		if (!client || client.socket == socket)
 			return ;
 		client.socket = socket;
@@ -113,13 +115,10 @@ abstract class GameSocket {
 		client.events.forEach(({event, callback}) => {
 			client.socket.on(event, callback as any);
 		});
-		client.socket.on("disconnect", () => this.onDisconnect(client.socket));
 	}
 
     protected onPlayerLeave(socket: Socket): void {
-		// this.clients.get(socket.id)?.events.forEach(({event, callback}) => {
-		// 	socket.removeListener(event, (...args: any[]) => callback(...args));
-		// });
+		this.clients.get(socket.id)?.socket.leave(this.room!);
 		if (this.clients.size === 0) {
 			this.destructor();
 		}
@@ -135,7 +134,6 @@ abstract class GameSocket {
 			client.events.forEach(({event, callback}) => {
 				client.socket.removeListener(event, callback as any);
 			});
-			client.socket.removeListener("disconnect", () => this.onDisconnect(client.socket));
 		});
 		this.clients.clear();
 	}

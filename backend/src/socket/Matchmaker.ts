@@ -37,7 +37,7 @@ class Matchmaker {
 	private findInviteById(id: string): IInvite | undefined {
 		for (const [clientRef, invite] of this.invites) {
 			if (clientRef.id === id) {
-			return invite;
+				return invite;
 			}
 		}
 		return (undefined);
@@ -100,9 +100,11 @@ class Matchmaker {
 	}
 
 	public	addToQueue(client: Client): void {
-		if (!this.queue.some(c => c.socket.id === client.socket.id)) {
-			this.queue.push(client);
+		if (this.queue.some(c => c.socket.id === client.socket.id)
+		) {
+			return ;
 		}
+		this.queue.push(client);
 	}
 
 	public	removeFromQueue(client: Client): void {
@@ -132,6 +134,7 @@ class Matchmaker {
 			const pongGame = new Pong(players.map(c => c.socket));
 			pongGame.onPlayerJoin(players[0].socket);
 			pongGame.onPlayerJoin(players[1].socket);
+			console.log(`Starting new pong game between ${players[0].username} and ${players[1].username}`);
 			this.games.push({ id: this.createGameId("pong", players), pong: pongGame });
 		}
 	}
@@ -139,7 +142,7 @@ class Matchmaker {
 	private startInviteGames(): void {
 		this.invites.forEach((invite, host) => {
 			if (invite.status === 'accepted') {
-				this.games.push({ id: invite.room, pong: new Pong([host.info.socket, invite.guest.info.socket]) });
+				this.games.push({ id: invite.room, pong: new Pong([host.info.socket, invite.guest.info.socket], invite.room) });
 				this.server.serverChat(invite!.room, {
 					room: invite!.room
 				});
