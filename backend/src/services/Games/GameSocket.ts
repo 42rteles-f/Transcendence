@@ -60,7 +60,7 @@ abstract class GameSocket {
 		});
 	}
 
-	onDisconnect(client: Socket) {
+	onDisconnect = (client: Socket) => {
 		this.handleDisconnect(client);
 		this.onPlayerLeave(client);
 		this.clients.delete(client.id);

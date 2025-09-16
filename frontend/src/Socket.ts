@@ -3,6 +3,7 @@ import { io, Socket as SocketIo } from 'socket.io-client';
 
 class Socket {
 	private	static socket:			Pointer<SocketIo> = null;
+	private static subscribedEvents:	Set<string> = new Set();
 
 	static init() {
 		if (this.socket) {
@@ -48,6 +49,9 @@ class Socket {
 			console.error("Socket not initialized");
 			return;
 		}
+		if (this.subscribedEvents.has(event))
+			return ;
+		this.subscribedEvents.add(event);
 		this.socket.emit(`subscribe-${event}`);
 		this.socket.on(event, callback);
 	}
@@ -57,7 +61,10 @@ class Socket {
 			console.error("Socket not initialized");
 			return;
 		}
-		this.socket.emit(`unsubscribe-${event}`);
+		if (this.subscribedEvents.has(event)) {
+			this.subscribedEvents.delete(event);
+			this.socket.emit(`unsubscribe-${event}`);
+		}
 		this.socket.off(event, callback);
 	}
 

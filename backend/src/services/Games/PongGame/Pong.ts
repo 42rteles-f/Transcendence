@@ -58,19 +58,24 @@ class Pong extends GameSocket {
 				this.destructor();
 			}
 		}, 10000);
-		if (this.localPlay)
-			this.onPongMatchJoin(this.players[0], this.room!);
+		if (this.localPlay) {
+			this.players.forEach((p) => p.online = true);
+			this.onPlayerJoin(clients[0]);
+		}
 	}
 
 	private mapEvents(): void {
 		this.players.forEach((player) => {
+			if (this.players[0].id === this.players[1].id && player === this.players[1]) {
+				return ;
+			}
 			const events: EventArray = [];
 			events.push({event: "pong-match-join", callback: (room: string) => this.onPongMatchJoin(player, room)});
 			events.push({event: "pong-match-leave", callback: (room: string) => this.onPongMatchLeave(player, room)});
 			events.push({event: "player-forfeit", callback: (room: string) => this.playerForfeit(player, room)});
 			events.push({event: "paddle-update", callback: ({ direction }:{ direction: number }) => player.paddle.changeDirection(direction)});
 			if (this.localPlay)
-				events.push({event: "second-paddle-update", callback: ({ direction }:{ direction: number }) => player.paddle.changeDirection(direction)});
+				events.push({event: "second-paddle-update", callback: ({ direction }:{ direction: number }) => this.players[1].paddle.changeDirection(direction)});
 			this.addEvents(player.id, events);
 		});
 	}
@@ -150,8 +155,11 @@ class Pong extends GameSocket {
 	private onPongMatchJoin(player: PongPlayer, room: string): void {
 		// if (room != this.room || !player) return ;
 
-		player.online = true;
-		const allClientsReady = this.players.every((p) => p.online) ?? this.localPlay;
+		if (this.localPlay)
+			this.players.forEach((p) => p.online = true);
+		else
+			player.online = true;
+		const allClientsReady = this.players.every((p) => p.online);
 		console.log("All clients ready: ", allClientsReady, " Status: ", this.status);
 		if (allClientsReady) {
 			this.status = 'playing';
@@ -164,7 +172,10 @@ class Pong extends GameSocket {
 	private onPongMatchLeave(player: PongPlayer, room: string): void {
 		// if (room != this.room || !player) return ;
 		
-		player.online = false;
+		if (this.localPlay)
+			this.players.forEach((p) => p.online = false);
+		else
+			player.online = false;
 		super.onPlayerLeave(player as unknown as Socket);
 		if (this.players.every((p) => !p.online)) {
 			this.winByDisconnect(player);
