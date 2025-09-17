@@ -8,13 +8,15 @@ class FriendListModal extends BaseComponent {
     private closeFriendList!: HTMLButtonElement;
     private friendsTab!: HTMLButtonElement;
     private notFriendsTab!: HTMLButtonElement;
+    private blockedTab!: HTMLButtonElement;
     private userList!: HTMLElement;
     private userId: number | string | null;
     private uploadUrl: string;
 
-    private activeTab: "friends" | "not-friends" = "friends";
+    private activeTab: "friends" | "not-friends" | "blocked" = "friends";
     private allFriends: any[] = [];
     private allNotFriends: any[] = [];
+	private allBlocked: any[] = [];
 
     constructor(userId: number | string | null, uploadUrl: string) {
         super("/pages/friendListModal.html");
@@ -29,6 +31,7 @@ class FriendListModal extends BaseComponent {
 
         this.friendsTab.onclick = () => this.switchTab("friends");
         this.notFriendsTab.onclick = () => this.switchTab("not-friends");
+        this.blockedTab.onclick = () => this.switchTab("blocked");
         this.closeFriendList.onclick = () => this.closeModal();
 
         await this.fetchUsersAndRequests();
@@ -38,24 +41,32 @@ class FriendListModal extends BaseComponent {
     async fetchUsersAndRequests() {
         try {
             this.allNotFriends = await Api.findUsers(this.userId);
-			// const { message: allFriends } = await Api.getAllFriends(this.userId);
-            this.allFriends = await Api.getAllFriends(this.userId);;
-		
+            this.allFriends = await Api.getAllFriends(this.userId);
+            this.allBlocked = await Api.getAllBlocked(this.userId);
+
+			console.log("Fetched users and requests:", {
+				allNotFriends: this.allNotFriends,
+				allFriends: this.allFriends,
+				allBlocked: this.allBlocked
+			});
+
             const token = AppControl.getValidDecodedToken() as { id: number | string } | null;
             const loggedUserId = token?.id;
 
             this.allFriends = this.allFriends.filter((u: any) => u.id !== loggedUserId);
             this.allNotFriends = this.allNotFriends.filter((u: any) => u.id !== loggedUserId);
+			this.allBlocked = this.allBlocked.filter((u: any) => u.id !== loggedUserId);
         } catch (error) {
             showToast("Failed to get users or requests.", 3000, "error");
         }
     }
 
-    switchTab(tab: "friends" | "not-friends") {
+    switchTab(tab: "friends" | "not-friends" | "blocked") {
         if (this.activeTab === tab) return;
         this.activeTab = tab;
         this.friendsTab.classList.toggle("active", tab === "friends");
         this.notFriendsTab.classList.toggle("active", tab === "not-friends");
+        this.blockedTab.classList.toggle("active", tab === "blocked");
         this.renderList();
     }
 
@@ -66,7 +77,9 @@ class FriendListModal extends BaseComponent {
             users = this.allFriends;
         } else if (this.activeTab === "not-friends") {
             users = this.allNotFriends;
-        }
+        } else if (this.activeTab === "blocked") {
+			users = this.allBlocked;
+		}
 
 		this.userList.innerHTML = "";
 

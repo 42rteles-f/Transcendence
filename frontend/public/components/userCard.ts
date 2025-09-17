@@ -4,6 +4,7 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { routes } from '../../src/routes';
 import { FriendListModal } from "../pages/friendListModal";
 import { showToast } from '../pages/toastNotification';
+import Socket from '../../src/Socket';
 
 class UserCard extends BaseComponent {
 	private userCard!: HTMLDivElement;
@@ -37,6 +38,7 @@ class UserCard extends BaseComponent {
     }	
 
 	renderFriendActionButton() {
+		console.log("Rendering friend action button for user:", this.user);
         const status = this.user.friendship_status as string;
         const requesterId = this.user.requester_id;
         const token = AppControl.getValidDecodedToken() as { id: number | string } | null;
@@ -138,6 +140,28 @@ class UserCard extends BaseComponent {
 			return;
 		}
 
+		if (status === "blocked") {
+			console.log("Rendering unblock button for blocked user");
+			const unblockBtn = document.createElement("button");
+			unblockBtn.className = "p-2 rounded-full hover:bg-gray-300 transition";
+			unblockBtn.title = "Unblock User";
+			unblockBtn.innerHTML = `<span class="text-xl">&#128275;</span>`;
+			unblockBtn.onclick = async (e) => {
+				e.stopPropagation();
+				try {
+					Socket.emit('unblock-client', { targetId: String(this.user.id) });
+					this.user.friendship_status = "no friendship";
+					this.renderFriendActionButton();
+					this.dispatchEvent(new CustomEvent("friendship-updated", { bubbles: true }));
+					this.onActionComplete?.();
+				} catch (error) {
+					showToast(error instanceof Error ? error.message : "Error", 3000, "error");
+				}
+			};
+			this.friendActionButton.appendChild(unblockBtn);
+			return;
+		}
+
 		if (status === "rejected" || status === "removed" || status === "no friendship" || !status) {
 			const addBtn = document.createElement("button");
 			addBtn.className = "p-2 rounded-full hover:bg-gray-300 transition";
@@ -180,6 +204,10 @@ class UserCard extends BaseComponent {
                 icon = "&#43;";
                 title = "Add Friend";
                 break;
+			case "blocked":
+				icon = "&#128275;";
+				title = "Unblock User";
+				break;
             default:
                 icon = "&#43;";
                 title = "Add Friend";

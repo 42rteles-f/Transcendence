@@ -74,5 +74,11 @@ export default class UserService {
 	): Promise<IResponse> {
 		return (await this.db.getAllFriends(userId));
 	}
+
+	async getAllBlocked(
+		userId: number
+	): Promise<IResponse> {
+		return (await this.db.findBlockedUsers(userId));
+	}
 }
 

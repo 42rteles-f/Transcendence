@@ -108,6 +108,11 @@ class Api {
 		return data.message;
     }
 
+	static async getAllBlocked(userId: number | string | null): Promise<any> {
+		const data = await this.makeRequest(`user/blocked-list/${userId}`, "GET");
+		return data.message;
+	}
+
     static async getAllTournaments(page: number = 1, pageSize: number = 5): Promise<any> {
         const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
 		const data = await this.makeRequest(`tournament/all`, "GET", undefined, params);
