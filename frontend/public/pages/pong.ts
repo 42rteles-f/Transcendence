@@ -54,12 +54,10 @@ class PongGame extends BaseComponent {
 
 	isUserPlayingTournament() {
 		const gameInfo = sessionStorage.getItem('tournamentGame');
-		if (!gameInfo) {
+		if (!gameInfo)
+		{
 			console.log("No tournament game found in session");
-			
-			setTimeout(() => {
-				routes.navigate("/tournaments");
-			}, 0);
+			setTimeout(() => { routes.navigate("/tournaments"); }, 0);
 			return false;  
 		}
 		return true; 
@@ -116,6 +114,8 @@ class PongGame extends BaseComponent {
 	{
 		Socket.init();
 		this.setupGameStateListener();
+		Socket.addEventListener("tournament-game-over", (data: any) => { console.log("[TOURNAMENT] Game over, waiting for next round...", data); });
+		Socket.addEventListener("pong-game-over", (data: any) => { console.log("[GAME] Regular game over", data); setTimeout(() => { routes.navigate("/game-menu"); }, 2000); });
 		if (this.tournamentPlay)
 			this.setupTournamentListeners();
 	}

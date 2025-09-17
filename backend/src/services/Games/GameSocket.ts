@@ -39,9 +39,15 @@ abstract class GameSocket {
     }
 
 	addEvents(clientId: string, events: EventArray) {
-		this.clients.get(clientId)?.events.push(...events);
-		this.clients.get(clientId)?.events.forEach(({event, callback}) => {
-			this.clients.get(clientId)?.socket.on(event, callback as any);
+		const client = this.clients.get(clientId);
+		if (!client) return;
+		
+		//console.log(`[ADD-EVENTS] Adding ${events.length} events for client ${clientId} in room ${this.room}`);
+		//console.log(`[ADD-EVENTS] Events:`, events.map(e => e.event));
+		
+		client.events.push(...events);
+		client.events.forEach(({event, callback}) => {
+			client.socket.on(event, callback as any);
 		});
 	}
 
@@ -51,11 +57,17 @@ abstract class GameSocket {
 		else
 		{
 			const ids = Array.from(this.clients.keys()).join('-');
-			const date = `-${new Date().toISOString().split('T')[0]}`;
-			this.room = `pong-${ids}-${date}`;
+			const timestamp = Date.now();
+			const randomId = Math.random().toString(36).substring(7);
+			this.room = `pong-${ids}-${timestamp}-${randomId}`;
 		}
+		
+		//console.log(`[ROOM-INIT] Game created with room: ${this.room}`);
+		//console.log(`[ROOM-INIT] Players in this room:`, Array.from(this.clients.keys()));
+		
 		this.clients.forEach(client => {
 			client.socket.join(this.room!);
+			//console.log(`[ROOM-INIT] Socket ${client.socket.id} (user ${client.id}) joined room ${this.room}`);
 		});
 	}
 
@@ -95,9 +107,10 @@ abstract class GameSocket {
 		this.io.to(this.room!).emit(event, payload);
 	}
 
-    protected broadcastState() {
-        this.io.to(this.room!).volatile.emit("game-state", this.state);
-    }
+	protected broadcastState() {
+		//console.log(`[BROADCAST] Room ${this.room} broadcasting to ${this.clients.size} clients`);
+		this.io.to(this.room!).volatile.emit("game-state", this.state);
+	}
 
     protected sendTo(socketId: string, event: string, payload: any) {
         this.io.to(socketId).emit(event, payload);

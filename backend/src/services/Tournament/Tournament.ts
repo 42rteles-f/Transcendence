@@ -1,6 +1,6 @@
 import Pong from "../Games/PongGame/Pong";
 import Client from '../../socket/Client';
-import {tournamentGameLogger} from "../../logger/logger"
+// import {tournamentGameLogger} from "../../logger/logger"
 
 interface ITournamentPlayer {
 	client:			Client;
@@ -47,6 +47,7 @@ export class Tournament {
 
 	private startRound()																							// Creates and emits new round pong games to players														
 	{
+		console.log(`[TOURNAMENT] Starting next round...`);
 		this.initializeRound();
 		this.createRoundGames();
 	}
@@ -60,6 +61,8 @@ export class Tournament {
 
 		}
 		this.currentRound++;
+		//tournamentGameLogger.log(`Tournament ${this.id} round${this.currentRound} has started`);
+		console.log(`Tournament ${this.id} round${this.currentRound} has started`);
 	}
 
 	private createRoundGames()																						// Creates new Pong games for the round
@@ -82,7 +85,8 @@ export class Tournament {
 			pong: new Pong([player1.client.socket, player2.client.socket], gameId),
 			round: this.currentRound
 		};
-		tournamentGameLogger.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);
+		//tournamentGameLogger.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);
+		console.log(`Created Round ${this.currentRound} game with players ${player1.client.username} (${player1.client.id}) vs ${player2.client.username} (${player2.client.id})`);
 		return game;
 	}
 
@@ -94,7 +98,8 @@ export class Tournament {
 	}
 
 
-	public gamesCheck() {																							// Checks games state, creates and initializes new rounds and calls when tournament is finished
+	public gamesCheck()
+	{																						// Checks games state, creates and initializes new rounds and calls when tournament is finished
 		const currentRoundGames = this.checkRoundCompletion();
 		if (!currentRoundGames)
 			return;
@@ -102,42 +107,75 @@ export class Tournament {
 		this.handleTournamentProgression();
 	}
 
-	private checkRoundCompletion(): ITournamentGame[] | null														// Check if all games in the round are finished
-	{
+	private checkRoundCompletion(): ITournamentGame[] | null {
 		const currentRoundGames = this.games.filter(game => game.round === this.currentRound);
-		if (currentRoundGames.some(game => game.pong.winner === null))
-			return null;
-		tournamentGameLogger.log(`Tournament ${this.id}: Round ${this.currentRound} complete - processing winners`);
+		
+		console.log(`[TOURNAMENT] Checking round ${this.currentRound}: ${currentRoundGames.length} games`);
+		
+		// Check if ALL games are finished (not just have winners)
+		for (let i = 0; i < currentRoundGames.length; i++) {
+			const gameStatus = currentRoundGames[i].pong.getState().gameStatus;
+			console.log(`[TOURNAMENT] Game ${i} status: ${gameStatus}, winner: ${currentRoundGames[i].pong.winner?.name || 'none'}`);
+			
+			// If any game is still playing or waiting, round is not complete
+			if (gameStatus !== 'finished' && gameStatus !== 'error') {
+				return null;
+			}
+		}
+		
+		console.log(`[TOURNAMENT] All games in round ${this.currentRound} are finished`);
 		return currentRoundGames;
 	}
 
-	private processRoundResults(currentRoundGames: ITournamentGame[])												// Processes games results aftrer all rounds are finished
-	{
+	private processRoundResults(currentRoundGames: ITournamentGame[]) {
+		console.log(`[TOURNAMENT] Processing results for round ${this.currentRound} - ${currentRoundGames.length} games`);
 		const roundWinners: ITournamentPlayer[] = [];
+		
 		for (let i = 0; i < currentRoundGames.length; i++) {
 			const game = currentRoundGames[i];
-			if (game.pong.winner) {
-				const winnerPlayer = [game.player1, game.player2].find(player => player.client.id === game.pong.winner!.id);
-				const loserPlayer = [game.player1, game.player2].find(player => player.client.id !== game.pong.winner!.id);
-				if (winnerPlayer)
-					roundWinners.push(winnerPlayer);
-				if (loserPlayer)
-					loserPlayer.client.socket.emit("tournament-eliminated", {tournamentId: this.id});
+			
+			// Make sure game actually has a winner
+			if (!game.pong.winner) {
+				console.log(`[TOURNAMENT] Warning: Game ${i} finished without a winner`);
+				continue;
+			}
+			
+			const winnerPlayer = [game.player1, game.player2].find(
+				player => player.client.id === game.pong.winner!.id
+			);
+			const loserPlayer = [game.player1, game.player2].find(
+				player => player.client.id !== game.pong.winner!.id
+			);
+			
+			console.log(`[TOURNAMENT] Game ${i} winner: ${winnerPlayer?.client.username}, loser: ${loserPlayer?.client.username}`);
+			
+			if (winnerPlayer) {
+				roundWinners.push(winnerPlayer);
+			}
+			if (loserPlayer) {
+				console.log(`[TOURNAMENT] Emitting elimination to ${loserPlayer.client.username}`);
+				loserPlayer.client.socket.emit("tournament-eliminated", {tournamentId: this.id});
 			}
 		}
+		
+		console.log(`[TOURNAMENT] Round ${this.currentRound} complete with ${roundWinners.length} winners`);
 		this.qualified = roundWinners;
 	}
 
-	private handleTournamentProgression()																			// Starts new round or finishes tournament
-	{
-		tournamentGameLogger.log(`Round ${this.currentRound} winners: ${this.qualified.map(p => p.displayName).join(', ')}`);
-		if (this.qualified.length > 1)
+	private handleTournamentProgression() {
+		console.log(`[TOURNAMENT] Handling progression: ${this.qualified.length} qualified players`);
+		
+		if (this.qualified.length > 1) {
+			console.log(`[TOURNAMENT] Starting round ${this.currentRound + 1}...`);
 			this.startRound();
-		else if (this.qualified.length === 1)
-		{
-			tournamentGameLogger.log(`Tournament winner: ${this.qualified[0].displayName}`);
+		}
+		else if (this.qualified.length === 1) {
+			console.log(`[TOURNAMENT] Tournament complete! Winner: ${this.qualified[0].displayName}`);
 			this.winner = this.qualified[0];
 			this.endTournament();
+		}
+		else {
+			console.log(`[TOURNAMENT] ERROR: No winners found!`);
 		}
 	}
 
@@ -174,7 +212,7 @@ export class Tournament {
 		this.winner?.client.socket.emit("tournament-completed", { tournamentId: this.id, result: "winner" });
 		this.end_date = new Date().toISOString();
 		this.status = "finished";
-		tournamentGameLogger.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
+		//tournamentGameLogger.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
 	}
 
 	public tournamentInfos() {

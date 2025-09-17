@@ -27,9 +27,9 @@ class Client {
 	  this.socket = socket;
 	  this.username = info.username;
 	  this.blockedList = info.blockedList || [];
-	  console.log(`Blocked list for ${this.username}:`, this.blockedList);
+	  //console.log(`Blocked list for ${this.username}:`, this.blockedList);
 	  this.id = info.id?.toString() || '';
-	  console.log(`Client created: ${info.id} as ${info.username}`);	//console.log(`Client created: ${info}`);
+	  //console.log(`Client created: ${info.id} as ${info.username}`);	//console.log(`Client created: ${info}`);
 	}
 
 	setInformation(info: IUserProfile) {

@@ -113,7 +113,7 @@ class SocketManager {
 			socket.disconnect();
 			return undefined;
 		}
-		console.log(`blockedUsers: ${JSON.stringify(blockedUsers)}`);
+		//console.log(`blockedUsers: ${JSON.stringify(blockedUsers)}`);
 		clientData.blockedList = (blockedUsers.status === 200) ? blockedUsers.reply : [];
 
 		const client = new Client(this, socket, clientData!);
@@ -204,7 +204,7 @@ class SocketManager {
 		) {
 			if (message)
 				this.serverChat(client.socket.id, { error: `Cant Interact with user: ${target?.username}` })
-			console.log(`auth false: ${client?.id}, ${target?.id}`)
+			//console.log(`auth false: ${client?.id}, ${target?.id}`)
 			return (false);
 		}
 		return (true);

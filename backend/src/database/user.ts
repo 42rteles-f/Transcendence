@@ -77,7 +77,7 @@ export default class UserDatabase {
             const match = await bcrypt.compare(password, user.password);
             if (!match)
                 throw new Error("Invalid credentials");
-			console.log(`secret: ${process.env.JWT_SECRET}`);
+			//console.log(`secret: ${process.env.JWT_SECRET}`);
 
             const token = jwt.sign(
                 { id: user.id, username: user.username },
@@ -328,7 +328,7 @@ export default class UserDatabase {
 			const requests = await this.allAsync('SELECT user_id, friend_id FROM friend_requests WHERE (user_id = ? OR friend_id = ?) AND status = "blocked"', [userId, userId]);
 			const blockedIds: String[] = [];
 
-			console.log("blocked requests:", requests);
+			//console.log("blocked requests:", requests);
 			requests.forEach(({user_id, friend_id}: {user_id: string, friend_id: string}) => {
 				if (Number(user_id) !== userId)
 					blockedIds.push(String(user_id));

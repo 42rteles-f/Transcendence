@@ -17,7 +17,7 @@ import {
 	BALL_SPEED,
 	MAX_SCORE,
 } from './PongTypes';
-import { localGameLogger, pongGameLogger } from "../../../logger/logger";
+//import { localGameLogger, pongGameLogger } from "../../../logger/logger";
 
 class Pong extends GameSocket {
 	private	players:		PongPlayer[] = [];
@@ -28,10 +28,19 @@ class Pong extends GameSocket {
 	public	winner?:		PongPlayer = undefined;
 
 	constructor(clients: Socket[], roomName?: string) {
-		super(clients, roomName ?? "noRoom");
-		if (clients.length !== 2) {
+		if (!roomName)
+		{
+			const timestamp = Date.now();
+			const random = Math.random().toString(36).substring(7);
+			roomName = `pong-room-${timestamp}-${random}`;
+		}
+
+		super(clients, roomName);
+
+		if (clients.length !== 2)
+		{
 			this.status = 'error';
-			pongGameLogger.error("Pong game requires exactly 2 players.");
+			//pongGameLogger.error("Pong game requires exactly 2 players.");
 			return ;
 		}
 		
@@ -61,24 +70,65 @@ class Pong extends GameSocket {
 		}, 10000);
 		this.updateState();
 		if (this.localPlay) {
-			localGameLogger.log("Localgame started!");
+			//localGameLogger.log("Localgame started!");
 			this.players.forEach((p) => p.online = true);
 			this.onPlayerJoin(clients[0]);
 		}
 	}
 
 	private mapEvents(): void {
+		//console.log(`[MAP-EVENTS] Mapping events for room ${this.room}`);
 		this.players.forEach((player) => {
-			if (this.players[0].id === this.players[1].id && player === this.players[1]) {
+			//console.log(`[MAP-EVENTS] Setting up events for player: ${player.name} (${player.id})`);
+			if (this.players[0].id === this.players[1].id && player === this.players[1])
 				return ;
-			}
 			const events: EventArray = [];
-			events.push({event: "pong-match-join", callback: ({ room }:{ room: string }) => this.onPongMatchJoin(player, room)});
-			events.push({event: "pong-match-leave", callback: (room: string) => this.onPongMatchLeave(player, room)});
-			events.push({event: "player-forfeit", callback: (room: string) => this.playerForfeit(player, room)});
-			events.push({event: "paddle-update", callback: ({ direction }:{ direction: number }) => player.paddle.changeDirection(direction)});
-			if (this.localPlay)
-				events.push({event: "second-paddle-update", callback: ({ direction }:{ direction: number }) => this.players[1].paddle.changeDirection(direction)});
+			
+			events.push({
+				event: "pong-match-join", 
+				callback: (data: any) => {
+					const room = data?.room || this.room;  // Use this.room as fallback
+					this.onPongMatchJoin(player, room);
+				}
+			});
+			
+			events.push({
+				event: "pong-match-leave", 
+				callback: (data: any) => {
+					const room = data?.room || this.room;  // Use this.room as fallback
+					this.onPongMatchLeave(player, room);
+				}
+			});
+			
+			events.push({
+				event: "player-forfeit", 
+				callback: (data: any) => {
+					const room = data?.room || this.room;  // Use this.room as fallback
+					this.playerForfeit(player, room);
+				}
+			});
+			
+			events.push({
+				event: "paddle-update", 
+				callback: (data: any) => {
+					// For paddle update, only process if it's for our room
+					if (!this.room || !data?.room || data.room === this.room) {
+						player.paddle.changeDirection(data?.direction || 0);
+					}
+				}
+			});
+			
+			if (this.localPlay) {
+				events.push({
+					event: "second-paddle-update", 
+					callback: (data: any) => {
+						if (!this.room || !data?.room || data.room === this.room) {
+							this.players[1].paddle.changeDirection(data?.direction || 0);
+						}
+					}
+				});
+			}
+			
 			this.addEvents(player.id, events);
 		});
 	}
@@ -91,26 +141,32 @@ class Pong extends GameSocket {
 		});
 
 		this.gameCheck();
-
 		this.updateState();
 	}
 
 	protected gameCheck(): void {
 		const side: number = this.isPoint();
-		if (side > -1) {
+		if (side > -1)
+		{
 			this.players[side].score += 1;
 			this.resetRound();
-			if (this.players[side].score >= MAX_SCORE) {
+			if (this.players[side].score >= MAX_SCORE)
+			{
 				this.stopGameLoop();
 				this.winner = this.players[side];
 				this.status = 'finished';
+				
+				if (this.room && this.room.startsWith('tournament-'))									// Don't call destructor
+				{
+					console.log(`[TOURNAMENT-GAME] Game finished, winner: ${this.winner.name}`);
+					this.broadcast("tournament-game-over", { winner: this.winner, room: this.room });
+				}
+				else
+					this.broadcast("pong-game-over", { winner: this.winner });							// For regular games, emit normal game-over
 			}
 		}
-		if (this.leaveTimeout
-			&& (this.players.every((p) => p.online) || this.winner)
-		) {
+		if (this.leaveTimeout && (this.players.every((p) => p.online) || this.winner))
 			this.endTimeout();
-		}
 	}
 
 	private isPoint(): number {
@@ -156,9 +212,16 @@ class Pong extends GameSocket {
 	}
 
 	private onPongMatchJoin(player: PongPlayer, room: string): void {
-		if (room != this.room || !player) return ;
+		//console.log(`[PONG-JOIN] Player ${player.name} trying to join. Expected room: ${this.room}, Got room: ${room}`);
 
-		pongGameLogger.log(`room ${room} - player ${player.name} joined the match`);
+		if (room != this.room || !player)
+		{
+			//console.log(`[PONG-JOIN] Rejected - wrong room or no player`);
+			return;
+		}
+
+		//console.log(`[PONG-JOIN] Accepted - player ${player.name} joined room ${room}`);
+		//pongGameLogger.log(`room ${room} - player ${player.name} joined the match`);
 		if (this.localPlay)
 			this.players.forEach((p) => p.online = true);
 		else
@@ -166,17 +229,17 @@ class Pong extends GameSocket {
 		super.onPlayerJoin(player as unknown as Socket);
 		const allClientsReady = this.players.every((p) => p.online);
 		console.log("All clients ready: ", allClientsReady, " Status: ", this.status);
-		pongGameLogger.log("All clients ready");
+		//pongGameLogger.log("All clients ready");
 		if (allClientsReady) {
 			this.status = 'playing';
-			pongGameLogger.log("Starting game loop");
+			//pongGameLogger.log("Starting game loop");
 			this.endTimeout();
 			this.startGameLoop();
 		}
 	}
 
 	private onPongMatchLeave(player: PongPlayer, room: string): void {
-		// if (room != this.room || !player) return ;
+		if (room != this.room || !player) return ;
 		
 		if (this.localPlay)
 			this.players.forEach((p) => p.online = false);
@@ -189,7 +252,7 @@ class Pong extends GameSocket {
 		else {
 			if (this.leaveTimeout) { clearTimeout(this.leaveTimeout); }
 			this.leaveTimeout = setTimeout(() => {
-				pongGameLogger.log("A player did not return in time, ending the game.");
+				//pongGameLogger.log("A player did not return in time, ending the game.");
 				console.log("Status: ", this.status, " Players online: ", this.players.some((p) => !p.online));
 				if (this.status === 'playing' && this.players.some((p) => !p.online))
 					this.winByDisconnect();
@@ -207,7 +270,7 @@ class Pong extends GameSocket {
 	}
 
 	private playerForfeit(player: PongPlayer, room: string): void {
-		// if (room != this.room || !player) return ;
+		if (room != this.room || !player) return ;
 
 		player.online = false;
 		this.winByDisconnect();
