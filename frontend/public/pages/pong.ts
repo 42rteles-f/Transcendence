@@ -156,7 +156,14 @@ class PongGame extends BaseComponent {
 
 	onDestroy()
 	{
-		Socket.emit("pong-match-leave");
+		if (!this.tournamentPlay)
+		{
+			if (this.invite)
+				Socket.emit("pong-match-leave", { room: this.invite });
+			else
+				Socket.emit("pong-match-leave");
+		}
+		
 		Socket.clearEventListeners("game-state");
 		Socket.clearEventListeners("tournament-completed");
 		Socket.clearEventListeners("tournament-eliminated");
@@ -164,8 +171,6 @@ class PongGame extends BaseComponent {
 
 		if (this.renderer3D)
 			this.renderer3D.dispose();
-
-		// Browser automatically cleans up when components are removed
 	}
 }
 

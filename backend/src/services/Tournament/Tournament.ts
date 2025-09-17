@@ -111,16 +111,10 @@ export class Tournament {
 		const currentRoundGames = this.games.filter(game => game.round === this.currentRound);
 		
 		console.log(`[TOURNAMENT] Checking round ${this.currentRound}: ${currentRoundGames.length} games`);
-		
-		// Check if ALL games are finished (not just have winners)
 		for (let i = 0; i < currentRoundGames.length; i++) {
 			const gameStatus = currentRoundGames[i].pong.getState().gameStatus;
 			console.log(`[TOURNAMENT] Game ${i} status: ${gameStatus}, winner: ${currentRoundGames[i].pong.winner?.name || 'none'}`);
-			
-			// If any game is still playing or waiting, round is not complete
-			if (gameStatus !== 'finished' && gameStatus !== 'error') {
-				return null;
-			}
+			if (gameStatus !== 'finished' && gameStatus !== 'error') { return null; }
 		}
 		
 		console.log(`[TOURNAMENT] All games in round ${this.currentRound} are finished`);
@@ -134,24 +128,18 @@ export class Tournament {
 		for (let i = 0; i < currentRoundGames.length; i++) {
 			const game = currentRoundGames[i];
 			
-			// Make sure game actually has a winner
 			if (!game.pong.winner) {
 				console.log(`[TOURNAMENT] Warning: Game ${i} finished without a winner`);
 				continue;
 			}
 			
-			const winnerPlayer = [game.player1, game.player2].find(
-				player => player.client.id === game.pong.winner!.id
-			);
-			const loserPlayer = [game.player1, game.player2].find(
-				player => player.client.id !== game.pong.winner!.id
-			);
+			const winnerPlayer = [game.player1, game.player2].find( player => player.client.id === game.pong.winner!.id );
+			const loserPlayer = [game.player1, game.player2].find( player => player.client.id !== game.pong.winner!.id );
 			
 			console.log(`[TOURNAMENT] Game ${i} winner: ${winnerPlayer?.client.username}, loser: ${loserPlayer?.client.username}`);
 			
-			if (winnerPlayer) {
+			if (winnerPlayer)
 				roundWinners.push(winnerPlayer);
-			}
 			if (loserPlayer) {
 				console.log(`[TOURNAMENT] Emitting elimination to ${loserPlayer.client.username}`);
 				loserPlayer.client.socket.emit("tournament-eliminated", {tournamentId: this.id});
@@ -164,7 +152,6 @@ export class Tournament {
 
 	private handleTournamentProgression() {
 		console.log(`[TOURNAMENT] Handling progression: ${this.qualified.length} qualified players`);
-		
 		if (this.qualified.length > 1) {
 			console.log(`[TOURNAMENT] Starting round ${this.currentRound + 1}...`);
 			this.startRound();
@@ -184,7 +171,7 @@ export class Tournament {
 		this.watcher = setInterval(() => {
 			this.gamesCheck();
 		}
-		, 1000);
+		, 2000);
 	}
 
 	public joinTournament(client: Client, displayName: string) {

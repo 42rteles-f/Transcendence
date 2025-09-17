@@ -293,9 +293,13 @@ class Pong extends GameSocket {
 	}
 
 	public destructor(): void {
-		console.log(`Destructing Pong game: ${this.status}`);
-		if (!this.winner)
+		console.log(`Destructing Pong game: ${this.status} in room: ${this.room}`);
+		
+		// Only assign random winner for non-tournament games that errored out
+		if (!this.winner && this.status === 'error' && !this.room?.startsWith('tournament-')) {
 			this.winner = this.players[Math.floor(Math.random() * this.players.length)];
+		}
+		
 		this.updateState();
 		this.stopGameLoop();
 		super.destructor();
