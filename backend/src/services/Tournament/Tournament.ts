@@ -1,6 +1,7 @@
 import Pong from "../Games/PongGame/Pong";
 import Client from '../../socket/Client';
 import {tournamentGameLogger} from "../../logger/logger"
+import SocketManager from "../../socket/SocketManager";
 
 interface ITournamentPlayer {
 	client:			Client;
@@ -32,7 +33,7 @@ export class Tournament {
 	public  end_date:			string = '';
 
 
-	constructor(client: Client, name: string, displayName: string, numberOfPlayers: number, id: string) {
+	constructor(client: Client, name: string, displayName: string, numberOfPlayers: number, id: string, private server: SocketManager) {
 		const player = { client, displayName };
 		this.players = [player];
 		this.qualified = [player];
@@ -89,6 +90,8 @@ export class Tournament {
 	private emitGameStartEvents(game: ITournamentGame, gameId: string)												// Emits game to qualified players
 	{
 		const gameStartData = { tournamentId: this.id, round: this.currentRound, gameId: gameId };
+		this.server.serverChat(game.player1.client.socket.id, { room: gameId, message: `Tournament game started! You are playing against ${game.player2.displayName}.`});
+		this.server.serverChat(game.player2.client.socket.id, { room: gameId, message: `Tournament game started! You are playing against ${game.player1.displayName}.` });
 		game.player1.client.socket.emit("tournament-game-start", { ...gameStartData, playerId: game.player1.client.id });
 		game.player2.client.socket.emit("tournament-game-start", { ...gameStartData, playerId: game.player2.client.id });
 	}

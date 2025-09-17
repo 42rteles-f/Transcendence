@@ -189,7 +189,7 @@ class Matchmaker {
 		if (this.tournaments.some((t) => t.owner.client.id == client.id))
 			return (undefined);
 		const id = `${client.id}-${randomUUID()}`;
-		this.tournaments.push(new Tournament(client, name, displayName, numberOfPlayers, id));
+		this.tournaments.push(new Tournament(client, name, displayName, numberOfPlayers, id, this.server));
 		return (id);
 	}
 

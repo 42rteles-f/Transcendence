@@ -118,7 +118,7 @@ class SocketManager {
 
 		const client = new Client(this, socket, clientData!);
 		this.clients.set(socket.id, client);
-		this.matchmaker!.clientReconnect(client);
+		// this.matchmaker!.clientReconnect(client);
 		return (client);
 	}
 

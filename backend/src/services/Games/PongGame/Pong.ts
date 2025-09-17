@@ -159,6 +159,7 @@ class Pong extends GameSocket {
 		if (room != this.room || !player) return ;
 
 		pongGameLogger.log(`room ${room} - player ${player.name} joined the match`);
+		if (player.online) return ;
 		if (this.localPlay)
 			this.players.forEach((p) => p.online = true);
 		else

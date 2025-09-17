@@ -19,6 +19,7 @@ interface IServerInvite {
 
 interface IServerRoom {
 	room: string
+	message?: string,
 }
 
 interface IServerError {
@@ -208,7 +209,7 @@ class Chat extends BaseComponent {
 		if (response.room) {
 			const button = this.createButton(
 				{id: "server"} as IClient,
-				"Join Room",
+				response.message ?? "Join Room",
 				() => {
 					routes.navigate("/pong/" + response.room);
 				}
