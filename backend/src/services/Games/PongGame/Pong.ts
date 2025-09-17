@@ -27,8 +27,8 @@ class Pong extends GameSocket {
 	private leaveTimeout?:	NodeJS.Timeout = undefined;
 	public	winner?:		PongPlayer = undefined;
 
-	constructor(clients: Socket[], roomName?: string) {
-		super(clients, roomName ?? "noRoom");
+	constructor(clients: Socket[], roomName: string) {
+		super(clients, roomName);
 		if (clients.length !== 2) {
 			this.status = 'error';
 			pongGameLogger.error("Pong game requires exactly 2 players.");

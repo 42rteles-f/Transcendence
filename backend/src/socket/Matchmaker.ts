@@ -61,7 +61,7 @@ class Matchmaker {
 
 		const newInvite: IInvite = {
 			guest: { id: guest.id, info: guest },
-			room: this.createGameId('invite', [host, guest]),
+			room: `invite-${host.id}-${guest.id}-${randomUUID()}`,
 			status: 'pending',
 		}
 		this.invites.set({ id: host.id, info: host }, newInvite);
@@ -96,10 +96,6 @@ class Matchmaker {
 		host.socket.leave(invite!.room);
 		guest.socket.leave(invite!.room);
 		this.removeInviteById(host.id);
-	}
-
-	createGameId(prefix:string, players: Client[]): string {
-		return `${prefix}-${players[0].id}-${players[1].id}-${new Date().toISOString().replace(/[-:.TZ]/g, "")}`;
 	}
 
 	public	addToQueue(client: Client): void {
@@ -139,11 +135,11 @@ class Matchmaker {
 	private startQueueGames(): void {
 		while (this.queue.length >= 2) {
 			const players = this.queue.splice(0, 2);
-			const pongGame = new Pong(players.map(c => c.socket));
+			const id = `match-${players[0].id}-${players[1].id}-${randomUUID()}`;
+			const pongGame = new Pong(players.map(c => c.socket), id);
 			pongGame.onPlayerJoin(players[0].socket);
 			pongGame.onPlayerJoin(players[1].socket);
-			console.log(`Starting new pong game between ${players[0].username} and ${players[1].username}`);
-			this.games.push({ id: this.createGameId("pong", players), pong: pongGame });
+			this.games.push({ id: id, pong: pongGame });
 		}
 	}
 

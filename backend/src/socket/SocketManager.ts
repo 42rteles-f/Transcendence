@@ -168,7 +168,7 @@ class SocketManager {
 	}
 
 	onPongLocalPlay(client: Client) {
-		new Pong([client.socket, client.socket]);
+		new Pong([client.socket, client.socket], `local-${client.id}`);
 	}
 
 	onPongMatchFind(client: Client) {
