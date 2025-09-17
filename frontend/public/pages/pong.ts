@@ -4,7 +4,7 @@ import { routes } from '../../src/routes';
 import { PongRenderer3D } from "./babylonJS/render3Dpong";
 import { AppControl } from "../../src/AppControl";
 
-console.log("executing PongGame");
+//("executing PongGame");
 
 interface Position {
 	x: number;
@@ -56,7 +56,7 @@ class PongGame extends BaseComponent {
 		const gameInfo = sessionStorage.getItem('tournamentGame');					// Event sored in the fronten | Socket -> No persistence: If user refreshes /pong/tournament page, the socket event is lost (not sure If I can refresh my games also)
 		if (!gameInfo)
 		{
-			console.log("No tournament game found in session");
+			//("No tournament game found in session");
 			setTimeout(() => { routes.navigate("/tournaments"); }, 0);
 			return false;  
 		}
@@ -123,14 +123,14 @@ class PongGame extends BaseComponent {
 	}
 
 	private setupTournamentListeners() {											// Recive tournament end, player elimination, game start
-		Socket.addEventListener("tournament-completed", (data: any) => { routes.navigate(`/tournament/${data.tournamentId}`); }); // console.log("Tournament completed! You are the winner!");
-		Socket.addEventListener("tournament-eliminated", (data: any) => { routes.navigate(`/tournament/${data.tournamentId}`); });	// console.log("You have been eliminated from the tournament");
+		Socket.addEventListener("tournament-completed", (data: any) => { routes.navigate(`/tournament/${data.tournamentId}`); }); // //("Tournament completed! You are the winner!");
+		Socket.addEventListener("tournament-eliminated", (data: any) => { routes.navigate(`/tournament/${data.tournamentId}`); });	// //("You have been eliminated from the tournament");
 		Socket.addEventListener("tournament-game-start", (data: any) => { this.handleTournamentGameStart(data); });
 	}
 
 	private handleTournamentGameStart(data: any) {									// Recive tournament game start, save item to localstorage, redirect user
 		const myUserId = this.getUserId();
-		console.log(`My userId: ${myUserId}, Event playerId: ${data.playerId}`);
+		//(`My userId: ${myUserId}, Event playerId: ${data.playerId}`);
 
 		if (Number(data.playerId) === Number(myUserId))
 		{
@@ -140,7 +140,7 @@ class PongGame extends BaseComponent {
 	}
 
 	private drawGame(state: PongState) {
-		//console.log("Drawing Pong Game in 3D", state);
+		////("Drawing Pong Game in 3D", state);
 		// eFfIciENcY 1oo%
 		if (state.playersState && state.playersState.length >= 2)
 		{

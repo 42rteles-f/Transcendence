@@ -40,7 +40,7 @@ class JoinTournamentModal extends BaseComponent {
 				return ;
 			}
 			showToast("Successfully joined the tournament!", 3000, "success");
-			console.log("modal should be removed");
+			//("modal should be removed");
 			this.remove();
 		} catch (e: any) {
 			showToast(e.message || "Failed to join tournament", 3000, "error");

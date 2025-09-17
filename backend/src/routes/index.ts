@@ -16,7 +16,7 @@ export function Router(prefix?: string) {
 			if (!prefix) prefix = constructor.name.toLowerCase().replace("routes", "");
 			const register = async (fastify: any, options: any) => {
 				for (const data of routes.get(constructor.name) || []) {
-					console.log(`${data.method.toUpperCase()}  /${prefix}/${data.url}`)
+					//(`${data.method.toUpperCase()}  /${prefix}/${data.url}`)
 					fastify[data.method](`/${data.url}`, {
 						onRequest: data.auth ? [fastify.authenticate] : undefined,
 						handler: data.action,
@@ -26,8 +26,8 @@ export function Router(prefix?: string) {
 			}
 			server.register(register, { prefix: `/${prefix}` })
 		} catch (err) {
-			console.log(`error registering ${constructor.name} with prefix ${prefix}`);
-			console.log(err);
+			//(`error registering ${constructor.name} with prefix ${prefix}`);
+			//(err);
 			throw err;
 		}
 	}
@@ -41,7 +41,7 @@ export function Get(url?: string, auth: boolean = true, preHandler: Function[] =
 	  descriptor: PropertyDescriptor
 	) {
 		const targetName = target.constructor.name;
-		console.log(targetName);
+		//(targetName);
 		if (!url) url = propertyKey.toLowerCase();
 		if (routes.has(targetName))
 		{	

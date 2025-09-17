@@ -80,7 +80,7 @@ class Matchmaker {
 		const invite = this.findInviteById(host.id);
 		if (!invite || (invite && invite.guest.id !== guest.id)) {
 			this.server.serverChat(guest.socket.id, { error: `Invite ${host.username}-${guest.username} expired` })
-			console.log(`joinInvite ${invite?.guest.id} !== ${guest.id}`)
+			//(`joinInvite ${invite?.guest.id} !== ${guest.id}`)
 			return;
 		}
 		invite!.status = 'accepted';
@@ -88,7 +88,7 @@ class Matchmaker {
 
 	public removeInvite(host: Client): void {
 		const invite = this.findInviteById(host.id);
-		console.log(`invite being removed ${invite?.guest}`)
+		//(`invite being removed ${invite?.guest}`)
 		if (!invite) return ;
 
 		const guest = invite.guest.info;
@@ -158,7 +158,7 @@ class Matchmaker {
 	endPongHandler(game: Pong): void {
 		const gameState = game.getState();
 		const { gameStatus } = game.getState();
-		// console.log(`Ending pong game with status: ${gameStatus} and winner: ${game.winner?.name}`);
+		// //(`Ending pong game with status: ${gameStatus} and winner: ${game.winner?.name}`);
 		if (gameStatus !== 'finished' || !game.winner)
 			return ;
 		this.gameDB.registerGame({
@@ -172,10 +172,10 @@ class Matchmaker {
 	}
 
 	private checkGames(): void {
-		// console.log(`Checking ${this.games.length} active games`);
+		// //(`Checking ${this.games.length} active games`);
 		this.games = this.games.filter(game => {
 			const { gameStatus } = game.pong.getState();
-			// console.log(`Checking game ${game.id} with status: ${gameStatus}`);
+			// //(`Checking game ${game.id} with status: ${gameStatus}`);
 			if (gameStatus === 'finished' || gameStatus === 'error') {
 				game.pong.destructor();
 				this.endPongHandler(game.pong);

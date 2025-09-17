@@ -1,7 +1,5 @@
 import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing toastNotification.ts");
-
 class ToastNotification extends BaseComponent {
 	private toastMessage !: HTMLSpanElement;
 	private toastCloseButton !: HTMLButtonElement;

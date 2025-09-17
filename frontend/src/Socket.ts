@@ -25,7 +25,7 @@ class Socket {
 		});
 
 		this.socket.on('connect', () => {
-			console.log('Connected to server!', this.socket!.id);
+			//('Connected to server!', this.socket!.id);
 		});
 		
 		this.socket.on('connect_error', (err) => {
@@ -33,7 +33,7 @@ class Socket {
 		});
 
 		this.socket.on('disconnect', () => {
-			console.log('Disconnected from server');
+			//('Disconnected from server');
 		});
 
 		return (!!this.socket);
@@ -94,7 +94,7 @@ class Socket {
 
 	static	async request(event: string, ...args: any[]) {
 		if (!this.socket) {
-			console.log("Socket not initialized");
+			//("Socket not initialized");
 			return ;
 		}
 		return (await this.socket.emitWithAck(event, ...args));		

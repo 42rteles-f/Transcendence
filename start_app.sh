@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# docker stop $(docker ps -a -q) \
+# && docker rm $(docker ps -a -q) \
+# && docker rmi -f $(docker images -a -q) \
+# && docker system prune -a --volumes --force \
+# && docker builder prune --all --force
+
 ip=$(hostname -I | awk '{print $1}')
 echo "Host IP: $ip"
 
@@ -27,9 +33,10 @@ docker-compose down
 docker-compose up -d
 
 echo "Setup complete!"
-x
 # curl:
 # -X METHOD - POST
 # -H HEADERS - Content type
 # -u HEADERS - Auth
 # -d DATA/BODY
+
+

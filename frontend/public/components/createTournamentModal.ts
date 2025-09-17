@@ -47,12 +47,12 @@ class CreateTournamentModal extends BaseComponent {
 			const { ok, message, redirectUrl } = await Socket.request("create-tournament", { name, displayName, numberOfPlayers });
 			if (!ok) {
 				showToast(message, 2000, "error");
-				console.log(`Error occurred during tournament creation`);
+				//(`Error occurred during tournament creation`);
 				return ;
 			}
 			
-			console.log(`Tournament created! id=${message}`);
-			console.log(`Redirecting to ${redirectUrl}`);
+			//(`Tournament created! id=${message}`);
+			//(`Redirecting to ${redirectUrl}`);
 
 			showToast("Tournament created!", 2000, "success");
 			this.remove();

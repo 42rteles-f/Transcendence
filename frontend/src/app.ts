@@ -4,7 +4,7 @@ import { ToastNotification } from '../public/pages/toastNotification.ts';
 import { routes } from "./routes.ts";
 import './style.css';
 
-console.log("app start." + window.location.pathname);
+//("app start." + window.location.pathname);
 
 (() => {console.warn = () => {}; console.error = () => {};
 	Object.defineProperty(console, 'warn', { value: () => {}, writable: false, configurable: false });
@@ -13,12 +13,12 @@ console.log("app start." + window.location.pathname);
 
 export function	warnIf(condition :Boolean, message :string) {
 	if (condition)
-		console.log(message);
+		//(message);
 	return (condition);
 }
 
 window.addEventListener('popstate', () => {
-	console.log("app start2." + window.location.pathname);
+	//("app start2." + window.location.pathname);
 	routes.navigate(window.location.pathname);
 });
 

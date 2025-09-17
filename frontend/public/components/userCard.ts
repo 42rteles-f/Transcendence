@@ -38,7 +38,7 @@ class UserCard extends BaseComponent {
     }	
 
 	renderFriendActionButton() {
-		console.log("Rendering friend action button for user:", this.user);
+		//("Rendering friend action button for user:", this.user);
         const status = this.user.friendship_status as string;
         const requesterId = this.user.requester_id;
         const token = AppControl.getValidDecodedToken() as { id: number | string } | null;
@@ -141,7 +141,7 @@ class UserCard extends BaseComponent {
 		}
 
 		if (status === "blocked") {
-			console.log("Rendering unblock button for blocked user");
+			//("Rendering unblock button for blocked user");
 			const unblockBtn = document.createElement("button");
 			unblockBtn.className = "p-2 rounded-full hover:bg-gray-300 transition";
 			unblockBtn.title = "Unblock User";

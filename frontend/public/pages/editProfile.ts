@@ -2,8 +2,9 @@ import { BaseComponent } from "../../src/BaseComponent";
 import { routes } from "../../src/routes";
 import { showToast } from './toastNotification';
 import Api from '../../src/api/Api';
+import Socket from "../../src/Socket";
 
-console.log("executing editProfile.ts");
+//("executing editProfile.ts");
 
 class editProfile extends BaseComponent {
 	private username!: HTMLInputElement;
@@ -49,6 +50,8 @@ class editProfile extends BaseComponent {
 		try {
 			await Api.updateProfile(formData);
 			showToast("Profile updated successfully!");
+			Socket.emit("update-username", { newUsername: this.username.value });
+			//("calling socket update name");
 			this.closeEditModal();
 			routes.navigate("/profile/me");
 		} catch (error) {

@@ -9,7 +9,7 @@ import { LogoutModal } from "./logoutModal";
 import Socket from "../../src/Socket";
 import Api from '../../src/api/Api';
 
-console.log("executing ProfilePage.ts");
+//("executing ProfilePage.ts");
 
 class ProfilePage extends BaseComponent {
 	private userId!: string | number | null;
@@ -29,7 +29,7 @@ class ProfilePage extends BaseComponent {
 		super("/pages/profile.html");
 		const token = AppControl.getValidDecodedToken() as { id: string | number, username?: string } | null;
 		this.userId = userId ? userId : token?.id || "me";
-		console.log(`checking userId: ${this.userId}`);
+		//(`checking userId: ${this.userId}`);
 	}
 	
 	async onInit() {
@@ -53,7 +53,7 @@ class ProfilePage extends BaseComponent {
 				} else {
 					this.friendshipStatus.innerText = "Friendship Status: Not Friends";
 				}
-				console.log(`Friend request status: ${friendRequest.status}`);
+				//(`Friend request status: ${friendRequest.status}`);
 			} catch (error) {
 				if (error instanceof Error
 					&& typeof error.message === "string"

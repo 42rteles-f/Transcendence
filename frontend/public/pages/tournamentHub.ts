@@ -39,7 +39,7 @@ class TournamentHubPage extends BaseComponent {
 	subscribeToUpdates() {															// Main update handler, takes care of updating tournament view, starting and redirecting players to tournament
 		this.updateHandler = (data: any) =>
 		{
-			//  console.log("Tournament update received:", data);
+			//  //("Tournament update received:", data);
 			if (data.exists === false || data.action === "cancel")
 			{
 				showToast("Tournament has been cancelled", 3000, "info");
@@ -59,7 +59,7 @@ class TournamentHubPage extends BaseComponent {
 				}));
 				routes.navigate(`/pong/${data.gameId}`);
 			} else {														// TODO: Remove, not usefull
-				console.log("A tournament game started (spectating)");
+				//("A tournament game started (spectating)");
 				showToast("You're spectating XY game", 2000, "info");
 			}
 		};
@@ -107,7 +107,7 @@ class TournamentHubPage extends BaseComponent {
 
 			this.renderBracket();
 		} catch (e) {
-			console.log("Error loading tournament:", e);
+			//("Error loading tournament:", e);
 			showToast("Failed to load tournament", 3000, "error");
 			routes.navigate("/404");
 		}

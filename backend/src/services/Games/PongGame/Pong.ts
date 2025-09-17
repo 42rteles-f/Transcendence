@@ -166,7 +166,7 @@ class Pong extends GameSocket {
 			player.online = true;
 		super.onPlayerJoin(player as unknown as Socket);
 		const allClientsReady = this.players.every((p) => p.online);
-		console.log("All clients ready: ", allClientsReady, " Status: ", this.status);
+		//("All clients ready: ", allClientsReady, " Status: ", this.status);
 		pongGameLogger.log("All clients ready");
 		if (allClientsReady) {
 			this.status = 'playing';
@@ -191,7 +191,7 @@ class Pong extends GameSocket {
 			if (this.leaveTimeout) { clearTimeout(this.leaveTimeout); }
 			this.leaveTimeout = setTimeout(() => {
 				pongGameLogger.log("A player did not return in time, ending the game.");
-				console.log("Status: ", this.status, " Players online: ", this.players.some((p) => !p.online));
+				//("Status: ", this.status, " Players online: ", this.players.some((p) => !p.online));
 				if (this.status === 'playing' && this.players.some((p) => !p.online))
 					this.winByDisconnect();
 				this.leaveTimeout = undefined;
@@ -231,7 +231,7 @@ class Pong extends GameSocket {
 	}
 
 	public destructor(): void {
-		console.log(`Destructing Pong game: ${this.status}`);
+		//(`Destructing Pong game: ${this.status}`);
 		if (!this.winner)
 			this.winner = this.players[Math.floor(Math.random() * this.players.length)];
 		this.updateState();

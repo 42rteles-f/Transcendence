@@ -68,16 +68,16 @@ export default class UserDatabase {
 
     async login(username: string, password: string): Promise<IResponse> {
         try {
-			console.log("Login attempt for user:", username);
+			//("Login attempt for user:", username);
             const user = await this.getAsync('SELECT * FROM users WHERE username = ?', [username]);
             if (!user)
                 throw new Error("Invalid credentials");
-			console.log("found user:", username);
+			//("found user:", username);
 
             const match = await bcrypt.compare(password, user.password);
             if (!match)
                 throw new Error("Invalid credentials");
-			console.log(`secret: ${process.env.JWT_SECRET}`);
+			//(`secret: ${process.env.JWT_SECRET}`);
 
             const token = jwt.sign(
                 { id: user.id, username: user.username },
@@ -239,7 +239,7 @@ export default class UserDatabase {
 
 			if (!request) {
 				if (status !== "pending")
-					return { status: 403, reply: "You can only send a friend request." };
+					return { status: 200, reply: "You can only send a friend request." };
 				await this.runAsync(
 					'INSERT INTO friend_requests (user_id, friend_id, status, requester_id) VALUES (?, ?, ?, ?)',
 					[userA, userB, status, userId]
@@ -328,7 +328,7 @@ export default class UserDatabase {
 			const requests = await this.allAsync('SELECT user_id, friend_id FROM friend_requests WHERE (user_id = ? OR friend_id = ?) AND status = "blocked"', [userId, userId]);
 			const blockedIds: String[] = [];
 
-			console.log("blocked requests:", requests);
+			//("blocked requests:", requests);
 			requests.forEach(({user_id, friend_id}: {user_id: string, friend_id: string}) => {
 				if (Number(user_id) !== userId)
 					blockedIds.push(String(user_id));
@@ -365,7 +365,7 @@ export default class UserDatabase {
 			if (!blockedUsers)
 				return { status: 200, reply: "no blocks" };
 			blockedUsers = blockedUsers.filter((user) => user.requester_id === userId);
-			console.log("Blocked users fetched:", blockedUsers);
+			//("Blocked users fetched:", blockedUsers);
 			return { status: 200, reply: blockedUsers };
 		} catch (error) {
 			if (error instanceof Error)

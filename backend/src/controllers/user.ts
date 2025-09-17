@@ -35,7 +35,7 @@ class UserController {
 	}
 
 	async updateProfile(req: FastifyRequest, _res: FastifyReply): Promise<IResponse> {
-		console.log(`body arriving in updateProfile: ${JSON.stringify(req.body)}`);
+		//(`body arriving in updateProfile: ${JSON.stringify(req.body)}`);
 		try {
 			let userId: number;
 			let username: string | undefined;
@@ -58,7 +58,7 @@ class UserController {
 					value: part.value,
 					file: part.file
 				};
-				console.log(`part: ${JSON.stringify(obj)}`);
+				//(`part: ${JSON.stringify(obj)}`);
 				if (part.type === 'file' && part.fieldname === 'profilePicture') {
 					if (!part.filename || part.file.truncated || part.file.bytesRead === 0)
 						continue ;
@@ -74,7 +74,7 @@ class UserController {
 								writeStream.end();
 							});
 							writeStream.on('finish', () => {
-								console.log(`image uploaded to ${filePath}`);
+								//(`image uploaded to ${filePath}`);
 								resolve();
 							});
 							writeStream.on('error', (err) => {

@@ -2,7 +2,7 @@ import * as BABYLON from 'babylonjs';
 
 export function createEngine(canvas: HTMLCanvasElement): BABYLON.Engine {
 	if (!canvas)
-			console.log("No canvas")
+			//("No canvas")
 	const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, antialias: true });
 	window.addEventListener('resize', () => { engine.resize(); });
 	return engine;
@@ -10,7 +10,7 @@ export function createEngine(canvas: HTMLCanvasElement): BABYLON.Engine {
 
 export function createScene(engine: BABYLON.Engine): BABYLON.Scene {
 	if (!engine)
-		console.log("No engine");
+		//("No engine");
 	const scene = new BABYLON.Scene(engine);
 	scene.clearColor = new BABYLON.Color4(0.02, 0.02, 0.05, 1);
 	return scene;

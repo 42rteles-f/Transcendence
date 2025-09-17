@@ -375,21 +375,21 @@ export default class TournamentDatabase {
 				`DELETE FROM tournaments WHERE status = 'in progress' OR status = 'waiting'`
 			);
 			if (deletedTournaments.changes > 0) {
-				console.log(`Deleted ${deletedTournaments.changes} tournaments in progress`);
+				//(`Deleted ${deletedTournaments.changes} tournaments in progress`);
 			}
 
 			const deletedTournamentPlayers = await this.runAsync(
 				`DELETE FROM tournament_players WHERE tournament_id NOT IN (SELECT id FROM tournaments)`
 			);
 			if (deletedTournamentPlayers.changes > 0) {
-				console.log(`Deleted ${deletedTournamentPlayers.changes} tournament players with missing tournaments`);
+				//(`Deleted ${deletedTournamentPlayers.changes} tournament players with missing tournaments`);
 			}
 
 			const deletedTournamentGames = await this.runAsync(
 				`DELETE FROM tournament_games WHERE tournament_id NOT IN (SELECT id FROM tournaments)`
 			);
 			if (deletedTournamentGames.changes > 0) {
-				console.log(`Deleted ${deletedTournamentGames.changes} tournament games with missing tournaments`);
+				//(`Deleted ${deletedTournamentGames.changes} tournament games with missing tournaments`);
 			}
 
 			const deletedGames = await this.runAsync(
@@ -397,7 +397,7 @@ export default class TournamentDatabase {
 					OR status = 'in progress'`
 			);
 			if (deletedGames.changes > 0) {
-				console.log(`Deleted ${deletedGames.changes} games that were not linked to tournaments or were in progress`);
+				//(`Deleted ${deletedGames.changes} games that were not linked to tournaments or were in progress`);
 			}
 
 		} catch (error) {

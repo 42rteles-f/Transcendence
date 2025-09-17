@@ -46,18 +46,18 @@ export class PongRenderer3D {
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
         if (canvasWidth && canvasHeight)
-            console.log(`Canvas dimensions set to: ${canvasWidth}x${canvasHeight}`);
+            //(`Canvas dimensions set to: ${canvasWidth}x${canvasHeight}`);
         this.initializeBabylon();
     }
 
     private initializeBabylon(): void {
         this.engine = createEngine(this.canvas);
         if (!this.engine)
-            console.log("Engine Error");
+            //("Engine Error");
         
         this.scene = createScene(this.engine);
         if (!this.scene)
-            console.log("Scene Error");
+            //("Scene Error");
         
         setupCamera(this.scene);
         setupLighting(this.scene);

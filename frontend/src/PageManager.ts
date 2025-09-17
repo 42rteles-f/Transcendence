@@ -42,7 +42,7 @@ export class PageManager {
 			return ;
 		}
 
-		console.log(`new page ${name}`);
+		//(`new page ${name}`);
 		this.currentPage.forEach((page) => {
 			page.remove();
 		});
@@ -57,15 +57,15 @@ export class PageManager {
 	}
 
 	load(name: string, param?: string[] | null): Boolean {
-		console.log(`load page: ${name}`);
+		//(`load page: ${name}`);
 
         if (!this.pageMap.has(name)) {
-			console.log(`PageManager: Component ${name} does not exist`);
+			//(`PageManager: Component ${name} does not exist`);
 			return (false);
         }
 
 		const newComponent = new (this.pageMap.get(name) as any)(...(param ?? []));
-		console.log(`param: ${param}`);
+		//(`param: ${param}`);
 		this.currentPage.push(newComponent);
 		document.body.appendChild(newComponent as Node);
 		return (true);

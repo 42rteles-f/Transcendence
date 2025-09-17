@@ -4,7 +4,7 @@ import Api from "../../src/api/Api";
 import { routes } from "../../src/routes";
 import { showToast } from './toastNotification';
 
-console.log("executing LoginPage.ts");
+//("executing LoginPage.ts");
 
 declare global {
 	interface Window { handleGoogleSignIn: (response: any) => void }

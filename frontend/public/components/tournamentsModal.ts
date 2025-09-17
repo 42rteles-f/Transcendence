@@ -51,7 +51,7 @@ class TournamentsModal extends BaseComponent {
 		const pageInfo = this.pageInfo as HTMLElement;
 
 		try {
-			console.log(`Loading tournaments`);
+			//(`Loading tournaments`);
 			list.classList.add("hidden");
 			pagination.classList.add("hidden");
 
@@ -63,9 +63,9 @@ class TournamentsModal extends BaseComponent {
 			const { tournaments, total } = message;
 
 			this.totalPages = Math.ceil(total / this.pageSize);
-			// console.log(`After calling getAllTournaments`);
-			// console.log(`tournaments: ${JSON.stringify(tournaments)}`);
-			// console.log(`total: ${JSON.stringify(total)}`);
+			// //(`After calling getAllTournaments`);
+			// //(`tournaments: ${JSON.stringify(tournaments)}`);
+			// //(`total: ${JSON.stringify(total)}`);
 
 			if (!Array.isArray(tournaments) || tournaments.length === 0) {
 				list.innerHTML = "<p class='text-center text-gray-500'>No tournaments found.</p>";
@@ -80,7 +80,7 @@ class TournamentsModal extends BaseComponent {
 				tournamentInfo.classList.add("cursor-pointer", "hover:bg-blue-50", "transition");
 				tournamentInfo.addEventListener("click", () => {
 					this.remove();
-					//	console.log(`Tournament page for uuid: ${t.uuid}`);
+					//	//(`Tournament page for uuid: ${t.uuid}`);
 					routes.navigate(`/tournament/${t.uuid}`);
 				});
 				list.appendChild(tournamentInfo);

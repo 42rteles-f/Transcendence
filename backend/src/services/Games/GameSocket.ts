@@ -128,7 +128,7 @@ abstract class GameSocket {
     protected abstract onTick(): void;
 
 	public	destructor() {
-		console.log(`GameSocket destructor called for room: ${this.room}`);
+		//(`GameSocket destructor called for room: ${this.room}`);
 		this.stopGameLoop();
 		this.clients.forEach(client => {
 			client.socket.leave(this.room!);

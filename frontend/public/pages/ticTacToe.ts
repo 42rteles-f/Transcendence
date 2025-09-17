@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../src/BaseComponent";
 import { showToast } from "./toastNotification";
 
-console.log("executing TicTacToePage.ts");
+//("executing TicTacToePage.ts");
 
 
 class ticTacToePage extends BaseComponent {
@@ -14,7 +14,7 @@ class ticTacToePage extends BaseComponent {
 
 	onInit() {
 		this.currentPlayer = "X";
-		console.log("Tic Tac Toe Page initialized");
+		//("Tic Tac Toe Page initialized");
 		this.ticTacToeCells = this.querySelectorAll(".tic-tac-toe-cell") as NodeListOf<HTMLDivElement>;
 		this.ticTacToeCells.forEach((cell) => {
 			cell.onclick = () => {

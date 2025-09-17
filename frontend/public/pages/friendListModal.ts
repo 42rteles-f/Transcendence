@@ -44,7 +44,7 @@ class FriendListModal extends BaseComponent {
             this.allFriends = await Api.getAllFriends(this.userId);
             this.allBlocked = await Api.getAllBlocked(this.userId);
 
-			console.log("Fetched users and requests:", {
+			//("Fetched users and requests:", {
 				allNotFriends: this.allNotFriends,
 				allFriends: this.allFriends,
 				allBlocked: this.allBlocked

@@ -4,7 +4,7 @@ import { showToast } from './toastNotification';
 import Api from '../../src/api/Api';
 import Socket from '../../src/Socket';
 
-console.log("executing RegisterPage.ts");
+//("executing RegisterPage.ts");
 
 class RegisterPage extends BaseComponent {
 	private registerForm!: HTMLButtonElement;

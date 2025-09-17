@@ -1,7 +1,7 @@
 import { routes } from "../../src/routes";
 import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing navbar copy");
+//("executing navbar copy");
 
 class Navbar extends BaseComponent {
 	private homeButton!: HTMLButtonElement;

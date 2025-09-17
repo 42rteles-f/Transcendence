@@ -34,7 +34,7 @@ server.register(cors, {
 	credentials: true,
 });
 
-console.log(`server cors: origin set to ${process.env.VITE_API_URL}`);
+//(`server cors: origin set to ${process.env.VITE_API_URL}`);
 
 server.register(fastifyMultipart);
 
@@ -83,9 +83,9 @@ server.get('/test', async (req, res) => {
 
 const start = async (port: number) => {
 	try {
-		console.log("starting server...");
+		//("starting server...");
 		await server.listen({ port, host: "0.0.0.0" })
-		console.log(`Server is running at port ${port}`);
+		//(`Server is running at port ${port}`);
 
 		const db = server.sqlite as Database;
         const database = new TournamentDatabase(db);
@@ -108,7 +108,7 @@ let socketManager = null;
 server.after(() => {
 	httpServer = server.server;
 	dbLite = server.sqlite;
-	console.log(`Database connected: ${dbLite}`);
+	//(`Database connected: ${dbLite}`);
 	socketManager = new SocketManager(httpServer);	
 });
 export { httpServer };

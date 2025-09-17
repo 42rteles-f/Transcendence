@@ -3,7 +3,7 @@ import { BaseComponent } from "../../../src/BaseComponent";
 import { routes } from "../../../src/routes";
 import Socket from "../../../src/Socket";
 
-console.log("executing home.ts");
+//("executing home.ts");
 
 interface IClient {
 	id: string;
@@ -45,7 +45,7 @@ class Chat extends BaseComponent {
 	}
 
 	override async onInit() {
-		console.log("Chat component initialized");
+		//("Chat component initialized");
 		this.sendButton.onclick = () => this.sendMessage();
 		this.chatInput.onkeydown = (e: KeyboardEvent) => {
 			if (e.key === "Enter") this.sendMessage();
@@ -68,7 +68,7 @@ class Chat extends BaseComponent {
 			target: this.chatName.dataset.socketId,
 			message: message,
 		});
-		console.log(`Sending message: ${message} to ${this.chatName.dataset.socketId}`);
+		//(`Sending message: ${message} to ${this.chatName.dataset.socketId}`);
 		this.addMessage(
 			{ fromId: this.chatName.dataset.id!, fromName: this.chatName.textContent!, message },
 			"outgoing"
@@ -87,7 +87,7 @@ class Chat extends BaseComponent {
 		data.fromId = data.fromId.toString();
 		if (type !== "outgoing") type = "incoming";
 
-		console.log(`message ${data.fromId}`)
+		//(`message ${data.fromId}`)
 		const messageElement = document.createElement("div");
 		messageElement.className = `chat-message-${type}`;
 		if (data.fromId === "system")
@@ -202,7 +202,7 @@ class Chat extends BaseComponent {
 
 	onSystemError(element: HTMLDivElement, response: IServerError) {
 		element.textContent = response.error;
-		console.log(`response.error ${response.error}`);
+		//(`response.error ${response.error}`);
 	}
 
 	onSystemRoom(element: HTMLDivElement, response: IServerRoom) {
@@ -230,7 +230,7 @@ class Chat extends BaseComponent {
 
 	addSystemMessage(element: HTMLDivElement, message: any) {
 		const fieldName = this.systemMessages.find(f => f in message);
-		console.log(`addSystemMessage fieldName ${fieldName}`)
+		//(`addSystemMessage fieldName ${fieldName}`)
 		if (!fieldName) return false;
 
 		this.storageSystemMessage(message);
@@ -268,7 +268,7 @@ class Chat extends BaseComponent {
 				item.remove();
 			}
 		});
-		console.log("Clients removed");
+		//("Clients removed");
 	};
 
 	openSystemMessages() {
@@ -338,7 +338,7 @@ class Chat extends BaseComponent {
 		this.hideNotification(client.id);
 		this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 		this.chatInput.value = "";
-		console.log("Chat opened");
+		//("Chat opened");
 	}
 
 	onDestroy(): void {

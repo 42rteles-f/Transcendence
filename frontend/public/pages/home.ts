@@ -3,7 +3,7 @@ import("./client_list/client_list.ts")
 import("./navbar.ts");
 import("./chat/chat.ts");
 
-console.log("executing home.ts");
+//("executing home.ts");
 
 class HomePage extends BaseComponent {
 

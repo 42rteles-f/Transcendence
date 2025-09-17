@@ -67,11 +67,9 @@ async function run(direction, migrationsDir = 'migrations') {
   for (const migration of migrations) {
     if (direction === 'up') {
       if (await hasRunMigration(migration.name)) {
-        console.log(`SKIP ${migration.name} (already run)`);
         continue;
       }
     }
-    console.log(`${direction.toUpperCase()} ${migration.name}`);
     await new Promise((resolve, reject) => {
       const action = migration[direction];
       if (!action) return resolve();
@@ -91,7 +89,7 @@ const direction = process.argv[2];
 const migrationsDir = process.argv[3] || 'migrations';
 
 if (!['up', 'down'].includes(direction)) {
-  console.log('Usage: node migrate.js up|down [migrationsDir]');
+
   process.exit(1);
 }
 

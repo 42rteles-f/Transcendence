@@ -17,7 +17,7 @@ class PongModal extends BaseComponent {
     async onInit() {
 		this.focus();
         this.closeBtn.onclick = () => {
-			console.log("Closing Pong Modal");
+			//("Closing Pong Modal");
 			this.handleCancel();
 		}
         this.cancelBtn.onclick = () => this.handleCancel();
@@ -30,7 +30,7 @@ class PongModal extends BaseComponent {
     }
 	
     handleSearch = () => {
-		console.log("Searching for game...");
+		//("Searching for game...");
 		if (this.searching) return;
 
         this.searching = true;
@@ -51,7 +51,7 @@ class PongModal extends BaseComponent {
 	}
 
     handleCancel = () => {
-		console.log("Cancelling search...");
+		//("Cancelling search...");
         if (this.searching)
             this.searching = false;
 		Socket.removeEventListener("search-game", this.handleGameFound);

@@ -84,7 +84,7 @@ class TournamentMenu extends BaseComponent {
 
 	subscribeToUpdates() {
 		this.updateHandler = (data: any) => {
-			//console.log("TournamentMenu received update:", data);
+			////("TournamentMenu received update:", data);
 			if (data.id !== this.menuInfo.id) return;
 			if (data.exists === false)
 			{
@@ -141,7 +141,7 @@ class TournamentMenu extends BaseComponent {
 	}
 
 	async joinTournament() {
-		// console.log(`tournamentId: ${this.menuInfo.id}`);
+		// //(`tournamentId: ${this.menuInfo.id}`);
 		if (!this.menuInfo.id) return;
 		try {
 			const modal = new JoinTournamentModal(this.menuInfo.id);

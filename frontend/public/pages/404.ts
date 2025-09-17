@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../src/BaseComponent";
 
-console.log("executing NotFoundPage.ts");
+//("executing NotFoundPage.ts");
 
 class NotFoundPage extends BaseComponent {
 

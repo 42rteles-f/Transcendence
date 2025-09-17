@@ -107,12 +107,12 @@ export class Tournament {
 
 	private checkRoundCompletion(): ITournamentGame[] | null														// Check if all games in the round are finished
 	{
-		console.log(`Checking completion of round ${this.currentRound} with ${this.games[0].round} active games.`);
+		//(`Checking completion of round ${this.currentRound} with ${this.games[0].round} active games.`);
 		const currentRoundGames = this.games.filter(game => game.round == this.currentRound);
-		console.log(this.games);
+		//(this.games);
 		if (currentRoundGames.some(game => !game.pong.winner))
 			return null;
-		console.log(`All games in round ${this.currentRound} are finished.`);
+		//(`All games in round ${this.currentRound} are finished.`);
 		tournamentGameLogger.log(`Tournament ${this.id}: Round ${this.currentRound} complete - processing winners`);
 		return currentRoundGames;
 	}
@@ -144,15 +144,15 @@ export class Tournament {
 			this.startRound();
 		else if (this.qualified.length === 1)
 		{
-			console.log("Tournament finished!");
+			//("Tournament finished!");
 			tournamentGameLogger.log(`Tournament winner: ${this.qualified[0].displayName}`);
 			this.winner = this.qualified[0];
 			this.unsubscribeTournament(this.winner.client);
 			this.endTournament();
 		}
 		else {
-			console.log(`${this.qualified.length} players remaining, but max rounds reached. Ending tournament.`);
-			console.log(`round: ${this.currentRound}, maxRound: ${this.maxRound}`);
+			//(`${this.qualified.length} players remaining, but max rounds reached. Ending tournament.`);
+			//(`round: ${this.currentRound}, maxRound: ${this.maxRound}`);
 		}
 	}
 
@@ -176,7 +176,7 @@ export class Tournament {
 	}
 
 	public unsubscribeTournament(client: Client) {
-		console.log("Player unsubscribed!");
+		//("Player unsubscribed!");
 		this.players = this.players.filter(p => p.client.id !== client.id);
 		this.qualified = this.qualified.filter(p => p.client.id !== client.id);
 	}

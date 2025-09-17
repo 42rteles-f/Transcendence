@@ -32,7 +32,7 @@ class ELKLogger {
 	} 
 	catch (error) {
 	  console.error('Failed to send log to Logstash:', error);
-	  console.log('Original log:', logEntry);
+	  //('Original log:', logEntry);
 	}
   }
 
