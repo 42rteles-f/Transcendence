@@ -1,5 +1,23 @@
 import * as BABYLON from 'babylonjs';
 
+// block WEBGL_debug_renderer_info so Firefox never warns
+(() => {
+  const wrap = (proto: any) => {
+    if (!proto || !proto.getExtension) return;
+    const orig = proto.getExtension;
+    proto.getExtension = function (name: string, ...rest: any[]) {
+      if (name === 'WEBGL_debug_renderer_info' || name === 'MOZ_WEBGL_debug_renderer_info') {
+        return null; // pretend the extension doesn't exist
+      }
+      return orig.call(this, name, ...rest);
+    };
+  };
+
+  wrap((window as any).WebGLRenderingContext?.prototype);
+  wrap((window as any).WebGL2RenderingContext?.prototype);
+})();
+
+
 export function createEngine(canvas: HTMLCanvasElement): BABYLON.Engine {
 	if (!canvas)
 			//("No canvas")
