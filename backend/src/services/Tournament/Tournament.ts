@@ -104,9 +104,12 @@ export class Tournament {
 
 	private checkRoundCompletion(): ITournamentGame[] | null														// Check if all games in the round are finished
 	{
-		const currentRoundGames = this.games.filter(game => game.round === this.currentRound);
-		if (currentRoundGames.some(game => game.pong.winner === null))
+		console.log(`Checking completion of round ${this.currentRound} with ${this.games[0].round} active games.`);
+		const currentRoundGames = this.games.filter(game => game.round == this.currentRound);
+		console.log(this.games);
+		if (currentRoundGames.some(game => !game.pong.winner))
 			return null;
+		console.log(`All games in round ${this.currentRound} are finished.`);
 		tournamentGameLogger.log(`Tournament ${this.id}: Round ${this.currentRound} complete - processing winners`);
 		return currentRoundGames;
 	}
@@ -138,10 +141,15 @@ export class Tournament {
 			this.startRound();
 		else if (this.qualified.length === 1)
 		{
+			console.log("Tournament finished!");
 			tournamentGameLogger.log(`Tournament winner: ${this.qualified[0].displayName}`);
 			this.winner = this.qualified[0];
 			this.unsubscribeTournament(this.winner.client);
 			this.endTournament();
+		}
+		else {
+			console.log(`${this.qualified.length} players remaining, but max rounds reached. Ending tournament.`);
+			console.log(`round: ${this.currentRound}, maxRound: ${this.maxRound}`);
 		}
 	}
 
@@ -150,7 +158,7 @@ export class Tournament {
 		this.watcher = setInterval(() => {
 			this.gamesCheck();
 		}
-		, 1000);
+		, 2000);
 	}
 
 	public joinTournament(client: Client, displayName: string) {

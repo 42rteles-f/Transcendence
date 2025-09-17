@@ -104,7 +104,8 @@ abstract class GameSocket {
     }
 
     protected onPlayerJoin(socket: Socket): void {
-		if (!socket.data) socket = this.clients.get(socket.id)!.socket;
+		if (!socket.data) socket = this.clients.get(socket.id)?.socket as Socket;
+		if (!socket) return ;
 
 		const client = this.clients.get(socket.data?.user.id.toString());
 		socket.join(this.room!);

@@ -154,7 +154,8 @@ class PongGame extends BaseComponent {
 
 	onDestroy()
 	{
-		Socket.emit("pong-match-leave");
+		if (!this.tournamentPlay)
+			Socket.emit("pong-match-leave");
 		Socket.clearEventListeners("game-state");
 		Socket.clearEventListeners("tournament-completed");
 		Socket.clearEventListeners("tournament-eliminated");
