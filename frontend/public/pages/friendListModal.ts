@@ -45,10 +45,10 @@ class FriendListModal extends BaseComponent {
             this.allBlocked = await Api.getAllBlocked(this.userId);
 
 			//("Fetched users and requests:", {
-				allNotFriends: this.allNotFriends,
-				allFriends: this.allFriends,
-				allBlocked: this.allBlocked
-			});
+			// 	allNotFriends: this.allNotFriends,
+			// 	allFriends: this.allFriends,
+			// 	allBlocked: this.allBlocked
+			// });
 
             const token = AppControl.getValidDecodedToken() as { id: number | string } | null;
             const loggedUserId = token?.id;

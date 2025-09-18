@@ -28,7 +28,7 @@ interface PongState {
 
 export class PongRenderer3D {
     private engine: BABYLON.Engine | null = null;
-    private scene: BABYLON.Scene | null = null;
+    private scene!: BABYLON.Scene;
     private canvas!: HTMLCanvasElement;
     private ball: BABYLON.Mesh | null = null;
     private paddles: BABYLON.Mesh[] = [];
@@ -52,11 +52,11 @@ export class PongRenderer3D {
 
     private initializeBabylon(): void {
         this.engine = createEngine(this.canvas);
-        if (!this.engine)
-            //("Engine Error");
+        // if (!this.engine)
+        //     //("Engine Error");
         
         this.scene = createScene(this.engine);
-        if (!this.scene)
+        // if (!this.scene)
             //("Scene Error");
         
         setupCamera(this.scene);

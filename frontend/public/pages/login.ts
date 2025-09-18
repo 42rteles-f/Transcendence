@@ -63,27 +63,27 @@ class LoginPage extends BaseComponent {
 	}
 }
 
-window.handleGoogleSignIn = async (response: any) => {
-	try {
-		const res = await fetch(`${import.meta.env.VITE_API_URL}auth/google`, { method: "POST", headers: { "Content-Type": "application/json"}, body: JSON.stringify({ credential: response.credential })});
-		const data = await res.json();
-		if (res.ok) {
-			localStorage.setItem("authToken", data.token);
-			showToast("Login successful with Google!", 2000, "success");
-			Socket.init();
+// window.handleGoogleSignIn = async (response: any) => {
+// 	try {
+// 		const res = await fetch(`${import.meta.env.VITE_API_URL}auth/google`, { method: "POST", headers: { "Content-Type": "application/json"}, body: JSON.stringify({ credential: response.credential })});
+// 		const data = await res.json();
+// 		if (res.ok) {
+// 			localStorage.setItem("authToken", data.token);
+// 			showToast("Login successful with Google!", 2000, "success");
+// 			Socket.init();
 
-			const loginPage = document.querySelector('login-page') as any;
-			if (loginPage && loginPage.cleanupErrorSuppression)
-				loginPage.cleanupErrorSuppression();
+// 			const loginPage = document.querySelector('login-page') as any;
+// 			if (loginPage && loginPage.cleanupErrorSuppression)
+// 				loginPage.cleanupErrorSuppression();
 
-			routes.navigate("/home");
-		}
-		else
-			showToast(data.message || "Google login failed", 3000, "error");
-	} catch (error) {
-		showToast("An error occurred during Google login", 3000, "error");
-	}
-}
+// 			routes.navigate("/home");
+// 		}
+// 		else
+// 			showToast(data.message || "Google login failed", 3000, "error");
+// 	} catch (error) {
+// 		showToast("An error occurred during Google login", 3000, "error");
+// 	}
+// }
 
 customElements.define("login-page", LoginPage);
 
