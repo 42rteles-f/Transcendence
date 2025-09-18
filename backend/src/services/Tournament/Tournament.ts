@@ -128,10 +128,7 @@ export class Tournament {
 				if (winnerPlayer)
 					roundWinners.push(winnerPlayer);
 				if (loserPlayer)
-				{
 					loserPlayer.client.socket.emit("tournament-eliminated", {tournamentId: this.id});
-					this.unsubscribeTournament(loserPlayer.client);
-				}
 			}
 		}
 		this.qualified = roundWinners;
@@ -147,7 +144,6 @@ export class Tournament {
 			//("Tournament finished!");
 			tournamentGameLogger.log(`Tournament winner: ${this.qualified[0].displayName}`);
 			this.winner = this.qualified[0];
-			this.unsubscribeTournament(this.winner.client);
 			this.endTournament();
 		}
 		else {
@@ -181,13 +177,18 @@ export class Tournament {
 		this.qualified = this.qualified.filter(p => p.client.id !== client.id);
 	}
 
-	private endTournament() {
+	private endTournament()
+	{
 		if (this.watcher) {
 			clearInterval(this.watcher);
 			this.watcher = null;
 		}
 
 		this.winner?.client.socket.emit("tournament-completed", { tournamentId: this.id, result: "winner" });
+		
+		const allPlayers = [...this.players];
+		allPlayers.forEach(player => { this.unsubscribeTournament(player.client); });
+
 		this.end_date = new Date().toISOString();
 		this.status = "finished";
 		tournamentGameLogger.log(`Tournament ${this.id} finished. Winner: ${this.winner?.displayName}, End date: ${this.end_date}`);
