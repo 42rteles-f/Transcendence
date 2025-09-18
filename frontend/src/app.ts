@@ -1,15 +1,10 @@
 import Socket from './Socket.ts';
 import { AppControl } from './AppControl.ts';
-// import { ToastNotification } from '../public/pages/toastNotification.ts';
+import { ToastNotification } from '../public/pages/toastNotification.ts';
 import { routes } from "./routes.ts";
 import './style.css';
 
 //("app start." + window.location.pathname);
-
-(() => {console.warn = () => {}; console.error = () => {};
-	Object.defineProperty(console, 'warn', { value: () => {}, writable: false, configurable: false });
-	Object.defineProperty(console, 'error', { value: () => {}, writable: false, configurable: false });
-})();
 
 export function	warnIf(condition :Boolean) {
 	// if (condition)
@@ -22,7 +17,7 @@ window.addEventListener('popstate', () => {
 	routes.navigate(window.location.pathname);
 });
 
-// document.body.insertBefore(new ToastNotification() as Node, document.body.firstChild);
+document.body.insertBefore(new ToastNotification() as Node, document.body.firstChild);
 if (AppControl.getValidDecodedToken())
 	Socket.init();
 routes.navigate(window.location.pathname);

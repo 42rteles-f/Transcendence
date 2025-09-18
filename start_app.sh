@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# docker stop $(docker ps -a -q) \
-# && docker rm $(docker ps -a -q) \
-# && docker rmi -f $(docker images -a -q) \
-# && docker system prune -a --volumes --force \
-# && docker builder prune --all --force
+docker stop $(docker ps -a -q) \
+&& docker rm $(docker ps -a -q) \
+&& docker rmi -f $(docker images -a -q) \
+&& docker system prune -a --volumes --force \
+&& docker builder prune --all --force
 
 ip=$(hostname -I | awk '{print $1}')
 echo "Host IP: $ip"
